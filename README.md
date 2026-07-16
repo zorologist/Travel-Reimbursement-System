@@ -54,16 +54,6 @@ This is a strict monorepo. Keep your concerns separated.
 * **Shared:** TypeScript interfaces and pricing constants
 
 ```text
-Travel-Reimbursement-System/
-├── frontend/       # React UI, Form logic, Live calculation previews
-├── backend/        # Express API, Workflow enforcement, Immutable math engine
-├── shared/         # Pricing rules (Job Level Rates) and types used by both environments
-└── docs/           # Extended API and Database documentation
-# Travel Reimbursement & Salary Management System
-
-Welcome to the digital workflow that replaces manual paperwork, auto-calculates travel salaries, and keeps a complete audit trail so nobody can lie about their hotel expenses.[cite: 2]
-
-With 9 developers touching this codebase, this README is the law. Read it before you break the build.
 
 ## The Tech Stack
 * **Frontend:** React + TypeScript + Vite (Fast, no Webpack bloat)
