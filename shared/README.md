@@ -264,4 +264,4 @@ The initial shared layer is ready when:
 - Invalid inputs are covered by runtime schemas.
 - The frontend can import the types and schemas.
 - The backend can import the types, schemas, constants, and calculator.
-- Neither application needs to copy shared business definitions.
+- Neither application needs to copy shared business definitions. 100 
