@@ -1,80 +1,66 @@
-# Travel Reimbursement & Salary Management System
+<!-- This is the main project guide so new developers can quickly understand and run the system. -->
 
-## Overview
-This system is a digital workflow designed to replace slow, error-prone manual paperwork for employee travel requests. It automates submissions, enforces a strict multi-department approval sequence, calculates exact salary payouts based on job levels, and maintains an immutable audit trail to prevent fraud.
+# Travel Reimbursement System
 
-If you are writing code for this repository, this document outlines the exact business logic and mathematical formulas you must follow.
+A simple travel request and reimbursement workflow built with React, Express, and TypeScript.
 
----
+The project will initially use temporary development information and in-memory storage. No real employee information or company database is required during development.
 
-## The 5-Stage Workflow
-
-Requests cannot skip steps. They must flow sequentially through the following departments:
-
-1. **Employee Submission:** Employee selects destination (for transport), dates, role, and accommodation. The system generates an immediate live salary preview.
-2. **Manager Review:** Approves the business need for the trip. A rejection sends it back to the employee.
-3. **PR Department:** Verifies accommodation. If the employee lied about their hotel or meals, PR edits this field and the system auto-recalculates the payout.
-4. **Transportation:** Verifies travel method. Calculates the transportation cost based on the destination city and verifies ticket receipts.
-5. **Timing:** Cross-references submitted dates/times with physical entry logs to ensure the employee actually traveled.
-6. **Salary Finalization:** Reviews the complete audit trail (Pre-edit vs. Post-edit differences), applies any manual bonuses/penalties, and locks the final amount for Finance.
-
----
-
-## The Salary Calculation Engine (Strict Business Rules)
-
-The base salary is **strictly role-based**, not city-based. The destination city is only used to calculate the transportation allowance.
-
-### 1. Base Daily Allowance by Job Level
-* **Chairman / Deputy / Advisor / Expert:** 270 EGP/night
-* **Assistant / Deputy Assistant:** 240 EGP/night
-* **General Manager / Asst. General Manager:** 200 EGP/night
-* **Level 1:** 140 EGP/night
-* **Level 2:** 110 EGP/night
-* **Level 3:** 60 EGP/night
-
-### 2. Accommodation Deductions
-If the company provides accommodation, the daily allowance is reduced:
-* **Accommodation Only (Room provided, no food):** 25% deduction (Employee receives 75% of their daily rate).
-* **Full Accommodation (Room + Food provided):** 50% deduction (Employee receives 50% of their daily rate).
-
-### 3. Special Day Rules
-* **Same-Day Mission (No overnight stay):** Employee receives 50% of their base allowance (Condition: must exceed 7 hours of work).
-* **Return Day:** The final day of travel returning from an overnight stay is calculated at strictly 30% of the daily rate (Condition: must exceed 7 hours).
-
-### 4. Transportation
-Transportation costs are isolated from the daily allowance. They are calculated based on the destination city and the method of travel (e.g., Company vehicle = 0 cost, Personal vehicle = Ticket cost).
-
----
-
-## Architecture & Tech Stack
-
-This is a strict monorepo. Keep your concerns separated.
-* **Frontend:** React + TypeScript + Vite
-* **Backend:** Node.js + Express
-* **Shared:** TypeScript interfaces and pricing constants
+## Project Structure
 
 ```text
+frontend/   React user interface
+backend/    Express API and temporary development storage
+shared/     Types, salary rates, and calculations used by both sides
+docs/       Short explanations of workflow, salary rules, and development data
+```
 
-## The Tech Stack
-* **Frontend:** React + TypeScript + Vite (Fast, no Webpack bloat)
-* **Backend:** Node.js + Express (The math and API engine)
-* **Architecture:** Monorepo (Single source of truth)
+## Workflow
 
----
+An employee submits a travel request. It then moves through five departments in order:
 
-## Detailed Project Structure
-We are running a strict monorepo. Keep your frontend code out of the backend, and vice versa.
+1. Manager
+2. PR
+3. Transportation
+4. Timing
+5. Salary
 
-```text
-Travel-Reimbursement-System/
-├── frontend/               # React UI, Forms, Admin Dashboards
-│   ├── src/components/     # UI elements (Split into Employee, Admin, Shared)
-│   ├── src/services/       # API call wrappers (Do not use raw fetch in components)
-│   └── src/pages/          # Main route views
-├── backend/                # Express API, DB schemas, Salary calculation engine
-│   ├── src/routes/         # API endpoints (/api/workflow/pr-approve)
-│   ├── src/controllers/    # Route logic and validation
-│   ├── src/services/       # Business logic (5-stage approval sequence, salary math)
-│   └── src/database/       # SQL schemas and DB connection
-├── shared/                 # TypeScript types & pricing rules shared by both sides
-└── docs/                   # API specs and core business logic
+Requests cannot skip a department. Rejections return the request for correction, and changes are recorded in the audit trail.
+
+## Salary Rules
+
+Daily rates are based on the employee's job level:
+
+| Job level | Daily rate |
+| --- | ---: |
+| Chairman, Deputy, Advisor, Expert | 270 EGP |
+| Assistant, Deputy Assistant | 240 EGP |
+| General Manager, Assistant General Manager | 200 EGP |
+| Level 1 | 140 EGP |
+| Level 2 | 110 EGP |
+| Level 3 | 60 EGP |
+
+- Accommodation only: deduct 25%.
+- Accommodation with food: deduct 50%.
+- Same-day mission longer than seven hours: pay 50% of the daily rate.
+- Return day longer than seven hours: pay 30% of the daily rate.
+- Transportation is calculated separately.
+
+## Development Data
+
+Temporary users, requests, and company details will live in `backend/src/data/`. The in-memory store will live in `backend/src/storage/memoryStore.ts` and reset whenever the backend restarts.
+
+When the company is ready, temporary storage can be replaced with a real database while keeping the workflow and user interface intact.
+
+## Running Locally
+
+```bash
+npm install
+npm run dev
+```
+
+- Frontend: `http://localhost:5173`
+- Backend: `http://localhost:3000`
+- Health check: `http://localhost:3000/api/health`
+
+See `docs/` for focused project notes.
