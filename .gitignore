@@ -1,0 +1,7 @@
+# Generated, local, and secret files are ignored so they are not committed to the repository.
+node_modules/
+dist/
+.env
+.env.local
+coverage/
+*.log

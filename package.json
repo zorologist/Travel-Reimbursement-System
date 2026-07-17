@@ -1,0 +1,15 @@
+{
+  "_comment": "Root workspace commands live here so the frontend and backend can be managed together.",
+  "name": "travel-reimbursement-system",
+  "private": true,
+  "workspaces": ["frontend", "backend"],
+  "scripts": {
+    "dev": "concurrently \"npm run dev --workspace frontend\" \"npm run dev --workspace backend\"",
+    "build": "npm run build --workspaces",
+    "test": "npm run test --workspaces",
+    "typecheck": "npm run typecheck --workspaces"
+  },
+  "devDependencies": {
+    "concurrently": "latest"
+  }
+}
