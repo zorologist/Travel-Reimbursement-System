@@ -9,7 +9,7 @@ The Salary page is the working area for a signed-in user with the `salary` role.
 1. They are a company employee and may create and track their own travel requests, just like any other signed-in staff member.
 2. They are a Salary administrator and may review requests that have reached `salary-finalization`, apply a bonus or penalty, inspect the calculation and audit history, and finalize the official payment.
 
-These responsibilities must remain visually and technically separate. A Salary employee must never finalize their personal request merely because they submitted it, and the interface must never confuse “my requests” with “requests assigned to Salary.”
+These responsibilities must remain visually separate so “my requests” is not confused with “requests assigned to Salary.” Self-processing is allowed: when a Salary employee's personal request reaches `salary-finalization` through the normal workflow, that user may open it from the Salary queue and finalize it.
 
 ## Recommended User Experience
 
@@ -49,20 +49,22 @@ Authenticated staff capability
 
 Salary role capability
 ├── View the Salary review queue
+├── View the initial calculation and every earlier price revision
 ├── Review verified request information
 ├── Apply bonus or penalty
-└── Finalize and lock the official payment
+├── Finalize and lock the official payment
+└── Process their own request when it reaches Salary
 ```
 
 The backend must enforce these capabilities. Hiding a button in React is not authorization.
 
-If the backend continues using role arrays, a development Salary user may have both roles:
+Administrative accounts use role arrays. A Salary user has both roles:
 
 ```ts
 roles: ["employee", "salary"]
 ```
 
-Alternatively, the backend may treat personal-request creation as a baseline signed-in-user capability. Whichever method is chosen must be applied consistently to every administrative role, not only Salary.
+The same rule applies to Manager, PR, Transportation, and Timing accounts: every administrator also has the `employee` role.
 
 ## Where the Frontend Files Belong
 
@@ -73,17 +75,22 @@ frontend/src/
 ├── pages/
 │   └── SalaryDashboardPage.tsx       Complete Salary landing page
 ├── components/
-│   └── salary/
-│       ├── SalarySummaryCards.tsx    Counts and total values
-│       ├── SalaryReviewQueue.tsx     Filterable requests table/list
-│       ├── SalaryReviewPanel.tsx     Selected request review form
-│       ├── SalaryBreakdown.tsx       Readable calculation breakdown
-│       └── FinalizeDialog.tsx        Irreversible-action confirmation
+│   ├── workflow/
+│   │   └── ApprovalQueue.tsx          Filterable role-aware request list
+│   ├── salary/
+│   │   ├── SalaryReviewPanel.tsx      Selected request review form
+│   │   ├── SalaryAdjustmentForm.tsx  Bonus and penalty controls
+│   │   └── FinalizeDialog.tsx         Irreversible-action confirmation
+│   └── pricing/
+│       ├── CalculationBreakdown.tsx  Complete calculation details
+│       ├── PriceHistoryTimeline.tsx  Earlier department revisions
+│       ├── PriceComparison.tsx       Salary before/after values
+│       └── PriceDifferenceBadge.tsx  Positive/negative/no-change amount
 ├── services/
 │   ├── api.ts                        Central HTTP/error handling
 │   └── salaryApi.ts                  Salary-specific API functions
 ├── styles/
-│   └── salaryDashboard.css           Page-specific layout and styling
+│   └── salary.css                    Page-specific layout and styling
 └── App.tsx                            Route registration and protection
 ```
 
@@ -142,8 +149,9 @@ The personal request routes should require authentication but should not require
 │ - destination               │ - calculation breakdown     │
 │ - submitted/updated date    │ - audit trail               │
 │ - preview total             │ - bonus and penalty         │
-│ - status                    │ - finalization note         │
-│                             │ - Finalize Payment button   │
+│ - status                    │ - prior price timeline      │
+│                             │ - Salary before/after       │
+│                             │ - finalization note/button  │
 └──────────────────────────────┴─────────────────────────────┘
 ```
 
@@ -200,6 +208,11 @@ Before finalizing, display the stored, verified information used in the calculat
 - Penalty
 - Final total
 - Complete audit trail
+- Initial system calculation
+- Manager, PR, Transportation, and Timing price revisions
+- Price entering Salary
+- Price after Salary bonus/penalty
+- Difference between those two totals
 
 Clearly label original information and department-verified information. Salary should be able to detect why the total changed without manually reconstructing the formula.
 
@@ -221,7 +234,22 @@ Official total
 
 All amounts should be formatted as EGP with two decimal places. Formatting is a presentation concern; calculation and rounding must remain in shared/backend code.
 
-The frontend may display a preview, but it must not calculate or submit an authoritative `finalSalary` or `totalAmount`. The server recalculates from stored data and returns the official breakdown.
+The frontend may display the server-provided calculation inside the authorized Salary workspace, but it must not calculate or submit an authoritative `finalSalary` or `totalAmount`. The server recalculates from stored data and returns the official breakdown. The employee-facing personal-request view must not display this calculation before completion.
+
+## Price Revision History
+
+Salary is the final department and therefore sees the complete price history:
+
+```text
+Initial system calculation
+→ Manager before/after
+→ PR before/after
+→ Transportation before/after
+→ Timing before/after
+→ Salary before/final
+```
+
+Every financial revision should display the department, actor, timestamp, changed fields, total before, total after, difference, and note. Approval events that do not affect the amount may show “No price change.” Salary must not reconstruct old prices in the browser; the backend returns stored calculation revisions.
 
 ## What the Salary Employee May Edit
 
@@ -403,6 +431,7 @@ Batch actions and exports involve financial and personal information. They requi
 - Do not log salary data, access tokens, or employee information to the browser console.
 - Do not trust role, actor ID, stage, or totals sent by the browser.
 - Avoid exposing requests outside the authenticated user's backend-defined visibility.
+- Do not expose intermediate prices through the personal employee view. They are visible only in authorized department workspaces until completion.
 - Clear sensitive page state on logout.
 - Require reloading the request before retrying a conflict rather than overwriting newer data.
 
@@ -422,6 +451,9 @@ Batch actions and exports involve financial and personal information. They requi
 - Successful finalization makes the request read-only and updates the queue.
 - Conflict and already-finalized responses are explained clearly.
 - Audit before/after values are displayed.
+- The initial calculation and every earlier department price revision are displayed.
+- Salary's before/after price comparison is correct.
+- A Salary user can finalize their own request after it reaches the Salary queue.
 
 ### Integration/API tests
 
@@ -430,12 +462,12 @@ Batch actions and exports involve financial and personal information. They requi
 - Only `salary-finalization` requests can be finalized.
 - Adjustments trigger server-side recalculation and audit events.
 - Finalization stores the complete breakdown and locks the request.
-- A Salary employee can submit a personal request but cannot use Salary permissions before that personal request reaches the Salary stage through the normal workflow.
+- A Salary employee can submit a personal request, cannot use Salary permissions before it reaches Salary, and may finalize it after it appears in the Salary queue.
 
 ## Recommended Implementation Order
 
 1. Finish development authentication and role restoration.
-2. Decide how every signed-in administrator receives personal-request capability.
+2. Use the confirmed dual-role model: every administrator also has the `employee` role.
 3. Implement backend request listing, detail, adjustment, and finalization endpoints.
 4. Build the central API helper and `salaryApi.ts`.
 5. Add the protected `/salary` route and basic page states.
@@ -451,7 +483,10 @@ The Salary page is complete when:
 
 - A Salary employee can create and track a personal travel request.
 - The same user can separately view only the requests assigned to Salary.
+- A Salary user can process their own request after it reaches the Salary queue.
 - Salary can inspect all verified inputs and the complete calculation breakdown.
+- Salary can inspect the initial calculation and all earlier department revisions.
+- Salary sees an accurate before/after comparison for its own adjustment.
 - Salary can change only bonus and penalty values.
 - Every adjustment is recalculated by the backend and audited.
 - Finalization saves the official breakdown, completes the request, and locks it.
@@ -460,16 +495,14 @@ The Salary page is complete when:
 - The page is accessible and works at the agreed responsive screen sizes.
 - Frontend type checking, tests, and production build pass.
 
-## Important Product Decisions
+## Confirmed Product Rules
 
-Confirm these before treating the page as final:
+- Every Salary account also has the `employee` role.
+- Salary users may process and finalize their own requests after the normal earlier approvals.
+- Employees see no calculation or price while a request is in progress.
+- Employees see the final confirmed price after completion.
+- Salary sees the initial system calculation and every earlier department revision.
+- Salary may edit only bonus, penalty, and an agreed note/reason field.
+- Salary finalization is irreversible and locks the official breakdown.
 
-1. Does every authenticated administrator implicitly have employee self-service capability, or should every account also include the `employee` role?
-2. Must every non-zero bonus or penalty include a written reason?
-3. May a Salary user finalize their own request after it completes all earlier approvals, or must separation-of-duties prevent this?
-4. Is a return-to-department correction workflow required?
-5. Which completed requests may Salary users see, and for how long?
-6. Are CSV/Excel export, printing, and payroll-period closing required?
-7. Should the page be Arabic, English, or fully bilingual?
-
-The third decision is especially important. For stronger financial control, this guide recommends preventing a Salary employee from finalizing a request where `employeeId` equals their own user ID, even after the request reaches Salary.
+Presentation choices still to confirm include whether a non-zero bonus/penalty note is mandatory, completed-history retention, export/printing requirements, and whether the interface is Arabic, English, or fully bilingual.
