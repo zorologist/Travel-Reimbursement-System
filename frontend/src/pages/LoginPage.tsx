@@ -11,7 +11,7 @@ export function LoginPage() {
     event.preventDefault();
 
     // Authentication will be added when the development login API is ready.
-    navigate("/dashboard");
+    navigate("/home");
   }
 
   return (

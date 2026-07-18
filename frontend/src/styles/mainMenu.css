@@ -1,0 +1,305 @@
+.main-menu-page {
+  font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont,
+    "Segoe UI", sans-serif;
+  color: #17232c;
+  background: #f2f6f7;
+}
+
+.main-menu-page *,
+.main-menu-page *::before,
+.main-menu-page *::after {
+  box-sizing: border-box;
+}
+
+.main-menu-page {
+  min-height: 100vh;
+  display: grid;
+  grid-template-rows: auto 1fr auto;
+  background:
+    linear-gradient(115deg, rgba(239, 248, 246, 0.97), rgba(249, 251, 251, 0.92)),
+    url("../../Background.jpg") center / cover fixed;
+}
+
+.main-menu-topbar {
+  min-height: 84px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  padding: 14px clamp(24px, 6vw, 88px);
+  background: rgba(255, 255, 255, 0.92);
+  border-bottom: 1px solid rgba(23, 78, 73, 0.12);
+  box-shadow: 0 4px 18px rgba(24, 54, 52, 0.06);
+  backdrop-filter: blur(12px);
+}
+
+.main-menu-brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 13px;
+  color: inherit;
+  text-decoration: none;
+}
+
+.main-menu-brand img {
+  width: 56px;
+  height: 56px;
+  object-fit: contain;
+}
+
+.main-menu-brand span {
+  display: grid;
+  gap: 2px;
+}
+
+.main-menu-brand strong {
+  color: #0b655c;
+  font-size: 1.15rem;
+  letter-spacing: 0.08em;
+}
+
+.main-menu-brand small {
+  color: #64747b;
+  font-size: 0.76rem;
+}
+
+.main-menu-signout {
+  padding: 9px 16px;
+  color: #315b58;
+  font-size: 0.9rem;
+  font-weight: 700;
+  text-decoration: none;
+  border: 1px solid #b9d0ce;
+  border-radius: 10px;
+  transition: border-color 160ms ease, background-color 160ms ease,
+    transform 160ms ease;
+}
+
+.main-menu-signout:hover {
+  background: #edf7f5;
+  border-color: #70a8a2;
+  transform: translateY(-1px);
+}
+
+.main-menu-content {
+  width: min(1040px, calc(100% - 40px));
+  margin: auto;
+  padding: clamp(52px, 8vh, 90px) 0;
+}
+
+.main-menu-intro {
+  max-width: 680px;
+  margin: 0 auto 42px;
+  text-align: center;
+}
+
+.main-menu-eyebrow {
+  margin: 0 0 10px;
+  color: #13766c;
+  font-size: 0.78rem;
+  font-weight: 800;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+.main-menu-intro h1 {
+  margin: 0;
+  color: #173c39;
+  font-size: clamp(2rem, 5vw, 3.35rem);
+  line-height: 1.08;
+  letter-spacing: -0.035em;
+}
+
+.main-menu-intro > p:last-child {
+  max-width: 610px;
+  margin: 18px auto 0;
+  color: #607177;
+  font-size: 1.02rem;
+  line-height: 1.7;
+}
+
+.main-menu-actions {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 24px;
+}
+
+.main-menu-card {
+  position: relative;
+  min-height: 245px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  padding: 32px;
+  overflow: hidden;
+  color: inherit;
+  text-decoration: none;
+  background: rgba(255, 255, 255, 0.96);
+  border: 1px solid rgba(35, 103, 96, 0.15);
+  border-radius: 22px;
+  box-shadow: 0 16px 42px rgba(27, 67, 63, 0.1);
+  transition: transform 180ms ease, box-shadow 180ms ease,
+    border-color 180ms ease;
+}
+
+.main-menu-card::after {
+  content: "";
+  position: absolute;
+  right: -60px;
+  bottom: -80px;
+  width: 190px;
+  height: 190px;
+  border-radius: 50%;
+  background: rgba(38, 143, 130, 0.07);
+}
+
+.main-menu-card:hover {
+  transform: translateY(-6px);
+  border-color: rgba(16, 112, 102, 0.45);
+  box-shadow: 0 24px 55px rgba(27, 67, 63, 0.16);
+}
+
+.main-menu-card:focus-visible,
+.main-menu-signout:focus-visible,
+.main-menu-brand:focus-visible {
+  outline: 3px solid rgba(22, 122, 111, 0.32);
+  outline-offset: 4px;
+}
+
+.main-menu-card-icon {
+  width: 56px;
+  height: 56px;
+  display: grid;
+  place-items: center;
+  color: #fff;
+  background: linear-gradient(145deg, #168477, #07594f);
+  border-radius: 16px;
+  box-shadow: 0 10px 24px rgba(13, 103, 93, 0.2);
+}
+
+.main-menu-card--dashboard .main-menu-card-icon {
+  background: linear-gradient(145deg, #285f75, #153f51);
+  box-shadow: 0 10px 24px rgba(24, 68, 87, 0.2);
+}
+
+.main-menu-card-icon svg {
+  width: 27px;
+  height: 27px;
+  stroke: currentColor;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.main-menu-card-copy {
+  display: grid;
+  gap: 8px;
+  margin-top: 25px;
+  padding-right: 36px;
+}
+
+.main-menu-card-copy small {
+  color: #148073;
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.main-menu-card--dashboard .main-menu-card-copy small {
+  color: #376f84;
+}
+
+.main-menu-card-copy strong {
+  color: #193c39;
+  font-size: 1.42rem;
+}
+
+.main-menu-card-copy span {
+  color: #697a7f;
+  font-size: 0.93rem;
+  line-height: 1.55;
+}
+
+.main-menu-card-arrow {
+  position: absolute;
+  right: 30px;
+  bottom: 30px;
+  z-index: 1;
+  width: 36px;
+  height: 36px;
+  display: grid;
+  place-items: center;
+  color: #0b685e;
+  font-size: 1.25rem;
+  background: #e7f4f2;
+  border-radius: 50%;
+  transition: transform 180ms ease;
+}
+
+.main-menu-card:hover .main-menu-card-arrow {
+  transform: translateX(4px);
+}
+
+.main-menu-help {
+  margin: 28px 0 0;
+  color: #718087;
+  font-size: 0.85rem;
+  text-align: center;
+}
+
+.main-menu-footer {
+  display: flex;
+  justify-content: space-between;
+  gap: 20px;
+  padding: 22px clamp(24px, 6vw, 88px);
+  color: #728087;
+  font-size: 0.78rem;
+  background: rgba(247, 250, 250, 0.88);
+  border-top: 1px solid rgba(23, 78, 73, 0.1);
+}
+
+@media (max-width: 720px) {
+  .main-menu-topbar {
+    min-height: 74px;
+    padding: 10px 20px;
+  }
+
+  .main-menu-brand img {
+    width: 48px;
+    height: 48px;
+  }
+
+  .main-menu-brand small {
+    display: none;
+  }
+
+  .main-menu-content {
+    width: min(100% - 28px, 520px);
+    padding: 44px 0;
+  }
+
+  .main-menu-actions {
+    grid-template-columns: 1fr;
+  }
+
+  .main-menu-card {
+    min-height: 220px;
+    padding: 27px;
+  }
+
+  .main-menu-footer {
+    flex-direction: column;
+    align-items: center;
+    padding: 18px 20px;
+    text-align: center;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .main-menu-card,
+  .main-menu-card-arrow,
+  .main-menu-signout {
+    transition: none;
+  }
+}
