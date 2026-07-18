@@ -1,4 +1,4 @@
-import { JobLevel } from "../types/User";
+import type { JobLevel } from "../types/User.js";
 
 export const SALARY_RATES: Record<JobLevel, number> = {
   Chairman: 270,

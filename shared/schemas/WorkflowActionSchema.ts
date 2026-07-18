@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { SystemRoleSchema } from "./UserSchema";
+import { SystemRoleSchema } from "./UserSchema.js";
 
 export const WorkflowStageSchema = z.enum([
   "manager-review",

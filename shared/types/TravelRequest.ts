@@ -1,4 +1,4 @@
-import { WorkflowStage, AuditEvent } from "./Workflow";
+import type { AuditEvent, WorkflowStage } from "./Workflow.js";
 
 export type AccommodationType = "none" | "room-only" | "room-and-food";
 

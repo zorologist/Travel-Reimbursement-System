@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { calculateSalary, SalaryCalculationInput } from "./calculateSalary";
+import { calculateSalary, type SalaryCalculationInput } from "./calculateSalary.js";
 
 describe("calculateSalary", () => {
   const defaultInput: SalaryCalculationInput = {

@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { WorkflowStageSchema, AuditEventSchema } from "./WorkflowActionSchema";
+import { AuditEventSchema, WorkflowStageSchema } from "./WorkflowActionSchema.js";
 
 export const AccommodationTypeSchema = z.enum(["none", "room-only", "room-and-food"]);
 

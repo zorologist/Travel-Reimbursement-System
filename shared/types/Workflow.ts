@@ -1,4 +1,4 @@
-import { SystemRole } from "./User";
+import type { SystemRole } from "./User.js";
 
 export type WorkflowStage =
   | "manager-review"

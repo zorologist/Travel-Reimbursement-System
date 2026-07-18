@@ -1,6 +1,6 @@
-import { JobLevel } from "../types/User";
-import { AccommodationType, SalaryCalculationResult } from "../types/TravelRequest";
-import { SALARY_RATES, ACCOMMODATION_FACTORS } from "../constants/salaryRates";
+import type { JobLevel } from "../types/User.js";
+import type { AccommodationType, SalaryCalculationResult } from "../types/TravelRequest.js";
+import { ACCOMMODATION_FACTORS, SALARY_RATES } from "../constants/salaryRates.js";
 
 export interface SalaryCalculationInput {
   jobLevel: JobLevel;
