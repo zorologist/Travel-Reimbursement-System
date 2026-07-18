@@ -6,7 +6,7 @@ The frontend is the React interface used by employees and approval departments. 
 
 The frontend does not decide permissions, workflow transitions, or final payments. It presents available actions and previews, while the backend verifies every action and returns the official result.1
 
-Read the root [README](../README.md) first for the full project and business rules. Read [shared/README.md](../shared/README.md) before implementing forms, workflow displays, or salary previews.
+Read the root [README](../README.md) first for the full project and business rules. Read [the shared guide](../random.md/README.md) before implementing forms, workflow displays, or salary previews.
 
 ## Technology
 

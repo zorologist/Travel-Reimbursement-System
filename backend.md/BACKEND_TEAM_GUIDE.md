@@ -106,8 +106,8 @@ backend/src/services/salaryService.ts
 shared/types/Workflow.ts
 shared/constants/salaryRates.ts
 shared/salary/calculateSalary.ts
-docs/WORKFLOW.md
-docs/SALARY_RULES.md
+random.md/WORKFLOW.md
+random.md/SALARY_RULES.md
 ```
 
 ### What they do
@@ -151,7 +151,7 @@ backend/src/data/users.ts
 backend/src/data/requests.ts
 backend/src/storage/memoryStore.ts
 shared/types/User.ts
-docs/DEVELOPMENT_DATA.md
+random.md/DEVELOPMENT_DATA.md
 ```
 
 ### What they do

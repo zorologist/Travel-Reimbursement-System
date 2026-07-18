@@ -245,11 +245,11 @@ Travel-Reimbursement-System/
 │   ├── constants/               Salary and transportation rates
 │   ├── salary/                  Pure calculation code and tests
 │   ├── schemas/                 Planned Zod runtime validation
-│   ├── types/                   Shared TypeScript contracts
-│   └── README.md                Shared developer implementation specification
+│   └── types/                   Shared TypeScript contracts
 │
-├── docs/                        Focused business and development guides
-├── BACKEND_TEAM_GUIDE.md        Four-person backend assignment plan
+├── frontend.md/                 All frontend documentation
+├── backend.md/                  All backend documentation
+├── random.md/                   Shared, workflow, salary, and data documentation
 ├── README.md                    Central project guide
 └── package.json                 Workspace commands
 ```
@@ -307,7 +307,7 @@ Some planned folders listed above, such as `shared/schemas`, will be created dur
 | `shared/salary/calculateSalary.test.ts` | Boundary and business-rule tests | Development and CI |
 | `shared/schemas/*` | Runtime validation for untrusted data | Frontend forms and backend endpoints |
 
-The complete shared implementation specification is in [shared/README.md](shared/README.md).
+The complete shared implementation specification is in [random.md/README.md](random.md/README.md).
 
 ## How Frontend and Backend Work Together
 
@@ -399,9 +399,9 @@ Backend work is divided among four people:
 3. Workflow and salary rules
 4. Development data, storage, and audit trail
 
-Exact backend ownership, skills, dependencies, and integration order are documented in [BACKEND_TEAM_GUIDE.md](BACKEND_TEAM_GUIDE.md).
+Exact backend ownership, skills, dependencies, and integration order are documented in [backend.md/BACKEND_TEAM_GUIDE.md](backend.md/BACKEND_TEAM_GUIDE.md).
 
-One developer should initially own `shared/` because both frontend and backend depend on stable shared contracts. That developer's complete handoff guide is [shared/README.md](shared/README.md).
+One developer should initially own `shared/` because both frontend and backend depend on stable shared contracts. That developer's complete handoff guide is [random.md/README.md](random.md/README.md).
 
 Frontend work can be divided by feature after the shared contracts exist:
 
@@ -633,7 +633,7 @@ Routes and services call those operations instead of directly changing arrays. L
 
 Active Directory is also deferred. The shared user model uses a role list so future directory groups can map to system permissions without redesigning every feature.
 
-More information is available in [docs/DEVELOPMENT_DATA.md](docs/DEVELOPMENT_DATA.md).
+More information is available in [random.md/DEVELOPMENT_DATA.md](random.md/DEVELOPMENT_DATA.md).
 
 ## Security and Audit Expectations
 
@@ -669,11 +669,12 @@ This section should be updated as phases are completed so new developers always 
 | Document | Read it when |
 | --- | --- |
 | [README.md](README.md) | You are joining the project or need the complete picture |
-| [shared/README.md](shared/README.md) | You are implementing shared contracts or calculations |
-| [BACKEND_TEAM_GUIDE.md](BACKEND_TEAM_GUIDE.md) | You are assigning or coordinating backend work |
-| [docs/WORKFLOW.md](docs/WORKFLOW.md) | You need a short workflow reference |
-| [docs/SALARY_RULES.md](docs/SALARY_RULES.md) | You need a short salary reference |
-| [docs/DEVELOPMENT_DATA.md](docs/DEVELOPMENT_DATA.md) | You are working with temporary data or future storage replacement |
+| [frontend.md/](frontend.md/) | You are working on any frontend page or task |
+| [backend.md/](backend.md/) | You are working on backend APIs, assignments, or remaining tasks |
+| [random.md/README.md](random.md/README.md) | You are implementing shared contracts or calculations |
+| [random.md/WORKFLOW.md](random.md/WORKFLOW.md) | You need a short workflow reference |
+| [random.md/SALARY_RULES.md](random.md/SALARY_RULES.md) | You need a short salary reference |
+| [random.md/DEVELOPMENT_DATA.md](random.md/DEVELOPMENT_DATA.md) | You are working with temporary data or future storage replacement |
 
 ## Definition of Project Completion
 

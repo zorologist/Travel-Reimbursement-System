@@ -6,7 +6,7 @@ The backend is the authoritative Express API for authentication context, travel 
 
 The browser may display permitted actions and salary previews, but the backend must independently verify the user, role, current stage, submitted values, and official amount on every request.
 
-Read the root [README](../README.md) first. Team assignment is documented in [BACKEND_TEAM_GUIDE.md](../BACKEND_TEAM_GUIDE.md). Shared contracts and calculations are specified in [shared/README.md](../shared/README.md).
+Read the root [README](../README.md) first. Team assignment is documented in [BACKEND_TEAM_GUIDE.md](BACKEND_TEAM_GUIDE.md). Shared contracts and calculations are specified in [the shared guide](../random.md/README.md).
 
 ## Technology
 
@@ -296,7 +296,7 @@ Recalculate after:
 
 Finalize only after Timing approval and Salary confirmation. Save the complete breakdown, not only the total.
 
-The complete formulas and expected numerical tests are in [shared/README.md](../shared/README.md).
+The complete formulas and expected numerical tests are in [the shared guide](../random.md/README.md).
 
 ## Audit Trail
 
