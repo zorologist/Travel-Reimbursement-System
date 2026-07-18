@@ -144,6 +144,18 @@ input {
   transition: background-color 150ms ease;
 }
 
+.login-error {
+  margin: 0.9rem 0 0;
+  padding: 0.7rem 0.8rem;
+  border: 1px solid #efb4b4;
+  border-radius: 8px;
+  background: #fff4f4;
+  color: #a52222;
+  font-size: 0.82rem;
+  line-height: 1.4;
+  text-align: left;
+}
+
 .login-button:hover {
   background: #153317;
 }

@@ -153,7 +153,7 @@
 }
 
 .request-grid-three {
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: minmax(180px, 1fr) minmax(180px, 1fr) minmax(275px, 1.4fr);
 }
 
 .request-form-group {
@@ -199,6 +199,44 @@
 
 .request-form-group textarea {
   resize: vertical;
+}
+
+.request-time-picker {
+  width: 100%;
+  min-width: 0;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  align-items: end;
+  gap: 0.5rem;
+}
+
+.request-time-part {
+  min-width: 0;
+  display: grid;
+  gap: 0.3rem;
+}
+
+.request-time-part > span {
+  color: #6b7280;
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-align: center;
+}
+
+.request-time-part select {
+  min-width: 0;
+  min-height: 46px;
+  padding-inline: 0.5rem;
+  background-color: #f9fafb;
+  text-align: center;
+  cursor: pointer;
+}
+
+.request-time-period select {
+  border-color: #7eae8d;
+  background: #f2f8f4;
+  color: #164326;
+  font-weight: 800;
 }
 
 .request-upload-zone {
@@ -299,6 +337,16 @@
   text-align: center;
 }
 
+@media (max-width: 900px) {
+  .request-grid-three {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .request-grid-three .request-form-group:last-child {
+    grid-column: 1 / -1;
+  }
+}
+
 @media (max-width: 640px) {
   .request-navbar {
     padding-inline: 1rem;
@@ -324,5 +372,9 @@
   .request-grid-two,
   .request-grid-three {
     grid-template-columns: 1fr;
+  }
+
+  .request-time-picker {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 }

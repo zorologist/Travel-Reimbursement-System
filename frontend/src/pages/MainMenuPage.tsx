@@ -1,8 +1,27 @@
-import { Link } from "react-router-dom";
+import { Link, Navigate, useNavigate } from "react-router-dom";
 import logoUrl from "../../EGAS.png";
+import {
+  clearDevelopmentSession,
+  getDevelopmentUser,
+} from "../services/developmentAuth";
 import "../styles/mainMenu.css";
 
 export function MainMenuPage() {
+  const navigate = useNavigate();
+  const user = getDevelopmentUser();
+
+  if (!user) return <Navigate to="/login" replace />;
+
+  const administrativeRole = user.roles.find((role) => role !== "employee");
+  const roleLabel = administrativeRole
+    ? `${administrativeRole[0].toUpperCase()}${administrativeRole.slice(1)} & Employee`
+    : "Employee";
+
+  function handleSignOut() {
+    clearDevelopmentSession();
+    navigate("/login", { replace: true });
+  }
+
   return (
     <div className="main-menu-page">
       <header className="main-menu-topbar">
@@ -14,14 +33,20 @@ export function MainMenuPage() {
           </span>
         </Link>
 
-        <Link className="main-menu-signout" to="/login">
-          Sign out
-        </Link>
+        <div className="main-menu-account">
+          <span>
+            <strong>{user.displayName}</strong>
+            <small>{roleLabel}</small>
+          </span>
+          <button className="main-menu-signout" type="button" onClick={handleSignOut}>
+            Sign out
+          </button>
+        </div>
       </header>
 
       <main className="main-menu-content">
         <section className="main-menu-intro" aria-labelledby="main-menu-title">
-          <p className="main-menu-eyebrow">Employee Services</p>
+          <p className="main-menu-eyebrow">{roleLabel} Services</p>
           <h1 id="main-menu-title">What would you like to do?</h1>
           <p>
             Start a new travel request or open your dashboard to follow existing

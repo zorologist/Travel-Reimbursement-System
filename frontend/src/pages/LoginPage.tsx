@@ -1,16 +1,26 @@
 // Development sign-in lives here until it is replaced by the company's authentication system.
-import type { FormEvent } from "react";
+import { useState, type FormEvent } from "react";
 import { useNavigate } from "react-router-dom";
 import logoUrl from "../../EGAS.png";
+import { loginDevelopmentUser } from "../services/developmentAuth";
 import "../styles/login.css";
 
 export function LoginPage() {
   const navigate = useNavigate();
+  const [employeeNumber, setEmployeeNumber] = useState("");
+  const [password, setPassword] = useState("");
+  const [remember, setRemember] = useState(false);
+  const [error, setError] = useState("");
 
   function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
 
-    // Authentication will be added when the development login API is ready.
+    const user = loginDevelopmentUser(employeeNumber, password, remember);
+    if (!user) {
+      setError("Invalid development employee number or password.");
+      return;
+    }
+
     navigate("/home");
   }
 
@@ -30,14 +40,19 @@ export function LoginPage() {
 
         <form onSubmit={handleSubmit}>
           <div className="form-group">
-            <label htmlFor="username">Username or Email</label>
+            <label htmlFor="username">Employee Number</label>
             <input
               type="text"
               id="username"
               name="username"
+              value={employeeNumber}
+              onChange={(event) => {
+                setEmployeeNumber(event.target.value);
+                setError("");
+              }}
               autoComplete="username"
               required
-              placeholder="Enter your username"
+              placeholder="Enter your development employee number"
             />
           </div>
 
@@ -47,6 +62,11 @@ export function LoginPage() {
               type="password"
               id="password"
               name="password"
+              value={password}
+              onChange={(event) => {
+                setPassword(event.target.value);
+                setError("");
+              }}
               autoComplete="current-password"
               required
               placeholder="Enter your password"
@@ -55,13 +75,24 @@ export function LoginPage() {
 
           <div className="form-options">
             <label className="remember-me">
-              <input type="checkbox" name="remember" />
+              <input
+                type="checkbox"
+                name="remember"
+                checked={remember}
+                onChange={(event) => setRemember(event.target.checked)}
+              />
               Remember me
             </label>
             <button className="forgot-password" type="button">
               Forgot password?
             </button>
           </div>
+
+          {error && (
+            <p className="login-error" role="alert">
+              {error}
+            </p>
+          )}
 
           <button type="submit" className="login-button">
             Sign In

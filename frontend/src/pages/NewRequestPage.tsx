@@ -3,13 +3,30 @@ import { useState, type FormEvent } from "react";
 import "../styles/newRequest.css";
 
 type TransportationMethod = "company" | "personal" | "other";
+type DayPeriod = "AM" | "PM";
+
+const hourOptions = Array.from({ length: 12 }, (_, index) => String(index + 1));
+const minuteOptions = Array.from({ length: 60 }, (_, index) =>
+  String(index).padStart(2, "0"),
+);
+
+function to24HourTime(hour: string, minute: string, period: DayPeriod | "") {
+  if (!hour || !minute || !period) return "";
+
+  const hourNumber = Number(hour) % 12 + (period === "PM" ? 12 : 0);
+  return `${String(hourNumber).padStart(2, "0")}:${minute}`;
+}
 
 export function NewRequestPage() {
   const [transportationMethod, setTransportationMethod] =
     useState<TransportationMethod>("company");
   const [submitted, setSubmitted] = useState(false);
+  const [returnHour, setReturnHour] = useState("");
+  const [returnMinute, setReturnMinute] = useState("");
+  const [returnPeriod, setReturnPeriod] = useState<DayPeriod | "">("");
 
   const needsTransportationProof = transportationMethod === "other";
+  const returnTime = to24HourTime(returnHour, returnMinute, returnPeriod);
 
   function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -116,13 +133,60 @@ export function NewRequestPage() {
                 </div>
 
                 <div className="request-form-group">
-                  <label htmlFor="returnTime">🕒 ساعة العودة</label>
-                  <input
-                    id="returnTime"
-                    type="time"
-                    name="returnTime"
-                    required
-                  />
+                  <label id="returnTimeLabel">🕒 ساعة العودة</label>
+                  <div
+                    className="request-time-picker"
+                    role="group"
+                    aria-labelledby="returnTimeLabel"
+                    dir="ltr"
+                  >
+                    <label className="request-time-part">
+                      <span>الساعة</span>
+                      <select
+                        aria-label="ساعة العودة"
+                        value={returnHour}
+                        onChange={(event) => setReturnHour(event.target.value)}
+                        required
+                      >
+                        <option value="" disabled>--</option>
+                        {hourOptions.map((hour) => (
+                          <option key={hour} value={hour}>{hour}</option>
+                        ))}
+                      </select>
+                    </label>
+
+                    <label className="request-time-part">
+                      <span>الدقيقة</span>
+                      <select
+                        aria-label="دقيقة العودة"
+                        value={returnMinute}
+                        onChange={(event) => setReturnMinute(event.target.value)}
+                        required
+                      >
+                        <option value="" disabled>--</option>
+                        {minuteOptions.map((minute) => (
+                          <option key={minute} value={minute}>{minute}</option>
+                        ))}
+                      </select>
+                    </label>
+
+                    <label className="request-time-part request-time-period">
+                      <span>الفترة</span>
+                      <select
+                        aria-label="الفترة صباحاً أو مساءً"
+                        value={returnPeriod}
+                        onChange={(event) =>
+                          setReturnPeriod(event.target.value as DayPeriod)
+                        }
+                        required
+                      >
+                        <option value="" disabled>AM/PM</option>
+                        <option value="AM">AM</option>
+                        <option value="PM">PM</option>
+                      </select>
+                    </label>
+                  </div>
+                  <input type="hidden" id="returnTime" name="returnTime" value={returnTime} />
                 </div>
               </div>
 
