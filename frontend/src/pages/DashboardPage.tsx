@@ -6,6 +6,8 @@ export function DashboardPage() {
     <main>
       <h1>Travel Reimbursement System</h1>
       <p>The dashboard will be implemented after development authentication.</p>
+      <Link to="/requests/new">Create a new travel request</Link>
+      <br />
       <Link to="/login">Return to login</Link>
     </main>
   );
