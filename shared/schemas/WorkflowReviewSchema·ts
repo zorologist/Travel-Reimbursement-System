@@ -1,0 +1,66 @@
+import { z } from "zod";
+import { AccommodationTypeSchema } from "./TravelRequestSchema.js";
+
+// Should match the enum used for CreateTravelRequestInputSchema.transportationMethod
+// once that field is converted from z.string() to a proper enum.
+export const TransportationMethodSchema = z.enum([
+  "company-vehicle",
+  "employee-vehicle",
+  "mixed",
+]);
+
+/**
+ * PR review — may edit accommodationType only.
+ */
+export const PrReviewSchema = z.object({
+  accommodationType: AccommodationTypeSchema,
+  note: z.string().nullable().optional(),
+});
+export type PrReviewInput = z.infer<typeof PrReviewSchema>;
+
+/**
+ * Transportation review — may edit method and cost only.
+ */
+export const TransportationReviewSchema = z.object({
+  transportationMethod: TransportationMethodSchema,
+  transportationCost: z.number().min(0),
+  note: z.string().nullable().optional(),
+});
+export type TransportationReviewInput = z.infer<typeof TransportationReviewSchema>;
+
+/**
+ * Timing review — may edit verified dates/hours only.
+ */
+export const TimingReviewSchema = z.object({
+  verifiedDepartureAt: z.string().datetime({ offset: true }).nullable(),
+  verifiedReturnAt: z.string().datetime({ offset: true }).nullable(),
+  verifiedSameDayHours: z.number().min(0),
+  verifiedReturnDayHours: z.number().min(0),
+  note: z.string().nullable().optional(),
+});
+export type TimingReviewInput = z.infer<typeof TimingReviewSchema>;
+
+/**
+ * Salary finalization — may edit bonus/penalty only.
+ */
+export const SalaryReviewSchema = z.object({
+  bonusAmount: z.number().min(0),
+  penaltyAmount: z.number().min(0),
+  note: z.string().nullable().optional(),
+});
+export type SalaryReviewInput = z.infer<typeof SalaryReviewSchema>;
+
+/**
+ * Maps each workflow stage to the schema that governs PATCH .../review
+ * at that stage. workflowService.ts should look up the schema by the
+ * request's CURRENT stage (not the caller's role) so the two stay in sync —
+ * a request only accepts the edit shape for the stage it is actually in.
+ */
+export const reviewSchemaByStage = {
+  "pr-review": PrReviewSchema,
+  "transportation-review": TransportationReviewSchema,
+  "timing-review": TimingReviewSchema,
+  "salary-finalization": SalaryReviewSchema,
+} as const;
+
+export type ReviewableStage = keyof typeof reviewSchemaByStage;
