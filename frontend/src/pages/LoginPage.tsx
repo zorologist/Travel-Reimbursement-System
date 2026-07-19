@@ -2,11 +2,12 @@
 import { useState, type FormEvent } from "react";
 import { useNavigate } from "react-router-dom";
 import logoUrl from "../../EGAS.png";
-import { loginDevelopmentUser } from "../services/developmentAuth";
+import { useAuth } from "../hooks/useAuth";
 import "../styles/login.css";
 
 export function LoginPage() {
   const navigate = useNavigate();
+  const { login } = useAuth();
   const [employeeNumber, setEmployeeNumber] = useState("");
   const [password, setPassword] = useState("");
   const [remember, setRemember] = useState(false);
@@ -15,8 +16,8 @@ export function LoginPage() {
   function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
 
-    const user = loginDevelopmentUser(employeeNumber, password, remember);
-    if (!user) {
+    const authenticated = login(employeeNumber, password, remember);
+    if (!authenticated) {
       setError("Invalid development employee number or password.");
       return;
     }

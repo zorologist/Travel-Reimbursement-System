@@ -28,17 +28,15 @@ export interface PriceRevision {
 
 export const workflowApi = {
   getQueue: async (): Promise<ApprovalQueueItem[]> => {
-    const response = await api.get('/api/workflow/queue');
+    const response = await api.get<ApprovalQueueItem[]>('/api/requests?scope=queue');
     return response.data;
   },
   
-  approve: async (id: string, payload: any) => {
-    const response = await api.post(`/api/workflow/${id}/approve`, payload);
-    return response.data;
+  approve: async (id: string, payload: Record<string, unknown>): Promise<void> => {
+    await api.post(`/api/requests/${id}/approve`, payload);
   },
 
-  reject: async (id: string, reason: string) => {
-    const response = await api.post(`/api/workflow/${id}/reject`, { reason });
-    return response.data;
+  reject: async (id: string, reason: string): Promise<void> => {
+    await api.post(`/api/requests/${id}/reject`, { reason });
   }
 };

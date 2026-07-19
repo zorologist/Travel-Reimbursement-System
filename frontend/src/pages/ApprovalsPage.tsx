@@ -5,10 +5,10 @@ import { LoadingState } from '../components/ui/LoadingState';
 import { ErrorState } from '../components/ui/ErrorState';
 
 export const ApprovalsPage: React.FC = () => {
-  const { queue, loading, error, handleAction } = useApprovalQueue();
+  const { queue, loading, error, handleAction, fetchQueue } = useApprovalQueue();
 
   if (loading) return <LoadingState message="Loading department queue..." />;
-  if (error) return <ErrorState error={error} />;
+  if (error) return <ErrorState message={error} onRetry={fetchQueue} />;
 
   return (
     <div className="approvals-page">

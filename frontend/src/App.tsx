@@ -4,14 +4,16 @@ import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import NewRequestPage from './pages/NewRequestPage';
 import MyRequestsPage from './pages/MyRequestsPage';
+import { AuthProvider } from './context/AuthContext';
 // لو عندك صفحات تانية زي الـ Login أو الـ Dashboard فكي الكومنت عنهم هنا:
 // import LoginPage from './pages/LoginPage';
 // import DashboardPage from './pages/DashboardPage';
 
 export default function App() {
   return (
-    <Router>
-      <Routes>
+    <AuthProvider>
+      <Router>
+        <Routes>
         {/* مسار صفحة عدم السماح بالوصول */}
         <Route path="/forbidden" element={<ForbiddenPage />} />
 
@@ -28,7 +30,8 @@ export default function App() {
         <Route path="/new-request" element={<NewRequestPage />} />
         
         {/* لو حبّيتي تضيفي باقي الصفحات بعدين هتكون هنا بنفس الطريقة */}
-      </Routes>
-    </Router>
+        </Routes>
+      </Router>
+    </AuthProvider>
   );
 }

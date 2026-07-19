@@ -16,8 +16,8 @@ Read the root [README](../README.md) first for the full project and business rul
 - **Routing:** React Router
 - **Forms:** React Hook Form
 - **Validation:** Zod shared schemas
-- **Testing:** Vitest is configured; React Testing Library and frontend test cases have not been added
-- **Communication:** JSON over HTTP; the planned central `src/services/api.ts` client is still missing
+- **Testing:** Vitest with three API-client tests; React Testing Library has not been added
+- **Communication:** JSON over HTTP through the central `src/services/api.ts` client
 
 ## Frontend Responsibilities
 
@@ -51,27 +51,24 @@ Verified: 19 July 2026
 | --- | --- |
 | Shared dependency | Implemented through `@travel-reimbursement/shared`; workflow types use the root export |
 | Current router | `/`, `/my-requests`, `/new-request`, `/forbidden`, and the wildcard 404 route |
-| Login/home/dashboard designs | Present, but login and dashboard are not connected to the active router/authentication context |
+| Login/home/dashboard designs | Present; login now uses the temporary authentication context, but these screens are not connected to the active router |
 | New request | Designed and partially interactive; uses a temporary local request shape that does not match the shared API contract |
-| My Requests | Page/filter implementation exists, but the separate `RequestList.tsx` file is invalid TypeScript/React |
+| My Requests | Page filters and a typed React `RequestList` are implemented; real backend integration remains |
 | Request details/tracker | Visual prototype with hardcoded data |
-| Department approvals | Queue/forms/pricing components exist, but are not routed and still have integration/type errors |
+| Department approvals | Queue/forms/pricing components type-check and use the central API client; route and backend endpoints remain |
 | Shared UI states | Loading, empty, error, forbidden, and not-found views are implemented |
-| Authentication | Context, hook, API client, and protected/role routes remain placeholders |
+| Authentication | Temporary context/hook and login integration implemented; backend auth API and protected/role routes remain |
 | Salary workspace | Placeholder files only |
-| Frontend tests | No test files; Vitest exits successfully with `--passWithNoTests` |
-| Type-check/build | Failing |
+| Frontend tests | Three API-client tests passing; component/route coverage remains missing |
+| Type-check/build | Passing |
 
-### Current blocking issues
+### Current integration priorities
 
-1. `src/components/requests/RequestList.tsx` contains a complete standalone HTML/CSS/JavaScript document rather than a React component. It begins with `<!DOCTYPE html>` and causes hundreds of TypeScript parser errors.
-2. `ApprovalQueue.tsx` passes `message` to `EmptyState`, but the implemented component requires `title` with optional `description` and `action`.
-3. `ApprovalsPage.tsx` passes `error` to `ErrorState`, but the implemented component requires a `message` string.
-4. `DepartmentReviewPanel.tsx` imports the still-empty `useAuth.ts` module.
-5. `workflowApi.ts` imports a nonexistent `src/services/api.ts` module.
-6. Authentication, salary, protected routing, and real backend integration remain incomplete.
-
-The first priority is to repair `RequestList.tsx`; after that, resolve the four known integration errors above and rerun the frontend type-check to expose any deeper issues.
+1. Add login, home, dashboard, details, approvals, and salary screens to the active router.
+2. Implement `ProtectedRoute` and `RequireRole` using the authentication context.
+3. Replace temporary frontend request types/direct `fetch` calls with shared contracts and the central API client.
+4. Connect authentication, requests, approvals, and salary to implemented backend endpoints when available.
+5. Complete the salary workspace and add component/route tests.
 
 ## Structure and File Ownership
 

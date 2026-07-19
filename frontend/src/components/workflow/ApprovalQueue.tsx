@@ -12,7 +12,12 @@ export const ApprovalQueue: React.FC<Props> = ({ queue, onAction }) => {
   const [selectedItemId, setSelectedItemId] = useState<string | null>(null);
 
   if (queue.length === 0) {
-    return <EmptyState message="No pending requests in your department queue." />;
+    return (
+      <EmptyState
+        title="No pending requests"
+        description="There are no requests in your department queue."
+      />
+    );
   }
 
   const selectedItem = queue.find(item => item.id === selectedItemId);

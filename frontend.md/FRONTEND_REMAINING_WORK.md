@@ -29,15 +29,15 @@ Signed-in user
 | New request design | Implemented; not connected to API |
 | Dashboard | Assigned to another developer |
 | Request details/tracker | Visual prototype; hardcoded data |
-| My Requests | Partial page implementation; `RequestList.tsx` currently breaks TypeScript because it contains standalone HTML/JS |
-| Authentication context/API | Empty placeholders |
+| My Requests | Page filters and typed React request list implemented; backend contract integration remains |
+| Authentication context/API | Temporary context/hook and central API client implemented; backend auth integration remains |
 | Protected/role routes | Empty placeholders |
-| Department approvals | Components implemented; not routed and has unresolved integration/type errors |
+| Department approvals | Components type-check and use central API client; not routed and backend endpoints remain |
 | Price-history UI | Components implemented; backend integration missing |
 | Salary UI | Empty placeholders |
-| Shared UI states | Loading, empty, error, forbidden, and not-found views implemented; two caller prop mismatches remain |
-| Frontend tests | Missing; Vitest finds no tests |
-| Frontend type-check/build | Failing first in `RequestList.tsx` |
+| Shared UI states | Loading, empty, error, forbidden, and not-found views implemented and callers aligned |
+| Frontend tests | Three API-client tests passing; component and route coverage missing |
+| Frontend type-check/build | Passing |
 
 ## Existing Working Navigation
 

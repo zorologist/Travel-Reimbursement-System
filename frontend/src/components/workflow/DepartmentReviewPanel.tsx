@@ -12,6 +12,10 @@ interface Props {
 
 export const DepartmentReviewPanel: React.FC<Props> = ({ request, onAction }) => {
   const { user } = useAuth();
+
+  if (!user) {
+    return <p role="alert">Sign in to review department requests.</p>;
+  }
   
   // Renders the correct form based on the request's current stage and user's role.
   // Backend authorization ultimately protects the submission.
