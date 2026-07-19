@@ -1,23 +1,26 @@
-// Global routes, providers, and page layout are composed in this root component.
-import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
-import { DashboardPage } from "./pages/DashboardPage";
-import { LoginPage } from "./pages/LoginPage";
-import { MainMenuPage } from "./pages/MainMenuPage";
-import { NewRequestPage } from "./pages/NewRequestPage";
-import { RequestDetailsPage } from "./pages/RequestDetailsPage";
+import React from 'react';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import NewRequestPage from './pages/NewRequestPage';
+import MyRequestsPage from './pages/MyRequestsPage';
+// لو عندك صفحات تانية زي الـ Login أو الـ Dashboard فكي الكومنت عنهم هنا:
+// import LoginPage from './pages/LoginPage';
+// import DashboardPage from './pages/DashboardPage';
 
 export default function App() {
   return (
-    <BrowserRouter>
+    <Router>
       <Routes>
-        <Route path="/login" element={<LoginPage />} />
-        <Route path="/home" element={<MainMenuPage />} />
-        <Route path="/dashboard" element={<DashboardPage />} />
-        <Route path="/requests/new" element={<NewRequestPage />} />
-        <Route path="/requests/:id" element={<RequestDetailsPage />} />
-        <Route path="/" element={<Navigate to="/login" replace />} />
-        <Route path="*" element={<Navigate to="/login" replace />} />
+        {/* الصفحة الرئيسية هتحول الموظف تلقائياً لصفحة طلباته */}
+        <Route path="/" element={<Navigate to="/my-requests" replace />} />
+        
+        {/* مسار صفحة عرض الطلبات الحالية */}
+        <Route path="/my-requests" element={<MyRequestsPage />} />
+        
+        {/* مسار صفحة تقديم طلب جديد */}
+        <Route path="/new-request" element={<NewRequestPage />} />
+        
+        {/* لو حبّيتي تضيفي باقي الصفحات بعدين هتكون هنا بنفس الطريقة */}
       </Routes>
-    </BrowserRouter>
+    </Router>
   );
 }
