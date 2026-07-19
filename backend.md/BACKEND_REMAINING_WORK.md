@@ -1,6 +1,6 @@
 # Backend Remaining Work
 
-Updated: 18 July 2026
+Updated: 19 July 2026
 
 This is the current backend handoff. The backend builds and the dummy database works, but only `GET /api/health` is currently exposed. Empty placeholder files compile successfully; that does not mean their features are implemented.
 
@@ -29,7 +29,8 @@ Submit → Manager → PR → Transportation → Timing → Salary → Completed
 | Dummy users and requests | Implemented |
 | Typed/resettable memory store | Implemented |
 | Storage tests | 10 passing |
-| Shared salary calculator | Implemented; 41 tests passing directly |
+| Backend verification | Type-check/build pass; 25 tests passing |
+| Shared package/calculator | Workspace and root export implemented; 44 tests passing |
 | Workflow domain service | Partial; needs corrections |
 | Authentication | Missing |
 | Request API | Missing |

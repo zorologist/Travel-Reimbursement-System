@@ -1,6 +1,6 @@
 # Frontend Remaining Work
 
-Updated: 18 July 2026
+Updated: 19 July 2026
 
 This is the current frontend handoff. Several screens are visually designed, but most application behavior is not connected to backend APIs yet.
 
@@ -29,13 +29,15 @@ Signed-in user
 | New request design | Implemented; not connected to API |
 | Dashboard | Assigned to another developer |
 | Request details/tracker | Visual prototype; hardcoded data |
-| My Requests | Empty placeholder |
+| My Requests | Partial page implementation; `RequestList.tsx` currently breaks TypeScript because it contains standalone HTML/JS |
 | Authentication context/API | Empty placeholders |
 | Protected/role routes | Empty placeholders |
-| Department approvals | Empty placeholders |
-| Price-history UI | Empty placeholders |
+| Department approvals | Components implemented; not routed and has unresolved integration/type errors |
+| Price-history UI | Components implemented; backend integration missing |
 | Salary UI | Empty placeholders |
-| Frontend tests | Missing |
+| Shared UI states | Loading, empty, error, forbidden, and not-found views implemented; two caller prop mismatches remain |
+| Frontend tests | Missing; Vitest finds no tests |
+| Frontend type-check/build | Failing first in `RequestList.tsx` |
 
 ## Existing Working Navigation
 

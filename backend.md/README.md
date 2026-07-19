@@ -47,9 +47,35 @@ The backend must not:
 
 ## Current Status
 
-The backend currently has a minimal Express health endpoint and placeholder files with responsibility comments. Authentication, routes, services, storage operations, validation, audit behavior, and tests still need implementation.
+Verified: 19 July 2026
 
-Shared-package import wiring must be configured before backend code imports from `shared/`.
+| Area | Current state |
+| --- | --- |
+| Shared dependency | Implemented through the `@travel-reimbursement/shared` workspace and root export |
+| Express application | Builds and starts successfully |
+| Public API | Only `GET /api/health` is exposed |
+| Error handling | Implemented: JSON 404, expected API errors, workflow errors, Zod errors, malformed JSON, and safe 500 responses |
+| Development data | Implemented: nine fictional users and seven requests covering all workflow outcomes |
+| Memory storage | Implemented and mutation-safe; formal interface/filtering/atomic revision persistence remain |
+| Workflow domain service | Partially implemented; corrections listed in `BACKEND_REMAINING_WORK.md` remain |
+| Authentication | Placeholder only |
+| Request API | Placeholder only |
+| Workflow API | Placeholder only |
+| Salary orchestration | Placeholder only |
+| Price revisions/privacy views | Missing |
+| Verification | Backend type-check and build pass; 25/25 backend tests pass; 44/44 shared tests pass |
+
+The backend foundation is healthy, but the application is not yet usable end to end because the authentication, request, workflow, and salary routers are not implemented or registered.
+
+### Current backend priorities
+
+1. Implement development authentication and trusted request identity.
+2. Complete the storage interface and authorized filtering operations.
+3. Implement request creation/list/detail APIs with financial privacy.
+4. Correct and expose workflow/salary operations.
+5. Add full API journey tests.
+
+`npm audit` currently reports four dependency findings (two moderate, one high, and one critical). They require a separate dependency review; no forced breaking upgrade has been applied.
 
 ## Structure
 

@@ -4,7 +4,7 @@
 
 The frontend is the React interface used by employees and approval departments. It collects travel-request information, displays workflow progress, sends permitted actions to the backend, and explains salary calculations and audit history.
 
-The frontend does not decide permissions, workflow transitions, or final payments. It presents available actions and previews, while the backend verifies every action and returns the official result.1
+The frontend does not decide permissions, workflow transitions, or final payments. It presents available actions and previews, while the backend verifies every action and returns the official result.
 
 Read the root [README](../README.md) first for the full project and business rules. Read [the shared guide](../random.md/README.md) before implementing forms, workflow displays, or salary previews.
 
@@ -16,8 +16,8 @@ Read the root [README](../README.md) first for the full project and business rul
 - **Routing:** React Router
 - **Forms:** React Hook Form
 - **Validation:** Zod shared schemas
-- **Testing:** Vitest and React Testing Library
-- **Communication:** JSON over HTTP through `src/services/api.ts`
+- **Testing:** Vitest is configured; React Testing Library and frontend test cases have not been added
+- **Communication:** JSON over HTTP; the planned central `src/services/api.ts` client is still missing
 
 ## Frontend Responsibilities
 
@@ -45,9 +45,33 @@ The frontend must never:
 
 ## Current Status
 
-The frontend currently contains a minimal React/Vite startup and placeholder feature files with explanatory comments. Pages, routing, state, API functions, styling, validation, and tests still need implementation.
+Verified: 19 July 2026
 
-Shared-package import wiring must be configured before importing code from `shared/`.
+| Area | Current state |
+| --- | --- |
+| Shared dependency | Implemented through `@travel-reimbursement/shared`; workflow types use the root export |
+| Current router | `/`, `/my-requests`, `/new-request`, `/forbidden`, and the wildcard 404 route |
+| Login/home/dashboard designs | Present, but login and dashboard are not connected to the active router/authentication context |
+| New request | Designed and partially interactive; uses a temporary local request shape that does not match the shared API contract |
+| My Requests | Page/filter implementation exists, but the separate `RequestList.tsx` file is invalid TypeScript/React |
+| Request details/tracker | Visual prototype with hardcoded data |
+| Department approvals | Queue/forms/pricing components exist, but are not routed and still have integration/type errors |
+| Shared UI states | Loading, empty, error, forbidden, and not-found views are implemented |
+| Authentication | Context, hook, API client, and protected/role routes remain placeholders |
+| Salary workspace | Placeholder files only |
+| Frontend tests | No test files; Vitest exits successfully with `--passWithNoTests` |
+| Type-check/build | Failing |
+
+### Current blocking issues
+
+1. `src/components/requests/RequestList.tsx` contains a complete standalone HTML/CSS/JavaScript document rather than a React component. It begins with `<!DOCTYPE html>` and causes hundreds of TypeScript parser errors.
+2. `ApprovalQueue.tsx` passes `message` to `EmptyState`, but the implemented component requires `title` with optional `description` and `action`.
+3. `ApprovalsPage.tsx` passes `error` to `ErrorState`, but the implemented component requires a `message` string.
+4. `DepartmentReviewPanel.tsx` imports the still-empty `useAuth.ts` module.
+5. `workflowApi.ts` imports a nonexistent `src/services/api.ts` module.
+6. Authentication, salary, protected routing, and real backend integration remain incomplete.
+
+The first priority is to repair `RequestList.tsx`; after that, resolve the four known integration errors above and rerun the frontend type-check to expose any deeper issues.
 
 ## Structure and File Ownership
 
