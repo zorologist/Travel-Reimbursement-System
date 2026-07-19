@@ -17,9 +17,9 @@ export const DepartmentReviewPanel: React.FC<Props> = ({ request, onAction }) =>
   // Backend authorization ultimately protects the submission.
   const renderActionForm = () => {
     switch (request.currentStage) {
-      case 'MANAGER':
+      case 'manager-review':
         return <ManagerActions request={request} onAction={onAction} />;
-      case 'PR':
+      case 'pr-review':
         return <PrReviewForm request={request} onAction={onAction} />;
       // TransportationReviewForm and TimingReviewForm would follow the exact pattern as PrReviewForm
       default:

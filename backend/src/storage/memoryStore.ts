@@ -1,6 +1,4 @@
-import type { TravelRequest } from "../../../shared/types/TravelRequest.js";
-import type { AuditEvent } from "../../../shared/types/Workflow.js";
-import type { User } from "../../../shared/types/User.js";
+import type { AuditEvent, TravelRequest, User } from "@travel-reimbursement/shared";
 import { createDevelopmentRequests } from "../data/requests.js";
 import { developmentUsers } from "../data/users.js";
 

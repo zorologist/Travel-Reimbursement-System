@@ -11,10 +11,29 @@ This folder contains shared code used by both the frontend and backend applicati
 
 ## Key Features
 
+- **Workspace package**: Installed in both applications as `@travel-reimbursement/shared`.
+- **Single public entry point**: Stable implemented exports are available from the package root.
 - **Pure Logic**: All calculations are deterministic and have no side effects.
 - **TypeScript**: Fully typed interfaces for all data structures.
 - **Validation**: Zod schemas matching TypeScript types for API and form validation.
 - **Testing**: Comprehensive test coverage using Vitest.
+
+## Importing Shared Code
+
+Frontend and backend code should import stable shared exports from the package root:
+
+```ts
+import {
+  TravelRequestSchema,
+  calculateSalary,
+  type TravelRequest,
+  type WorkflowStage,
+} from "@travel-reimbursement/shared";
+```
+
+Do not use repository-relative paths such as `../../../shared/...`. The package also retains documented subpath exports for targeted imports, but the root entry point is the default application-facing API.
+
+Only implemented contracts are exported from the root. The empty Auth, API, and PriceRevision placeholders will be added after their assigned developers define stable contracts.
 
 ## Calculation Rules
 

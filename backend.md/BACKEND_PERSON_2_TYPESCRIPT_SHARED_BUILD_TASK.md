@@ -6,12 +6,29 @@ Updated: 19 July 2026
 
 This task belongs to **Backend Person 2**.
 
+## Completion Status
+
+**Completed on 19 July 2026 using Option B: a proper npm workspace package.**
+
+- `shared` is now the `@travel-reimbursement/shared` workspace.
+- Backend and frontend declare it as a dependency.
+- A single root entry point exports the stable implemented types, schemas, constants, and salary code; targeted subpath exports also remain available.
+- Backend and frontend imports use `@travel-reimbursement/shared` instead of repository-relative paths.
+- Backend `rootDir` is restored to `src`.
+- A clean backend build now emits `backend/dist/server.js`.
+- The configured backend start command successfully starts that generated file.
+- The compiled backend successfully resolves the compiled shared salary module.
+- Shared tests pass: 44/44, including public-entry-point coverage.
+- Backend tests pass: 25/25.
+
+The sections below preserve the original diagnosis and explain why the selected solution was necessary.
+
 There were two related TypeScript/build concerns around importing code from the repository-level `shared` directory:
 
 1. Backend TypeScript files previously showed unresolved imports from `shared`.
 2. The current TypeScript configuration resolves those imports, but it creates a production build layout that does not match the backend start command.
 
-The original import-resolution problem is fixed. The build/start mismatch still needs to be fixed and verified from a clean build.
+Both the original import-resolution problem and the build/start mismatch are now fixed and verified from clean generated output.
 
 ## Project Layout
 
@@ -28,7 +45,7 @@ Travel-Reimbursement-System/
     └── types/
 ```
 
-Backend source files currently import shared code using relative imports such as:
+Backend source files previously imported shared code using relative imports such as:
 
 ```ts
 import type { TravelRequest } from "../../../shared/types/TravelRequest.js";
@@ -42,11 +59,18 @@ import type {
 
 The `.js` extension is intentional when TypeScript uses `module: "NodeNext"`. TypeScript resolves it to the corresponding `.ts` source during development and preserves a valid `.js` import in compiled ESM output.
 
+They now use package imports such as:
+
+```ts
+import type { TravelRequest } from "@travel-reimbursement/shared/types/TravelRequest";
+import type { SystemRole } from "@travel-reimbursement/shared/types/User";
+```
+
 ## Issue 1 — Shared Imports Previously Failed
 
 The earlier backend configuration treated `backend/src` as the only source root. Files under the repository-level `shared` directory were therefore outside the configured TypeScript root, which caused editor errors or compiler errors when backend code imported shared types and calculations.
 
-The current `backend/tsconfig.json` uses:
+The temporary `backend/tsconfig.json` solution used:
 
 ```json
 {
@@ -63,7 +87,7 @@ The current `backend/tsconfig.json` uses:
 }
 ```
 
-This allows both `backend/src` and `shared` to sit under the TypeScript source root.
+This allowed both `backend/src` and `shared` to sit under the TypeScript source root, but caused the output mismatch described below. The completed workspace solution now uses `rootDir: "src"` and `include: ["src"]`.
 
 ### Current verification
 
@@ -115,9 +139,9 @@ backend/dist/server.js
 
 The repository currently has an older `backend/dist/server.js`, but `dist` is ignored by Git. This stale local artifact can hide the problem. On a clean clone, or after deleting the old build output and rebuilding, `npm start` may fail because the file it expects was not generated at that location.
 
-## Required Work
+## Evaluated Solutions
 
-Choose and implement one consistent build strategy. Acceptable approaches include:
+The team evaluated the following consistent build strategies:
 
 ### Option A — Keep the current compilation layout
 
@@ -132,7 +156,7 @@ Choose and implement one consistent build strategy. Acceptable approaches includ
 
 This is the smallest immediate correction.
 
-### Option B — Make `shared` a proper workspace package
+### Option B — Make `shared` a proper workspace package (selected and completed)
 
 - Add `shared` to the root npm workspaces.
 - Define package exports and TypeScript declarations for shared contracts and calculations.
@@ -140,7 +164,7 @@ This is the smallest immediate correction.
 - Build shared before its consumers.
 - Restore a backend-only source root if appropriate, so the server can emit to `dist/server.js` or another intentionally selected location.
 
-This is cleaner for long-term frontend/backend sharing, but it is a larger integration change and must be coordinated with the frontend.
+This is cleaner for long-term frontend/backend sharing and is the implemented solution.
 
 Do not combine pieces of both approaches without confirming the emitted file structure and Node runtime resolution.
 
@@ -170,7 +194,7 @@ cd shared && npm test
 
 ## Frontend Coordination Note
 
-The frontend currently does not import the repository's shared contracts. That means the backend import issue is verified, but true frontend/backend contract sharing is not complete yet.
+The frontend workflow API now imports `TravelRequest` and `WorkflowStage` from the shared workspace. Full frontend type-checking remains blocked by separate empty placeholder components assigned to another developer; those files were deliberately not changed as part of this task.
 
 If Option B is selected, coordinate with the frontend developer so both applications import the same exported schemas, types, constants, and salary rules rather than creating duplicate local interfaces.
 

@@ -1,12 +1,12 @@
 import { randomUUID } from "node:crypto";
 
-import type { TravelRequest } from"../../../shared/types/TravelRequest.js";
-import type { SystemRole } from "../../../shared/types/User.js";
 import type {
   AuditEvent,
+  SystemRole,
+  TravelRequest,
   WorkflowAction,
   WorkflowStage,
-} from"../../../shared/types/Workflow.js";
+} from "@travel-reimbursement/shared";
 
 
 export type WorkflowErrorCode =

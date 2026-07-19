@@ -1,15 +1,13 @@
-import { calculateSalary } from "../../../shared/salary/calculateSalary.js";
+import { calculateSalary } from "@travel-reimbursement/shared";
 import type {
   AccommodationType,
-  SalaryCalculationResult,
-  TravelRequest,
-} from "../../../shared/types/TravelRequest.js";
-import type {
   AuditEvent,
+  SalaryCalculationResult,
+  SystemRole,
+  TravelRequest,
   WorkflowAction,
   WorkflowStage,
-} from "../../../shared/types/Workflow.js";
-import type { SystemRole } from "../../../shared/types/User.js";
+} from "@travel-reimbursement/shared";
 import { developmentUsers } from "./users.js";
 
 const actors = {

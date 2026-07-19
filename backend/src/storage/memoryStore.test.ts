@@ -1,9 +1,11 @@
 import { beforeEach, describe, expect, it } from "vitest";
 
-import { TravelRequestSchema } from "../../../shared/schemas/TravelRequestSchema.js";
-import { UserSchema } from "../../../shared/schemas/UserSchema.js";
-import type { TravelRequest } from "../../../shared/types/TravelRequest.js";
-import type { AuditEvent } from "../../../shared/types/Workflow.js";
+import {
+  TravelRequestSchema,
+  UserSchema,
+  type AuditEvent,
+  type TravelRequest,
+} from "@travel-reimbursement/shared";
 import {
   addAuditEvent,
   createRequest,

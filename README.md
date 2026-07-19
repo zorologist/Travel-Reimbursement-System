@@ -414,8 +414,8 @@ Frontend work can be divided by feature after the shared contracts exist:
 
 ### Phase 1 — Shared contract
 
-- Configure `shared` as an importable workspace package, or add one documented TypeScript/Vite alias used by both applications.
-- Add a single shared export entry point so consumers do not rely on fragile relative paths.
+- [x] Configure `shared` as the `@travel-reimbursement/shared` workspace package used by both applications.
+- [x] Add a single shared export entry point so consumers do not rely on fragile relative paths.
 - Confirm names and rules.
 - Implement user, request, workflow, and audit types.
 - Implement Zod schemas.
@@ -658,7 +658,7 @@ At the moment:
 - Feature files mainly contain comments describing their future responsibilities.
 - The shared implementation specification is documented.
 - The four-person backend work division is documented.
-- Shared package/import wiring has not been configured yet and must be completed before frontend or backend code imports it.
+- Shared package/import wiring and the root export entry point are implemented and verified in frontend and backend consumers.
 - Business logic, runtime schemas, storage operations, API routes, interface features, and automated tests still need implementation.
 - Dependencies may not yet be installed in a fresh checkout.
 

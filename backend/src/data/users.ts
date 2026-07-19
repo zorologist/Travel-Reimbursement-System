@@ -1,4 +1,4 @@
-import type { User } from "../../../shared/types/User.js";
+import type { User } from "@travel-reimbursement/shared";
 
 /**
  * Stable, obviously fictional accounts for development and automated tests.

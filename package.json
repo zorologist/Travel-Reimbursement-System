@@ -3,12 +3,13 @@
   "name": "travel-reimbursement-system",
   "private": true,
   "workspaces": [
+    "shared",
     "frontend",
     "backend"
   ],
   "scripts": {
-    "dev": "concurrently \"npm run dev --workspace frontend\" \"npm run dev --workspace backend\"",
-    "build": "npm run build --workspaces",
+    "dev": "npm run build --workspace @travel-reimbursement/shared && concurrently \"npm run dev --workspace frontend\" \"npm run dev --workspace backend\"",
+    "build": "npm run build --workspace @travel-reimbursement/shared && npm run build --workspace backend && npm run build --workspace frontend",
     "test": "npm run test --workspaces",
     "typecheck": "npm run typecheck --workspaces"
   },

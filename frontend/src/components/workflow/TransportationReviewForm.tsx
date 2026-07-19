@@ -9,8 +9,8 @@ interface Props {
 
 export const TransportationReviewForm: React.FC<Props> = ({ request, onAction }) => {
   // Fallback to empty strings if requestDetails hasn't been fully populated yet
-  const [destination, setDestination] = useState(request.requestDetails?.destination || '');
-  const [method, setMethod] = useState(request.requestDetails?.method || '');
+  const [destination, setDestination] = useState(request.requestDetails.destinationCity || '');
+  const [method, setMethod] = useState(request.requestDetails.transportationMethod || '');
   const [transportationCost, setTransportationCost] = useState(request.currentPrice);
 
   const handleApprove = () => {

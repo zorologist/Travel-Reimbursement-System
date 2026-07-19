@@ -25,7 +25,7 @@ Submit → Manager → PR → Transportation → Timing → Salary → Completed
 
 | Area | Status |
 | --- | --- |
-| Express server and health | Partial: health only |
+| Express server, health, and errors | Partial: health, JSON 404, and centralized error handling implemented; feature routers still missing |
 | Dummy users and requests | Implemented |
 | Typed/resettable memory store | Implemented |
 | Storage tests | 10 passing |
@@ -40,6 +40,19 @@ Submit → Manager → PR → Transportation → Timing → Salary → Completed
 | API journey tests | Missing |
 
 ## Person 1 — Authentication and API Foundation
+
+### Completed Foundation
+
+- JSON 404 responses use the documented error envelope.
+- Central error middleware is registered after the 404 handler.
+- Expected API errors support explicit safe status, code, message, and details.
+- Existing workflow errors map to `400`, `403`, or `409` as appropriate.
+- Zod errors from both backend and shared schemas map to `400` with validation details.
+- Malformed JSON maps to `400`.
+- Unexpected errors map to a safe `500` without leaking internal messages.
+- Error handling is covered by the backend integration suite.
+
+Authentication, feature router registration, and their related error cases remain assigned below.
 
 ### Files
 

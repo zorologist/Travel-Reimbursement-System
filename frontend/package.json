@@ -13,6 +13,7 @@
   "dependencies": {
     "@hookform/resolvers": "latest",
     "@tailwindcss/vite": "^4.3.3",
+    "@travel-reimbursement/shared": "1.0.0",
     "react": "latest",
     "react-dom": "latest",
     "react-hook-form": "latest",

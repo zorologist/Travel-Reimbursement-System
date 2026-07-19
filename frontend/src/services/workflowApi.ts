@@ -1,14 +1,20 @@
 import api from './api';
+import type { TravelRequest, WorkflowStage } from '@travel-reimbursement/shared';
+
+type ReviewStage = Extract<
+  WorkflowStage,
+  'manager-review' | 'pr-review' | 'transportation-review' | 'timing-review'
+>;
 
 export interface ApprovalQueueItem {
   id: string;
   employeeId: string;
   status: string;
-  currentStage: 'MANAGER' | 'PR' | 'TRANSPORTATION' | 'TIMING';
+  currentStage: ReviewStage;
   initialPrice: number;
   currentPrice: number;
   revisions: PriceRevision[];
-  requestDetails: any; // Using any for brevity; replace with Request type
+  requestDetails: Partial<TravelRequest>;
 }
 
 export interface PriceRevision {
