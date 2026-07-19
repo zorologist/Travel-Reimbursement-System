@@ -1,3 +1,5 @@
+import { ForbiddenPage } from "./pages/ForbiddenPage";
+import { NotFoundPage } from "./pages/NotFoundPage";
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import NewRequestPage from './pages/NewRequestPage';
@@ -10,6 +12,12 @@ export default function App() {
   return (
     <Router>
       <Routes>
+        {/* مسار صفحة عدم السماح بالوصول */}
+        <Route path="/forbidden" element={<ForbiddenPage />} />
+
+        {/* مسار أي رابط غير موجود (404) */}
+        <Route path="*" element={<NotFoundPage />} />
+
         {/* الصفحة الرئيسية هتحول الموظف تلقائياً لصفحة طلباته */}
         <Route path="/" element={<Navigate to="/my-requests" replace />} />
         
