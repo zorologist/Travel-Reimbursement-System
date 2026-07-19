@@ -11,7 +11,11 @@ interface DevelopmentAccount extends DevelopmentUser {
   password: string;
 }
 
-const SESSION_KEY = "travel-reimbursement-development-user";
+// Version the temporary browser session whenever its shape or routing changes.
+// This prevents an older development login from silently reopening an API-backed
+// page that is not ready yet.
+const SESSION_KEY = "travel-reimbursement-development-user-v2";
+const LEGACY_SESSION_KEYS = ["travel-reimbursement-development-user"] as const;
 
 /** Temporary frontend accounts. Replace with /api/auth/login and /api/auth/me. */
 const developmentAccounts: DevelopmentAccount[] = [
@@ -80,4 +84,8 @@ export function getDevelopmentUser(): DevelopmentUser | null {
 export function clearDevelopmentSession(): void {
   sessionStorage.removeItem(SESSION_KEY);
   localStorage.removeItem(SESSION_KEY);
+  for (const legacyKey of LEGACY_SESSION_KEYS) {
+    sessionStorage.removeItem(legacyKey);
+    localStorage.removeItem(legacyKey);
+  }
 }
