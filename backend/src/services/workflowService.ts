@@ -1,12 +1,14 @@
 import { randomUUID } from "node:crypto";
 
-import type { TravelRequest } from"../../../shared/types/TravelRequest.js";
-import type { SystemRole } from "../../../shared/types/User.js";
+import type { TravelRequest } from "../../../shared/types/TravelRequest.js";
+import type { SystemRole, User } from "../../../shared/types/User.js";
 import type {
   AuditEvent,
   WorkflowAction,
   WorkflowStage,
-} from"../../../shared/types/Workflow.js";
+} from "../../../shared/types/Workflow.js";
+import { calculateSalary } from "../../../shared/salary/calculateSalary.js";
+import { buildCalculatorInput } from "./salaryService.js";
 
 
 export type WorkflowErrorCode =
@@ -264,7 +266,7 @@ export function rejectRequest(
     request.id, actorId, actorRole, "reject", request.stage, "cancelled",
     stageChange(request.stage, "cancelled"), note, optionsAt(options, now),
   );
-  return withAuditEvent(request, event, toIsoString(now), { stage: "cancelled" });
+  return withAuditEvent(request, event, toIsoString(now), { stage: "cancelled", cancellationReason: note });
 }
 
 function changesFor(request: TravelRequest, edits: RequestEdits): FieldChanges {
@@ -287,11 +289,18 @@ function assertEditableFields(role: SystemRole, edits: RequestEdits): void {
   }
 }
 
+/**
+ * `employee` is the TRAVELING employee who owns the request (their jobLevel
+ * drives the daily rate) — not necessarily the actor making this edit. Routes
+ * must look this up via the request's employeeId, since a PR/Transportation/
+ * Timing/Salary reviewer is a different person than the request owner.
+ */
 export function editRequest(
   request: TravelRequest,
   actorId: string,
   actorRole: SystemRole,
   edits: RequestEdits,
+  employee: User,
   note: string | null = null,
   options?: WorkflowExecutionOptions,
 ): TravelRequest {
@@ -305,16 +314,33 @@ export function editRequest(
 
   const now = currentTime(options);
   const changes = changesFor(request, edits);
+
+  // Recalculate the preview against the EDITED request, so the number reflects
+  // the new values (e.g. PR's corrected accommodation) rather than the old ones.
+  // Runs for every role, since every editable field set (including the employee's
+  // own correction fields) can affect the amount — not just PR/Transportation/Timing/Salary.
+  const editedRequest: TravelRequest = { ...request, ...edits };
+  const salaryPreview = calculateSalary(buildCalculatorInput(editedRequest, employee));
+  if (!Object.is(request.salaryPreview.totalAmount, salaryPreview.totalAmount)) {
+    changes.salaryPreview = { before: request.salaryPreview, after: salaryPreview };
+  }
+
   const event = createAuditEvent(
     request.id, actorId, actorRole, "edit", request.stage, request.stage, changes, note, optionsAt(options, now),
   );
-  return withAuditEvent(request, event, toIsoString(now), edits);
+  return withAuditEvent(request, event, toIsoString(now), { ...edits, salaryPreview });
 }
 
+/**
+ * `employee` is the traveling employee who owns the request — see editRequest's
+ * note above. This is what actually populates finalSalary, closing the gap
+ * where finalization used to lock the stage without saving a final amount.
+ */
 export function finalizeRequest(
   request: TravelRequest,
   actorId: string,
   actorRole: SystemRole,
+  employee: User,
   note: string | null = null,
   options?: WorkflowExecutionOptions,
 ): TravelRequest {
@@ -322,11 +348,13 @@ export function finalizeRequest(
   assertAllowed(canFinalize(request, actorRole), "finalize");
 
   const now = currentTime(options);
+  const finalSalary = calculateSalary(buildCalculatorInput(request, employee));
   const event = createAuditEvent(
     request.id, actorId, actorRole, "finalize", request.stage, "completed",
-    stageChange(request.stage, "completed"), note, optionsAt(options, now),
+    { ...stageChange(request.stage, "completed"), finalSalary: { before: request.finalSalary, after: finalSalary } },
+    note, optionsAt(options, now),
   );
-  return withAuditEvent(request, event, toIsoString(now), { stage: "completed" });
+  return withAuditEvent(request, event, toIsoString(now), { stage: "completed", finalSalary });
 }
 
 /** Moves only a valid approval stage forward; included for callers needing transition validation. */
@@ -337,4 +365,3 @@ export function moveToNextStage(stage: WorkflowStage): WorkflowStage {
   }
   return next;
 }
-// Sequential approval and role-permission rules will belong here so workflow steps cannot be skipped.

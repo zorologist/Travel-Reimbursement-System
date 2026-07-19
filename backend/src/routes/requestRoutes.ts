@@ -57,7 +57,7 @@ router.patch("/:id", (req: Request, res: Response) => {
   }
 
   const { note, ...edits } = EmployeeCorrectionSchema.parse(req.body);
-  const updated = editRequest(request, req.user!.id, "employee", edits, note ?? null);
+  const updated = editRequest(request, req.user!.id, "employee", edits,req.user!, note ?? null);
   updateRequest(updated);
   res.json(updated);
 });
