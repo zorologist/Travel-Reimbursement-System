@@ -16,7 +16,11 @@ import {
 interface AuthContextValue {
   user: DevelopmentUser | null;
   isAuthenticated: boolean;
-  login: (employeeNumber: string, password: string, remember: boolean) => boolean;
+  login: (
+    employeeNumber: string,
+    password: string,
+    remember: boolean,
+  ) => DevelopmentUser | null;
   logout: () => void;
   restore: () => void;
 }
@@ -35,10 +39,14 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const [user, setUser] = useState<DevelopmentUser | null>(restoredDevelopmentUser);
 
   const login = useCallback(
-    (employeeNumber: string, password: string, remember: boolean): boolean => {
+    (
+      employeeNumber: string,
+      password: string,
+      remember: boolean,
+    ): DevelopmentUser | null => {
       const authenticatedUser = loginDevelopmentUser(employeeNumber, password, remember);
       setUser(authenticatedUser);
-      return authenticatedUser !== null;
+      return authenticatedUser;
     },
     [],
   );

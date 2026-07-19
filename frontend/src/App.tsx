@@ -1,37 +1,76 @@
+import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
+
+import { AuthProvider } from "./context/AuthContext";
+import { DashboardPage } from "./pages/DashboardPage";
 import { ForbiddenPage } from "./pages/ForbiddenPage";
+import { LoginPage } from "./pages/LoginPage";
+import { MainMenuPage } from "./pages/MainMenuPage";
+import MyRequestsPage from "./pages/MyRequestsPage";
+import NewRequestPage from "./pages/NewRequestPage";
 import { NotFoundPage } from "./pages/NotFoundPage";
-import React from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
-import NewRequestPage from './pages/NewRequestPage';
-import MyRequestsPage from './pages/MyRequestsPage';
-import { AuthProvider } from './context/AuthContext';
-// لو عندك صفحات تانية زي الـ Login أو الـ Dashboard فكي الكومنت عنهم هنا:
-// import LoginPage from './pages/LoginPage';
-// import DashboardPage from './pages/DashboardPage';
+import { SalaryDashboardPage } from "./pages/SalaryDashboardPage";
+import { ProtectedRoute } from "./routes/ProtectedRoute";
+import { RequireRole } from "./routes/RequireRole";
 
 export default function App() {
   return (
     <AuthProvider>
-      <Router>
+      <BrowserRouter>
         <Routes>
-        {/* مسار صفحة عدم السماح بالوصول */}
-        <Route path="/forbidden" element={<ForbiddenPage />} />
-
-        {/* مسار أي رابط غير موجود (404) */}
-        <Route path="*" element={<NotFoundPage />} />
-
-        {/* الصفحة الرئيسية هتحول الموظف تلقائياً لصفحة طلباته */}
-        <Route path="/" element={<Navigate to="/my-requests" replace />} />
-        
-        {/* مسار صفحة عرض الطلبات الحالية */}
-        <Route path="/my-requests" element={<MyRequestsPage />} />
-        
-        {/* مسار صفحة تقديم طلب جديد */}
-        <Route path="/new-request" element={<NewRequestPage />} />
-        
-        {/* لو حبّيتي تضيفي باقي الصفحات بعدين هتكون هنا بنفس الطريقة */}
+          <Route path="/" element={<Navigate to="/home" replace />} />
+          <Route path="/login" element={<LoginPage />} />
+          <Route path="/forbidden" element={<ForbiddenPage />} />
+          <Route
+            path="/home"
+            element={
+              <ProtectedRoute>
+                <MainMenuPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/dashboard"
+            element={
+              <ProtectedRoute>
+                <DashboardPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/my-requests"
+            element={
+              <ProtectedRoute>
+                <MyRequestsPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/new-request"
+            element={
+              <ProtectedRoute>
+                <NewRequestPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/requests/new"
+            element={
+              <ProtectedRoute>
+                <NewRequestPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/salary"
+            element={
+              <RequireRole role="salary">
+                <SalaryDashboardPage />
+              </RequireRole>
+            }
+          />
+          <Route path="*" element={<NotFoundPage />} />
         </Routes>
-      </Router>
+      </BrowserRouter>
     </AuthProvider>
   );
 }

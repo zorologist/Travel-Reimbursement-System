@@ -16,7 +16,7 @@ Read the root [README](../README.md) first for the full project and business rul
 - **Routing:** React Router
 - **Forms:** React Hook Form
 - **Validation:** Zod shared schemas
-- **Testing:** Vitest with three API-client tests; React Testing Library has not been added
+- **Testing:** Vitest with seven API/service tests; React Testing Library has not been added
 - **Communication:** JSON over HTTP through the central `src/services/api.ts` client
 
 ## Frontend Responsibilities
@@ -50,25 +50,24 @@ Verified: 19 July 2026
 | Area | Current state |
 | --- | --- |
 | Shared dependency | Implemented through `@travel-reimbursement/shared`; workflow types use the root export |
-| Current router | `/`, `/my-requests`, `/new-request`, `/forbidden`, and the wildcard 404 route |
-| Login/home/dashboard designs | Present; login now uses the temporary authentication context, but these screens are not connected to the active router |
+| Current router | Login, home, dashboard, request, forbidden, and role-restricted `/salary` routes are connected; details and approvals remain |
+| Login/home/dashboard designs | Login and home are connected to the active router; dashboard remains a placeholder assigned to another developer |
 | New request | Designed and partially interactive; uses a temporary local request shape that does not match the shared API contract |
 | My Requests | Page filters and a typed React `RequestList` are implemented; real backend integration remains |
 | Request details/tracker | Visual prototype with hardcoded data |
 | Department approvals | Queue/forms/pricing components type-check and use the central API client; route and backend endpoints remain |
 | Shared UI states | Loading, empty, error, forbidden, and not-found views are implemented |
-| Authentication | Temporary context/hook and login integration implemented; backend auth API and protected/role routes remain |
-| Salary workspace | Placeholder files only |
-| Frontend tests | Three API-client tests passing; component/route coverage remains missing |
+| Authentication | Temporary context/hook, protected routes, and shared-role checks are implemented; backend auth API remains |
+| Salary workspace | Responsive React queue, verified breakdown, revisions, adjustments, and confirmation implemented with development data; backend route integration remains |
+| Frontend tests | Seven API/service tests passing; component/route coverage remains missing |
 | Type-check/build | Passing |
 
 ### Current integration priorities
 
-1. Add login, home, dashboard, details, approvals, and salary screens to the active router.
-2. Implement `ProtectedRoute` and `RequireRole` using the authentication context.
-3. Replace temporary frontend request types/direct `fetch` calls with shared contracts and the central API client.
-4. Connect authentication, requests, approvals, and salary to implemented backend endpoints when available.
-5. Complete the salary workspace and add component/route tests.
+1. Add request details and department approvals to the active router.
+2. Replace temporary frontend request types/direct `fetch` calls with shared contracts and the central API client.
+3. Connect authentication, requests, approvals, and salary to implemented backend HTTP endpoints when available.
+4. Add component and route tests, including salary authorization and confirmation behavior.
 
 ## Structure and File Ownership
 

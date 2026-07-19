@@ -16,13 +16,13 @@ export function LoginPage() {
   function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
 
-    const authenticated = login(employeeNumber, password, remember);
-    if (!authenticated) {
+    const authenticatedUser = login(employeeNumber, password, remember);
+    if (!authenticatedUser) {
       setError("Invalid development employee number or password.");
       return;
     }
 
-    navigate("/home");
+    navigate(authenticatedUser.roles.includes("salary") ? "/salary" : "/home");
   }
 
   return (

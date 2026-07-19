@@ -24,19 +24,19 @@ Signed-in user
 | Area | Status |
 | --- | --- |
 | Login design | Implemented |
-| Temporary frontend demo login | Implemented for DEV001 and DEV004 |
+| Temporary frontend demo login | Implemented for DEV001, DEV004, and salary user DEV008 |
 | Choice/home page | Implemented |
 | New request design | Implemented; not connected to API |
 | Dashboard | Assigned to another developer |
 | Request details/tracker | Visual prototype; hardcoded data |
 | My Requests | Page filters and typed React request list implemented; backend contract integration remains |
 | Authentication context/API | Temporary context/hook and central API client implemented; backend auth integration remains |
-| Protected/role routes | Empty placeholders |
+| Protected/role routes | Implemented and used by the active router |
 | Department approvals | Components type-check and use central API client; not routed and backend endpoints remain |
 | Price-history UI | Components implemented; backend integration missing |
-| Salary UI | Empty placeholders |
+| Salary UI | Responsive queue/review workflow implemented; uses shared calculations and development data until backend HTTP routes exist |
 | Shared UI states | Loading, empty, error, forbidden, and not-found views implemented and callers aligned |
-| Frontend tests | Three API-client tests passing; component and route coverage missing |
+| Frontend tests | Seven API/service tests passing; component and route coverage missing |
 | Frontend type-check/build | Passing |
 
 ## Existing Working Navigation
@@ -52,6 +52,7 @@ The temporary credentials are frontend-only:
 ```text
 Employee: DEV001 / Employee@123
 Manager:  DEV004 / Admin@123
+Salary:   DEV008 / Admin@123
 ```
 
 Replace `developmentAuth.ts` with the backend auth API when Person 1 completes it.
@@ -81,7 +82,7 @@ frontend/src/styles/layout.css
 - Connect login to `/api/auth/login` and `/api/auth/me`.
 - Remove temporary frontend credentials after backend integration.
 - Store/restore the current user safely.
-- Protect signed-in routes and enforce department roles.
+- Extend the implemented protected/role routes to the remaining department screens.
 - Build the shared header/sidebar layout.
 - Show employee navigation to every account.
 - Add department navigation according to roles.
@@ -174,14 +175,10 @@ frontend/src/test/setup.ts
 
 ### Tasks
 
-- Build the Salary queue and full prior price history.
-- Display verified request information and calculation breakdown.
-- Allow only bonus and penalty edits.
-- Show Salary before/after comparison.
-- Confirm finalization with request ID, employee, and official total.
-- Make completed requests read-only and remove them from the pending queue.
-- Build reusable loading, empty, error, and confirmation components.
-- Add frontend test setup and tests for all roles and states.
+- Replace the salary development adapter with the backend queue, review, and finalization responses.
+- Keep the shared calculator as the preview/calculation contract and never submit an official total from the browser.
+- Add React component tests for loading, empty, error, adjustment, confirmation, and role-denied states.
+- Confirm stale-action and completed-request behavior against backend HTTP errors.
 
 ## Dashboard Developer
 

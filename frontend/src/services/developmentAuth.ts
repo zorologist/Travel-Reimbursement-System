@@ -1,8 +1,10 @@
+import type { SystemRole } from "@travel-reimbursement/shared";
+
 export interface DevelopmentUser {
   id: string;
   employeeNumber: string;
   displayName: string;
-  roles: Array<"employee" | "manager">;
+  roles: SystemRole[];
 }
 
 interface DevelopmentAccount extends DevelopmentUser {
@@ -25,6 +27,13 @@ const developmentAccounts: DevelopmentAccount[] = [
     employeeNumber: "DEV004",
     displayName: "Karim Adel (Demo Manager)",
     roles: ["employee", "manager"],
+    password: "Admin@123",
+  },
+  {
+    id: "u8",
+    employeeNumber: "DEV008",
+    displayName: "Tarek Mostafa (Demo Salary)",
+    roles: ["employee", "salary"],
     password: "Admin@123",
   },
 ];
