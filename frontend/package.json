@@ -12,6 +12,7 @@
   },
   "dependencies": {
     "@hookform/resolvers": "latest",
+    "@tailwindcss/vite": "^4.3.3",
     "react": "latest",
     "react-dom": "latest",
     "react-hook-form": "latest",
@@ -22,6 +23,9 @@
     "@types/react": "latest",
     "@types/react-dom": "latest",
     "@vitejs/plugin-react": "latest",
+    "autoprefixer": "^10.5.4",
+    "postcss": "^8.5.20",
+    "tailwindcss": "^4.3.3",
     "typescript": "latest",
     "vite": "latest",
     "vitest": "latest"
