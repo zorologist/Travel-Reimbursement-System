@@ -1,0 +1,380 @@
+/* New-request styles are scoped under one page class so they do not alter login or future screens. */
+.new-request-page {
+  min-height: 100vh;
+  background: #f3f4f6;
+  color: #111827;
+  font-family: Cairo, "Segoe UI", Tahoma, Arial, sans-serif;
+}
+
+.new-request-page *,
+.new-request-page *::before,
+.new-request-page *::after {
+  box-sizing: border-box;
+}
+
+.request-navbar {
+  position: sticky;
+  z-index: 50;
+  top: 0;
+  padding: 0.75rem 1.5rem;
+  border-bottom: 1px solid #e5e7eb;
+  background: #ffffff;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+}
+
+.request-nav-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.request-brand-section,
+.request-user-profile {
+  display: flex;
+  align-items: center;
+}
+
+.request-brand-section {
+  gap: 0.75rem;
+}
+
+.request-logo-box {
+  width: 40px;
+  height: 40px;
+  flex: 0 0 40px;
+  display: grid;
+  place-items: center;
+  border-radius: 8px;
+  background: #1e5a34;
+  color: #ffffff;
+  box-shadow: 0 4px 6px -1px rgba(30, 90, 52, 0.2);
+  font-size: 1.25rem;
+  font-weight: 700;
+}
+
+.request-brand-title,
+.request-brand-subtitle {
+  display: block;
+}
+
+.request-brand-title {
+  color: #1e5a34;
+  font-size: 1rem;
+  font-weight: 700;
+}
+
+.request-brand-subtitle {
+  color: #6b7280;
+  font-size: 0.7rem;
+}
+
+.request-user-profile {
+  gap: 0.5rem;
+  padding: 0.4rem 1rem;
+  border: 1px solid #f3f4f6;
+  border-radius: 999px;
+  background: #f9fafb;
+}
+
+.request-user-role {
+  color: #374151;
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+.request-main-content {
+  width: min(100%, 800px);
+  margin: 0 auto;
+  padding: 3rem 1rem;
+}
+
+.request-success {
+  margin-bottom: 1rem;
+  padding: 1rem 1.25rem;
+  border: 1px solid #9bc7a7;
+  border-radius: 12px;
+  background: #effaf2;
+  color: #164326;
+  font-weight: 600;
+}
+
+.request-form-card {
+  overflow: hidden;
+  border: 1px solid #f3f4f6;
+  border-radius: 16px;
+  background: #ffffff;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.08);
+}
+
+.request-card-line {
+  height: 8px;
+  background: #1e5a34;
+}
+
+.request-card-body {
+  padding: 2.5rem;
+}
+
+.request-form-header {
+  margin-bottom: 2rem;
+  padding-bottom: 1.25rem;
+  border-bottom: 1px solid #f3f4f6;
+}
+
+.request-form-header h1 {
+  margin: 0;
+  color: #111827;
+  font-size: 1.5rem;
+  font-weight: 800;
+}
+
+.request-form-header p {
+  margin: 0.5rem 0 0;
+  color: #6b7280;
+  font-size: 0.9rem;
+  line-height: 1.8;
+}
+
+.request-form-grid {
+  display: grid;
+  gap: 1.25rem;
+  margin-bottom: 1.5rem;
+}
+
+.request-grid-one {
+  grid-template-columns: 1fr;
+}
+
+.request-grid-two {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.request-grid-three {
+  grid-template-columns: minmax(180px, 1fr) minmax(180px, 1fr) minmax(275px, 1.4fr);
+}
+
+.request-form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.request-form-grid .request-form-group {
+  margin-bottom: 0;
+}
+
+.request-form-group label {
+  color: #374151;
+  font-size: 0.875rem;
+  font-weight: 600;
+}
+
+.request-form-group input,
+.request-form-group select,
+.request-form-group textarea {
+  width: 100%;
+  padding: 0.75rem 1rem;
+  border: 1px solid #d1d5db;
+  border-radius: 12px;
+  outline: none;
+  background: #f9fafb;
+  color: #111827;
+  font: inherit;
+  font-size: 0.875rem;
+  transition: border-color 150ms ease, box-shadow 150ms ease,
+    background-color 150ms ease;
+}
+
+.request-form-group input:focus,
+.request-form-group select:focus,
+.request-form-group textarea:focus {
+  border-color: #1e5a34;
+  background: #ffffff;
+  box-shadow: 0 0 0 3px rgba(30, 90, 52, 0.1);
+}
+
+.request-form-group textarea {
+  resize: vertical;
+}
+
+.request-time-picker {
+  width: 100%;
+  min-width: 0;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  align-items: end;
+  gap: 0.5rem;
+}
+
+.request-time-part {
+  min-width: 0;
+  display: grid;
+  gap: 0.3rem;
+}
+
+.request-time-part > span {
+  color: #6b7280;
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-align: center;
+}
+
+.request-time-part select {
+  min-width: 0;
+  min-height: 46px;
+  padding-inline: 0.5rem;
+  background-color: #f9fafb;
+  text-align: center;
+  cursor: pointer;
+}
+
+.request-time-period select {
+  border-color: #7eae8d;
+  background: #f2f8f4;
+  color: #164326;
+  font-weight: 800;
+}
+
+.request-upload-zone {
+  position: relative;
+  display: block;
+  padding: 1.5rem;
+  border: 2px dashed #d1d5db;
+  border-radius: 12px;
+  background: #f9fafb;
+  text-align: center;
+  cursor: pointer;
+  transition: border-color 150ms ease, background-color 150ms ease;
+}
+
+.request-upload-zone:hover,
+.request-upload-zone:focus-within {
+  border-color: #1e5a34;
+  background: rgba(30, 90, 52, 0.03);
+}
+
+.request-upload-icon,
+.request-upload-text,
+.request-upload-hint {
+  display: block;
+}
+
+.request-upload-icon {
+  margin-bottom: 0.75rem;
+  font-size: 2rem;
+}
+
+.request-upload-text {
+  color: #1e5a34;
+  font-size: 0.875rem;
+  font-weight: 700;
+}
+
+.request-upload-hint {
+  margin-top: 0.25rem;
+  color: #8a94a3;
+  font-size: 0.75rem;
+}
+
+.request-file-input {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  cursor: pointer;
+}
+
+.request-submit-button {
+  width: 100%;
+  padding: 1rem;
+  border: 0;
+  border-radius: 12px;
+  background: #1e5a34;
+  color: #ffffff;
+  box-shadow: 0 4px 12px rgba(30, 90, 52, 0.15);
+  font: inherit;
+  font-size: 1rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background-color 150ms ease, box-shadow 150ms ease,
+    transform 150ms ease;
+}
+
+.request-submit-button:hover {
+  background: #164326;
+  box-shadow: 0 6px 16px rgba(30, 90, 52, 0.25);
+  transform: translateY(-1px);
+}
+
+.request-submit-button:focus-visible,
+.request-upload-zone:focus-within {
+  outline: 3px solid rgba(30, 90, 52, 0.28);
+  outline-offset: 3px;
+}
+
+.request-fade-in {
+  animation: request-fade-in 200ms ease-out;
+}
+
+@keyframes request-fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(-5px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.request-footer {
+  margin-top: 1.5rem;
+  color: #8a94a3;
+  font-size: 0.75rem;
+  text-align: center;
+}
+
+@media (max-width: 900px) {
+  .request-grid-three {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .request-grid-three .request-form-group:last-child {
+    grid-column: 1 / -1;
+  }
+}
+
+@media (max-width: 640px) {
+  .request-navbar {
+    padding-inline: 1rem;
+  }
+
+  .request-brand-subtitle,
+  .request-user-role {
+    display: none;
+  }
+
+  .request-user-profile {
+    padding: 0.4rem 0.65rem;
+  }
+
+  .request-main-content {
+    padding-top: 1.5rem;
+  }
+
+  .request-card-body {
+    padding: 1.5rem 1rem;
+  }
+
+  .request-grid-two,
+  .request-grid-three {
+    grid-template-columns: 1fr;
+  }
+
+  .request-time-picker {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}

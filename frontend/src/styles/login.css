@@ -1,0 +1,197 @@
+/* Login-specific presentation lives here so the page component stays focused on structure and behavior. */
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  min-height: 100%;
+  margin: 0;
+}
+
+body {
+  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+}
+
+button,
+input {
+  font: inherit;
+}
+
+.login-page {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 6rem 1rem 2rem;
+  background:
+    linear-gradient(rgba(6, 35, 18, 0.18), rgba(6, 35, 18, 0.18)),
+    url("../../Background.jpg") center / cover no-repeat fixed;
+}
+
+.top-bar {
+  position: fixed;
+  z-index: 10;
+  top: 0;
+  left: 0;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  padding: 0.5rem 2rem;
+}
+
+.top-bar img {
+  width: auto;
+  height: 70px;
+}
+
+.login-container {
+  width: min(100%, 400px);
+  padding: 2.5rem;
+  border-radius: 12px;
+  background: #ffffff;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.16);
+  text-align: center;
+}
+
+.logo-area img {
+  width: min(150px, 45%);
+  height: auto;
+  margin-bottom: 1.5rem;
+}
+
+.login-container h1 {
+  margin: 0 0 0.5rem;
+  color: #1e4620;
+  font-size: 1.6rem;
+  font-weight: 650;
+}
+
+.subtitle {
+  margin: 0 0 2rem;
+  color: #666666;
+  font-size: 0.9rem;
+}
+
+.form-group {
+  margin-bottom: 1.25rem;
+  text-align: left;
+}
+
+.form-group label {
+  display: block;
+  margin-bottom: 0.5rem;
+  color: #333333;
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.form-group input {
+  width: 100%;
+  padding: 0.75rem 1rem;
+  border: 1px solid #c8c8c8;
+  border-radius: 6px;
+  outline: none;
+  transition: border-color 150ms ease, box-shadow 150ms ease;
+}
+
+.form-group input:focus {
+  border-color: #1e4620;
+  box-shadow: 0 0 0 3px rgba(30, 70, 32, 0.15);
+}
+
+.form-options {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+  font-size: 0.85rem;
+}
+
+.remember-me {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  color: #555555;
+  cursor: pointer;
+}
+
+.forgot-password {
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: #1e4620;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.forgot-password:hover,
+.forgot-password:focus-visible {
+  text-decoration: underline;
+}
+
+.login-button {
+  width: 100%;
+  padding: 0.75rem;
+  border: 0;
+  border-radius: 6px;
+  background: #1e4620;
+  color: #ffffff;
+  font-weight: 650;
+  cursor: pointer;
+  transition: background-color 150ms ease;
+}
+
+.login-error {
+  margin: 0.9rem 0 0;
+  padding: 0.7rem 0.8rem;
+  border: 1px solid #efb4b4;
+  border-radius: 8px;
+  background: #fff4f4;
+  color: #a52222;
+  font-size: 0.82rem;
+  line-height: 1.4;
+  text-align: left;
+}
+
+.login-button:hover {
+  background: #153317;
+}
+
+.login-button:focus-visible,
+.forgot-password:focus-visible {
+  outline: 3px solid rgba(30, 70, 32, 0.35);
+  outline-offset: 3px;
+}
+
+.footer-text {
+  margin: 2rem 0 0;
+  color: #888888;
+  font-size: 0.8rem;
+}
+
+@media (max-width: 480px) {
+  .login-page {
+    align-items: flex-start;
+    padding-top: 5.5rem;
+  }
+
+  .top-bar {
+    padding-inline: 1rem;
+  }
+
+  .top-bar img {
+    height: 56px;
+  }
+
+  .login-container {
+    padding: 2rem 1.25rem;
+  }
+
+  .form-options {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+}

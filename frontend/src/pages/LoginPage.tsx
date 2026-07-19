@@ -1,1 +1,106 @@
-// Development sign-in will live here until it is replaced by the company's authentication system.
+// Development sign-in lives here until it is replaced by the company's authentication system.
+import { useState, type FormEvent } from "react";
+import { useNavigate } from "react-router-dom";
+import logoUrl from "../../EGAS.png";
+import { loginDevelopmentUser } from "../services/developmentAuth";
+import "../styles/login.css";
+
+export function LoginPage() {
+  const navigate = useNavigate();
+  const [employeeNumber, setEmployeeNumber] = useState("");
+  const [password, setPassword] = useState("");
+  const [remember, setRemember] = useState(false);
+  const [error, setError] = useState("");
+
+  function handleSubmit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+
+    const user = loginDevelopmentUser(employeeNumber, password, remember);
+    if (!user) {
+      setError("Invalid development employee number or password.");
+      return;
+    }
+
+    navigate("/home");
+  }
+
+  return (
+    <main className="login-page">
+      <header className="top-bar">
+        <img src={logoUrl} alt="EGAS" />
+      </header>
+
+      <section className="login-container" aria-labelledby="login-title">
+        <div className="logo-area">
+          <img src={logoUrl} alt="EGAS logo" />
+        </div>
+
+        <h1 id="login-title">Welcome Back</h1>
+        <p className="subtitle">Please sign in to your EGAS account</p>
+
+        <form onSubmit={handleSubmit}>
+          <div className="form-group">
+            <label htmlFor="username">Employee Number</label>
+            <input
+              type="text"
+              id="username"
+              name="username"
+              value={employeeNumber}
+              onChange={(event) => {
+                setEmployeeNumber(event.target.value);
+                setError("");
+              }}
+              autoComplete="username"
+              required
+              placeholder="Enter your development employee number"
+            />
+          </div>
+
+          <div className="form-group">
+            <label htmlFor="password">Password</label>
+            <input
+              type="password"
+              id="password"
+              name="password"
+              value={password}
+              onChange={(event) => {
+                setPassword(event.target.value);
+                setError("");
+              }}
+              autoComplete="current-password"
+              required
+              placeholder="Enter your password"
+            />
+          </div>
+
+          <div className="form-options">
+            <label className="remember-me">
+              <input
+                type="checkbox"
+                name="remember"
+                checked={remember}
+                onChange={(event) => setRemember(event.target.checked)}
+              />
+              Remember me
+            </label>
+            <button className="forgot-password" type="button">
+              Forgot password?
+            </button>
+          </div>
+
+          {error && (
+            <p className="login-error" role="alert">
+              {error}
+            </p>
+          )}
+
+          <button type="submit" className="login-button">
+            Sign In
+          </button>
+        </form>
+
+        <p className="footer-text">© 2026 EGAS. All rights reserved.</p>
+      </section>
+    </main>
+  );
+}

@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 // تعريف واجهة البيانات الصادرة للـ API بناءً على الشروط المطلوبة
 export interface TravelRequestData {
   travelFrom: string;       // الـ origin المطلوب تفعيله
@@ -44,3 +45,6 @@ export const requestApi = {
     return response.json();
   }
 };
+=======
+
+>>>>>>> 5dbe00b3608914a34a607d8eba7d15fbdcbdf0f6
