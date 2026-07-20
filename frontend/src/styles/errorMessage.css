@@ -5,7 +5,7 @@
   align-items: flex-start;
   gap: 16px;
   padding: 18px 46px 18px 18px;
-  border-left: 5px solid #d44545;
+  border-inline-start: 5px solid #d44545;
   border-radius: 9px;
   background: #fff;
   color: #2d3748;
@@ -27,7 +27,7 @@
 
 .error-message-content h3 { margin: 0 0 4px; font-size: 1rem; }
 .error-message-content p { margin: 0; color: #718096; font-size: .875rem; line-height: 1.45; }
-.error-message-popup > button { position: absolute; top: 12px; right: 14px; padding: 3px; border: 0; background: none; color: #8d9aab; font-size: 1.3rem; line-height: 1; cursor: pointer; }
+.error-message-popup > button { position: absolute; top: 12px; inset-inline-end: 14px; padding: 3px; border: 0; background: none; color: #8d9aab; font-size: 1.3rem; line-height: 1; cursor: pointer; }
 .error-message-popup > button:hover { color: #3c4958; }
 
 @keyframes error-message-slide-in { from { opacity: 0; transform: translateY(16px) scale(.98); } to { opacity: 1; transform: none; } }

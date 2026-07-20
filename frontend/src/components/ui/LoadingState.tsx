@@ -1,12 +1,14 @@
 import "../../styles/global.css";
+import { useLanguage } from "../../hooks/useLanguage";
 
 interface LoadingStateProps {
   message?: string;
 }
 
 export function LoadingState({
-  message = "Loading information...",
+  message,
 }: LoadingStateProps) {
+  const { tr } = useLanguage();
   return (
     <div
       className="ui-state"
@@ -18,7 +20,7 @@ export function LoadingState({
         aria-hidden="true"
       />
 
-      <p>{message}</p>
+      <p>{message ?? tr("Loading information...", "جارٍ تحميل البيانات...")}</p>
     </div>
   );
 }

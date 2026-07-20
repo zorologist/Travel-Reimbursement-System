@@ -1,7 +1,9 @@
 import { Link } from "react-router-dom";
 import "../styles/global.css";
+import { useLanguage } from "../hooks/useLanguage";
 
 export function NotFoundPage() {
+  const { tr } = useLanguage();
   return (
     <main className="ui-page">
       <section className="ui-state">
@@ -9,17 +11,17 @@ export function NotFoundPage() {
           404
         </span>
 
-        <h1>Page not found</h1>
+        <h1>{tr("Page not found", "الصفحة غير موجودة")}</h1>
 
         <p>
-          The page you requested does not exist.
+          {tr("The page you requested does not exist.", "الصفحة التي طلبتها غير موجودة.")}
         </p>
 
         <Link
           className="ui-state-button"
           to="/"
         >
-          Return home
+          {tr("Return home", "العودة للرئيسية")}
         </Link>
       </section>
     </main>

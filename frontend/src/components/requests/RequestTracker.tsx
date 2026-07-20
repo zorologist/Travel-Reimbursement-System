@@ -1,4 +1,6 @@
 import type { WorkflowStage } from "@travel-reimbursement/shared";
+import { useLanguage } from "../../hooks/useLanguage";
+import { localizeLabel } from "../../i18n/format";
 
 const workflow: Array<{ stage: WorkflowStage; label: string }> = [
   { stage: "manager-review", label: "Manager review" },
@@ -10,6 +12,7 @@ const workflow: Array<{ stage: WorkflowStage; label: string }> = [
 ];
 
 export function RequestTracker({ stage }: { stage: WorkflowStage }) {
+  const { language, tr } = useLanguage();
   const activeIndex = stage === "cancelled" ? -1 : workflow.findIndex((item) => item.stage === stage);
-  return <ol className="workflow-timeline">{workflow.map((item, index) => { const state = stage === "cancelled" ? "stopped" : index < activeIndex || stage === "completed" ? "done" : index === activeIndex ? "current" : "pending"; return <li key={item.stage} data-state={state}><i>{state === "done" ? "✓" : index + 1}</i><span><strong>{item.label}</strong><small>{state === "current" ? "Current stage" : state === "done" ? "Completed" : state === "stopped" ? "Not reached" : "Pending"}</small></span></li>; })}</ol>;
+  return <ol className="workflow-timeline">{workflow.map((item, index) => { const state = stage === "cancelled" ? "stopped" : index < activeIndex || stage === "completed" ? "done" : index === activeIndex ? "current" : "pending"; return <li key={item.stage} data-state={state}><i>{state === "done" ? "✓" : index + 1}</i><span><strong>{localizeLabel(item.stage, language)}</strong><small>{state === "current" ? tr("Current stage", "المرحلة الحالية") : state === "done" ? tr("Completed", "مكتمل") : state === "stopped" ? tr("Not reached", "لم يتم الوصول") : tr("Pending", "قيد الانتظار")}</small></span></li>; })}</ol>;
 }

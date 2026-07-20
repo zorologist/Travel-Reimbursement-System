@@ -17,3 +17,114 @@
 
 body { margin: 0; min-width: 320px; min-height: 100vh; }
 button, input, select, textarea { font: inherit; }
+
+.language-toggle {
+  position: fixed;
+  inset-inline-end: 18px;
+  bottom: 18px;
+  z-index: 5000;
+  display: flex;
+  direction: ltr;
+  padding: 4px;
+  border: 1px solid rgba(11, 107, 96, .24);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, .96);
+  box-shadow: 0 8px 24px rgba(20, 60, 56, .18);
+  backdrop-filter: blur(8px);
+}
+
+.language-toggle button {
+  min-width: 44px;
+  border: 0;
+  border-radius: 999px;
+  padding: 7px 10px;
+  color: #52615f;
+  background: transparent;
+  cursor: pointer;
+  font-size: .78rem;
+  font-weight: 800;
+}
+
+.language-toggle button.is-active {
+  color: #fff;
+  background: var(--green-700);
+}
+
+html[dir="rtl"] body {
+  font-family: Tahoma, "Segoe UI", Arial, sans-serif;
+}
+
+html[dir="rtl"] input[type="email"],
+html[dir="rtl"] input[type="number"],
+html[dir="rtl"] input[type="password"],
+html[dir="rtl"] input[type="tel"] {
+  direction: rtl;
+}
+
+html[dir="rtl"] input[type="date"],
+html[dir="rtl"] input[type="time"] {
+  direction: ltr;
+  text-align: right;
+}
+
+/* Logical alignment keeps the same layouts natural in both directions. */
+.app-account,
+.salary-info-list dd,
+.audit-panel li small {
+  text-align: end;
+}
+
+.form-group,
+.login-error,
+.login-demo-accounts,
+.queue-card {
+  text-align: start;
+}
+
+.app-sidebar {
+  border-inline-end: 1px solid #dce7e5;
+  border-right: 0;
+}
+
+.error-message-popup {
+  border-inline-start: 5px solid #d44545;
+  border-left: 0;
+}
+
+.error-message-popup > button {
+  inset-inline-end: 14px;
+  right: auto;
+}
+
+.timeline-item,
+.salary-history li {
+  padding-left: 0;
+  border-left: 0;
+  padding-inline-start: 12px;
+  border-inline-start: 2px solid #d7e3e1;
+}
+
+.salary-history li {
+  border-inline-start-width: 3px;
+  border-inline-start-color: #9bcdbb;
+}
+
+html[dir="ltr"] .tracker-timeline li::before {
+  right: auto;
+  left: 50%;
+}
+
+html[dir="ltr"] .tracker-toggle i {
+  right: auto;
+  left: 2px;
+}
+
+html[dir="ltr"] .tracker-toggle input:checked + span i {
+  transform: translateX(16px);
+}
+
+@media (max-width: 760px) {
+  .app-sidebar {
+    border-inline-end: 0;
+  }
+}

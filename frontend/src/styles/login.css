@@ -34,7 +34,7 @@ input {
   position: fixed;
   z-index: 10;
   top: 0;
-  left: 0;
+  inset-inline-start: 0;
   width: 100%;
   display: flex;
   align-items: center;
@@ -76,7 +76,7 @@ input {
 
 .form-group {
   margin-bottom: 1.25rem;
-  text-align: left;
+  text-align: start;
 }
 
 .form-group label {
@@ -155,7 +155,7 @@ input {
   color: #a52222;
   font-size: 0.82rem;
   line-height: 1.4;
-  text-align: left;
+  text-align: start;
 }
 
 .login-button:hover {
@@ -174,7 +174,7 @@ input {
   font-size: 0.8rem;
 }
 
-.login-demo-accounts { margin-top: 18px; padding: 10px 12px; border: 1px solid #dce7df; border-radius: 8px; background: #f7faf8; color: #52615a; text-align: left; }
+.login-demo-accounts { margin-top: 18px; padding: 10px 12px; border: 1px solid #dce7df; border-radius: 8px; background: #f7faf8; color: #52615a; text-align: start; }
 .login-demo-accounts summary { color: #1e5a34; font-size: .82rem; font-weight: 700; cursor: pointer; }
 .login-demo-accounts p { margin: 7px 0; font-size: .74rem; }
 .login-demo-accounts small { color: #718078; }

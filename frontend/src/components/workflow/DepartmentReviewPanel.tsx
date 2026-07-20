@@ -6,6 +6,8 @@ import { TransportationReviewForm } from './TransportationReviewForm';
 import { TimingReviewForm } from './TimingReviewForm';
 import { PriceHistoryTimeline } from '../pricing/PriceHistoryTimeline';
 import { useAuth } from '../../hooks/useAuth';
+import { useLanguage } from '../../hooks/useLanguage';
+import { formatCurrency } from '../../i18n/format';
 
 interface Props {
   request: ApprovalQueueItem;
@@ -14,9 +16,10 @@ interface Props {
 
 export const DepartmentReviewPanel: React.FC<Props> = ({ request, onAction }) => {
   const { user } = useAuth();
+  const { language, tr } = useLanguage();
 
   if (!user) {
-    return <p role="alert">Sign in to review department requests.</p>;
+    return <p role="alert">{tr("Sign in to review department requests.", "سجل الدخول لمراجعة طلبات القسم.")}</p>;
   }
   
   // Renders the correct form based on the request's current stage and user's role.
@@ -32,23 +35,23 @@ export const DepartmentReviewPanel: React.FC<Props> = ({ request, onAction }) =>
       case 'timing-review':
         return <TimingReviewForm request={request} onAction={onAction} />;
       default:
-        return <p>Awaiting review from another department.</p>;
+        return <p>{tr("Awaiting review from another department.", "بانتظار المراجعة من قسم آخر.")}</p>;
     }
   };
 
   return (
     <div className="department-review-panel">
-      <h2>Review Details</h2>
+      <h2>{tr("Review Details", "تفاصيل المراجعة")}</h2>
       
       <section className="request-info">
-        <p><strong>Employee:</strong> {request.employeeName} ({request.employeeNumber})</p>
-        <p><strong>Department:</strong> {request.department}</p>
-        <p><strong>Initial System Calculation:</strong> {request.initialPrice.toFixed(2)} EGP</p>
+        <p><strong>{tr("Employee", "الموظف")}:</strong> {request.employeeName} ({request.employeeNumber})</p>
+        <p><strong>{tr("Department", "القسم")}:</strong> {request.department}</p>
+        <p><strong>{tr("Initial System Calculation", "حساب النظام الأولي")}:</strong> {formatCurrency(request.initialPrice, language)}</p>
       </section>
 
       {request.revisions && request.revisions.length > 0 && (
         <section className="price-history">
-          <h3>Earlier Revisions</h3>
+          <h3>{tr("Earlier Revisions", "التعديلات السابقة")}</h3>
           <PriceHistoryTimeline revisions={request.revisions} />
         </section>
       )}

@@ -1,7 +1,9 @@
 import { Link } from "react-router-dom";
 import "../styles/global.css";
+import { useLanguage } from "../hooks/useLanguage";
 
 export function ForbiddenPage() {
+  const { tr } = useLanguage();
   return (
     <main className="ui-page">
       <section className="ui-state ui-state--error">
@@ -9,17 +11,17 @@ export function ForbiddenPage() {
           403
         </span>
 
-        <h1>Access denied</h1>
+        <h1>{tr("Access denied", "تم رفض الوصول")}</h1>
 
         <p>
-          You do not have permission to open this page.
+          {tr("You do not have permission to open this page.", "ليس لديك صلاحية لفتح هذه الصفحة.")}
         </p>
 
         <Link
           className="ui-state-button"
           to="/"
         >
-          Return home
+          {tr("Return home", "العودة للرئيسية")}
         </Link>
       </section>
     </main>

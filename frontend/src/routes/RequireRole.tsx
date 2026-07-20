@@ -4,6 +4,7 @@ import { Navigate, useLocation } from "react-router-dom";
 
 import { useAuth } from "../hooks/useAuth";
 import { LoadingState } from "../components/ui/LoadingState";
+import { useLanguage } from "../hooks/useLanguage";
 
 interface RequireRoleProps {
   role?: SystemRole;
@@ -14,8 +15,9 @@ interface RequireRoleProps {
 export function RequireRole({ role, roles, children }: RequireRoleProps) {
   const { user, loading } = useAuth();
   const location = useLocation();
+  const { tr } = useLanguage();
 
-  if (loading) return <LoadingState message="Checking your access..." />;
+  if (loading) return <LoadingState message={tr("Checking your access...", "جارٍ التحقق من الصلاحيات...")} />;
 
   if (!user) {
     return <Navigate to="/login" replace state={{ from: location.pathname }} />;

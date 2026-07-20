@@ -1,4 +1,5 @@
 import "../../styles/global.css";
+import { useLanguage } from "../../hooks/useLanguage";
 
 interface ErrorStateProps {
   message: string;
@@ -9,6 +10,7 @@ export function ErrorState({
   message,
   onRetry,
 }: ErrorStateProps) {
+  const { tr } = useLanguage();
   return (
     <section
       className="ui-state ui-state--error"
@@ -21,7 +23,7 @@ export function ErrorState({
         !
       </span>
 
-      <h1>Something went wrong</h1>
+      <h1>{tr("Something went wrong", "حدث خطأ")}</h1>
 
       <p>{message}</p>
 
@@ -31,7 +33,7 @@ export function ErrorState({
           type="button"
           onClick={onRetry}
         >
-          Try again
+          {tr("Try again", "حاول مرة أخرى")}
         </button>
       )}
     </section>

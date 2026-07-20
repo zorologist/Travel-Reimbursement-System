@@ -7,11 +7,8 @@ interface FinalizeDialogProps {
   onCancel: () => void;
   onConfirm: () => void;
 }
-
-const money = new Intl.NumberFormat("en-EG", {
-  minimumFractionDigits: 2,
-  maximumFractionDigits: 2,
-});
+import { useLanguage } from "../../hooks/useLanguage";
+import { formatCurrency } from "../../i18n/format";
 
 export function FinalizeDialog({
   open,
@@ -22,6 +19,7 @@ export function FinalizeDialog({
   onCancel,
   onConfirm,
 }: FinalizeDialogProps) {
+  const { language, tr } = useLanguage();
   if (!open) return null;
 
   return (
@@ -37,21 +35,20 @@ export function FinalizeDialog({
         <span className="salary-dialog-lock" aria-hidden="true">
           !
         </span>
-        <h2 id="salary-finalize-title">Finalize payment?</h2>
+        <h2 id="salary-finalize-title">{tr("Finalize payment?", "هل تريد اعتماد الدفع؟")}</h2>
         <p id="salary-finalize-description">
-          This permanently completes <strong>{requestId}</strong> for {employeeName}.
-          The action cannot be reversed from this screen.
+          {tr(`This permanently completes ${requestId} for ${employeeName}. The action cannot be reversed from this screen.`, `سيؤدي هذا إلى إكمال الطلب ${requestId} نهائياً للموظف ${employeeName}. لا يمكن التراجع عن الإجراء من هذه الشاشة.`)}
         </p>
         <div className="salary-dialog-total">
-          <span>Official total</span>
-          <strong>{money.format(officialTotal)} EGP</strong>
+          <span>{tr("Official total", "الإجمالي الرسمي")}</span>
+          <strong>{formatCurrency(officialTotal, language)}</strong>
         </div>
         <div className="salary-dialog-actions">
           <button type="button" className="salary-btn salary-btn--secondary" disabled={busy} onClick={onCancel}>
-            Go back
+            {tr("Go back", "رجوع")}
           </button>
           <button type="button" className="salary-btn salary-btn--danger" disabled={busy} onClick={onConfirm} autoFocus>
-            {busy ? "Finalizing..." : "Confirm finalization"}
+            {busy ? tr("Finalizing...", "جارٍ الاعتماد...") : tr("Confirm finalization", "تأكيد الاعتماد")}
           </button>
         </div>
       </section>

@@ -5,12 +5,10 @@ import {
   type RequestResponse,
   type TravelRequestData,
 } from "../services/requestApi";
-
-function messageFor(error: unknown): string {
-  return error instanceof Error ? error.message : "Unable to load requests.";
-}
+import { useLanguage } from "./useLanguage";
 
 export function useRequests() {
+  const { localizeError } = useLanguage();
   const [requests, setRequests] = useState<RequestResponse[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -21,11 +19,11 @@ export function useRequests() {
     try {
       setRequests(await requestApi.getMyRequests());
     } catch (loadError) {
-      setError(messageFor(loadError));
+      setError(localizeError(loadError, "Unable to load requests.", "تعذر تحميل الطلبات."));
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [localizeError]);
 
   const addRequest = useCallback(async (formData: TravelRequestData) => {
     setLoading(true);
@@ -35,12 +33,12 @@ export function useRequests() {
       setRequests((current) => [created, ...current]);
       return created;
     } catch (createError) {
-      setError(messageFor(createError));
+      setError(localizeError(createError, "Unable to create the request.", "تعذر إنشاء الطلب."));
       throw createError;
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [localizeError]);
 
   useEffect(() => {
     void fetchRequests();

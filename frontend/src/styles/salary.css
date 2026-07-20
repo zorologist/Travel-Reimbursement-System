@@ -447,7 +447,7 @@
 .salary-info-list dd {
   margin: 0;
   font-weight: 650;
-  text-align: right;
+  text-align: end;
   overflow-wrap: anywhere;
 }
 
@@ -476,8 +476,8 @@
 }
 
 .salary-history li {
-  padding-left: 12px;
-  border-left: 3px solid #9bcdbb;
+  padding-inline-start: 12px;
+  border-inline-start: 3px solid #9bcdbb;
   font-size: 0.69rem;
 }
 

@@ -2,6 +2,8 @@ import React, { useEffect, useState } from 'react';
 import type { ApprovalQueueItem } from '../../services/workflowApi';
 import { DepartmentReviewPanel } from './DepartmentReviewPanel';
 import { EmptyState } from '../ui/EmptyState';
+import { useLanguage } from '../../hooks/useLanguage';
+import { localizeLabel } from '../../i18n/format';
 
 interface Props {
   queue: ApprovalQueueItem[];
@@ -9,6 +11,7 @@ interface Props {
 }
 
 export const ApprovalQueue: React.FC<Props> = ({ queue, onAction }) => {
+  const { language, tr } = useLanguage();
   const [selectedItemId, setSelectedItemId] = useState<string | null>(null);
 
   useEffect(() => {
@@ -18,8 +21,8 @@ export const ApprovalQueue: React.FC<Props> = ({ queue, onAction }) => {
   if (queue.length === 0) {
     return (
       <EmptyState
-        title="No pending requests"
-        description="There are no requests in your department queue."
+        title={tr("No pending requests", "لا توجد طلبات معلقة")}
+        description={tr("There are no requests in your department queue.", "لا توجد طلبات في قائمة القسم الخاصة بك.")}
       />
     );
   }
@@ -35,9 +38,9 @@ export const ApprovalQueue: React.FC<Props> = ({ queue, onAction }) => {
             className={`queue-card ${selectedItemId === item.id ? 'active' : ''}`}
             onClick={() => setSelectedItemId(item.id)}
           >
-            <h3>Request #{item.id.slice(-4)}</h3>
+            <h3>{tr("Request", "طلب")} #{item.id.slice(-4)}</h3>
             <p>{item.employeeName}</p>
-            <small>{item.currentStage.replaceAll('-', ' ')}</small>
+            <small>{localizeLabel(item.currentStage, language)}</small>
           </button>
         ))}
       </div>
@@ -46,7 +49,7 @@ export const ApprovalQueue: React.FC<Props> = ({ queue, onAction }) => {
         {selectedItem ? (
           <DepartmentReviewPanel request={selectedItem} onAction={onAction} />
         ) : (
-          <div className="select-prompt">Select a request to review</div>
+          <div className="select-prompt">{tr("Select a request to review", "اختر طلباً لمراجعته")}</div>
         )}
       </div>
     </div>

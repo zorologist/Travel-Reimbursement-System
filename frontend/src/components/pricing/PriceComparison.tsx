@@ -1,5 +1,7 @@
 import React from 'react';
 import { PriceDifferenceBadge } from './PriceDifferenceBadge';
+import { useLanguage } from '../../hooks/useLanguage';
+import { formatCurrency } from '../../i18n/format';
 
 interface Props {
   originalPrice: number;
@@ -7,18 +9,19 @@ interface Props {
 }
 
 export const PriceComparison: React.FC<Props> = ({ originalPrice, newPrice }) => {
+  const { language, tr } = useLanguage();
   const difference = newPrice - originalPrice;
 
   return (
     <div className="price-comparison">
       <div className="price-metrics">
         <div className="metric">
-          <span className="label">Incoming Price</span>
-        <span className="value">{originalPrice.toFixed(2)} EGP</span>
+          <span className="label">{tr("Incoming Price", "المبلغ الوارد")}</span>
+        <span className="value">{formatCurrency(originalPrice, language)}</span>
         </div>
         <div className="metric">
-          <span className="label">Your Revised Price</span>
-        <span className="value">{newPrice.toFixed(2)} EGP</span>
+          <span className="label">{tr("Your Revised Price", "المبلغ بعد التعديل")}</span>
+        <span className="value">{formatCurrency(newPrice, language)}</span>
         </div>
       </div>
       <PriceDifferenceBadge difference={difference} />

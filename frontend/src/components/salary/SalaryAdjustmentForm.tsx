@@ -1,4 +1,5 @@
 import type { ChangeEvent } from "react";
+import { useLanguage } from "../../hooks/useLanguage";
 
 interface SalaryAdjustmentFormProps {
   bonusAmount: number;
@@ -24,12 +25,13 @@ export function SalaryAdjustmentForm({
   onPenaltyChange,
   onNoteChange,
 }: SalaryAdjustmentFormProps) {
+  const { tr } = useLanguage();
   return (
     <section className="salary-panel-section salary-adjustments">
-      <h3>Manual adjustments</h3>
+      <h3>{tr("Manual adjustments", "التعديلات اليدوية")}</h3>
 
       <label className="salary-field">
-        <span>Bonus amount (EGP)</span>
+        <span>{tr("Bonus amount (EGP)", "قيمة المكافأة (جنيه)")}</span>
         <input
           type="number"
           min="0"
@@ -38,11 +40,11 @@ export function SalaryAdjustmentForm({
           disabled={disabled}
           onChange={(event) => onBonusChange(moneyValue(event))}
         />
-        <small>Performance or mission bonus, when applicable.</small>
+        <small>{tr("Performance or mission bonus, when applicable.", "مكافأة الأداء أو المأمورية عند انطباقها.")}</small>
       </label>
 
       <label className="salary-field">
-        <span>Penalty deduction (EGP)</span>
+        <span>{tr("Penalty deduction (EGP)", "قيمة الخصم (جنيه)")}</span>
         <input
           type="number"
           min="0"
@@ -51,22 +53,22 @@ export function SalaryAdjustmentForm({
           disabled={disabled}
           onChange={(event) => onPenaltyChange(moneyValue(event))}
         />
-        <small>Policy deduction, when applicable.</small>
+        <small>{tr("Policy deduction, when applicable.", "خصم وفقاً للائحة عند انطباقه.")}</small>
       </label>
 
       <label className="salary-field">
         <span>
-          Audit / finalization note <b>(required)</b>
+          {tr("Audit / finalization note", "ملاحظة التدقيق / الاعتماد")} <b>{tr("(required)", "(مطلوبة)")}</b>
         </span>
         <textarea
           rows={4}
           value={note}
           disabled={disabled}
           maxLength={1000}
-          placeholder="Explain the adjustment or add the final audit note..."
+          placeholder={tr("Explain the adjustment or add the final audit note...", "اشرح التعديل أو أضف ملاحظة التدقيق النهائية...")}
           onChange={(event) => onNoteChange(event.target.value)}
         />
-        <small>This note is permanently attached to the audit trail.</small>
+        <small>{tr("This note is permanently attached to the audit trail.", "تُرفق هذه الملاحظة بسجل الإجراءات بشكل دائم.")}</small>
       </label>
     </section>
   );
