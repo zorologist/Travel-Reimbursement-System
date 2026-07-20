@@ -25,12 +25,16 @@
 .tracker-topbar {
   padding: 22px clamp(16px, 4vw, 48px);
   display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap;
-  background: linear-gradient(135deg, var(--tracker-green-900), #26493a 65%, var(--tracker-green-700));
-  color: white;
+  position: sticky; top: 0; z-index: 30;
+  border-bottom: 1px solid #dce7e5;
+  background: rgba(255, 255, 255, .97);
+  color: #173c39;
+  box-shadow: 0 3px 16px rgba(20, 60, 56, .06);
+  backdrop-filter: blur(12px);
 }
 .tracker-topbar h1 { font-size: 1.35rem; }
-.tracker-topbar p { margin-top: 2px; color: #cfe0d5; font-size: .85rem; }
-.tracker-request-badge { padding: 9px 20px; border: 1px solid #ffffff38; border-radius: 999px; background: #ffffff1a; font-size: .85rem; }
+.tracker-topbar p { margin-top: 2px; color: #70807e; font-size: .85rem; }
+.tracker-request-badge { padding: 9px 20px; border: 1px solid #b9d0ce; border-radius: 999px; background: #eaf5f2; color: #075d54; font-size: .85rem; }
 
 .tracker-layout { max-width: 1180px; margin: auto; padding: 28px clamp(16px, 4vw, 32px) 40px; display: grid; grid-template-columns: 280px 1fr; gap: 24px; align-items: start; }
 .tracker-sidebar, .tracker-panel { border: 1px solid var(--tracker-line); border-radius: 20px; background: white; box-shadow: 0 8px 24px #1e3b2c0f; }

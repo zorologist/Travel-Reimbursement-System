@@ -4,6 +4,7 @@ import type { AccommodationType } from "@travel-reimbursement/shared";
 
 import { useRequests } from "../hooks/useRequests";
 import { useLanguage } from "../hooks/useLanguage";
+import { TimeWheelPicker } from "../components/ui/TimeWheelPicker";
 import type { RequestAttachment, TravelRequestData } from "../services/requestApi";
 import "../styles/newRequest.css";
 
@@ -57,7 +58,7 @@ export default function NewRequestPage() {
     startDate: "",
     startTime: "08:00",
     endDate: "",
-    returnTime: "",
+    returnTime: "08:00",
     transport: "company-car",
     ticketAmount: "",
     accommodation: "full-board",
@@ -173,7 +174,15 @@ export default function NewRequestPage() {
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">{tr("Return time", "ساعة العودة")}</label>
-              <input type="time" name="returnTime" value={form.returnTime} onChange={handleChange} className="w-full bg-gray-50/50 border border-gray-200 p-3 rounded-lg text-gray-800 focus:bg-white focus:border-[#1E5A34] focus:outline-none transition-all" required />
+              <TimeWheelPicker
+                value={form.returnTime}
+                ariaLabel={tr("Select return time", "اختيار ساعة العودة")}
+                onChange={(returnTime) => {
+                  setForm((current) => ({ ...current, returnTime }));
+                  setLocalError(null);
+                }}
+              />
+              <input type="hidden" name="returnTime" value={form.returnTime} />
             </div>
           </div>
         </fieldset>
