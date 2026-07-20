@@ -44,7 +44,7 @@ All accounts are fictional. Administrative users also have the `employee` role, 
 
 Two Salary accounts exist so separation-of-duties behavior can be tested without allowing a Salary user to finalize their own personal request.
 
-No passwords are defined here. Person 1 should connect the chosen development authentication mechanism to employee numbers without storing real credentials.
+DEV001–DEV003 use `Employee@123`. DEV004–DEV009 use `Admin@123`. These are fictional development-only credentials and are kept separate from user records.
 
 ## Stable Request Scenarios
 
@@ -123,6 +123,7 @@ Storage behavior:
 - Results are cloned so callers cannot silently mutate stored records.
 - IDs, employee ownership, and creation timestamps are preserved during updates.
 - Audit history can only be appended.
+- Price revision history can only be appended.
 - Duplicate request IDs are rejected.
 - Missing lookup returns `undefined`; missing update returns `null`.
 - Reset produces fresh nested fixtures.

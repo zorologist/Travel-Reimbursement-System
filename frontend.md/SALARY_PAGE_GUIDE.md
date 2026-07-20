@@ -302,9 +302,9 @@ Finalization is irreversible in the current workflow. The button should therefor
 
 The confirmation text should state that the amount will be locked and cannot be edited afterward.
 
-## Required Backend API
+## Implemented Backend API
 
-The frontend page depends on these planned endpoints:
+The frontend page uses these implemented endpoints:
 
 | Method | Endpoint | Use on this page |
 | --- | --- | --- |

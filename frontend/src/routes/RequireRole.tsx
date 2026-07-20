@@ -3,21 +3,26 @@ import type { ReactNode } from "react";
 import { Navigate, useLocation } from "react-router-dom";
 
 import { useAuth } from "../hooks/useAuth";
+import { LoadingState } from "../components/ui/LoadingState";
 
 interface RequireRoleProps {
-  role: SystemRole;
+  role?: SystemRole;
+  roles?: readonly SystemRole[];
   children: ReactNode;
 }
 
-export function RequireRole({ role, children }: RequireRoleProps) {
-  const { user } = useAuth();
+export function RequireRole({ role, roles, children }: RequireRoleProps) {
+  const { user, loading } = useAuth();
   const location = useLocation();
+
+  if (loading) return <LoadingState message="Checking your access..." />;
 
   if (!user) {
     return <Navigate to="/login" replace state={{ from: location.pathname }} />;
   }
 
-  if (!user.roles.includes(role)) {
+  const acceptedRoles = roles ?? (role ? [role] : []);
+  if (!acceptedRoles.some((acceptedRole) => user.roles.includes(acceptedRole))) {
     return <Navigate to="/forbidden" replace />;
   }
 

@@ -7,7 +7,11 @@ export const developmentCompany = {
   timezone: "Africa/Cairo",
   departments: [
     "Operations",
+    "Offshore Operations",
+    "Planning",
+    "Pipeline Engineering",
     "Finance",
+    "IT",
     "Human Resources",
     "Public Relations",
     "Transportation",
@@ -20,3 +24,6 @@ export const developmentCompany = {
 
 /** Backward-compatible name for callers that already import `company`. */
 export const company = developmentCompany;
+
+/** Compatibility export for callers that need only the department list. */
+export const COMPANY_DEPARTMENTS = [...developmentCompany.departments];

@@ -2,6 +2,8 @@ import React from 'react';
 import { ApprovalQueueItem } from '../../services/workflowApi';
 import { ManagerActions } from './ManagerActions';
 import { PrReviewForm } from './PrReviewForm';
+import { TransportationReviewForm } from './TransportationReviewForm';
+import { TimingReviewForm } from './TimingReviewForm';
 import { PriceHistoryTimeline } from '../pricing/PriceHistoryTimeline';
 import { useAuth } from '../../hooks/useAuth';
 
@@ -25,7 +27,10 @@ export const DepartmentReviewPanel: React.FC<Props> = ({ request, onAction }) =>
         return <ManagerActions request={request} onAction={onAction} />;
       case 'pr-review':
         return <PrReviewForm request={request} onAction={onAction} />;
-      // TransportationReviewForm and TimingReviewForm would follow the exact pattern as PrReviewForm
+      case 'transportation-review':
+        return <TransportationReviewForm request={request} onAction={onAction} />;
+      case 'timing-review':
+        return <TimingReviewForm request={request} onAction={onAction} />;
       default:
         return <p>Awaiting review from another department.</p>;
     }
@@ -36,8 +41,9 @@ export const DepartmentReviewPanel: React.FC<Props> = ({ request, onAction }) =>
       <h2>Review Details</h2>
       
       <section className="request-info">
-        <p><strong>Employee:</strong> {request.employeeId}</p>
-        <p><strong>Initial System Calculation:</strong> ${request.initialPrice}</p>
+        <p><strong>Employee:</strong> {request.employeeName} ({request.employeeNumber})</p>
+        <p><strong>Department:</strong> {request.department}</p>
+        <p><strong>Initial System Calculation:</strong> {request.initialPrice.toFixed(2)} EGP</p>
       </section>
 
       {request.revisions && request.revisions.length > 0 && (

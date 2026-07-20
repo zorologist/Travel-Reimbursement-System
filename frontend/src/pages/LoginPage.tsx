@@ -12,11 +12,20 @@ export function LoginPage() {
   const [password, setPassword] = useState("");
   const [remember, setRemember] = useState(false);
   const [error, setError] = useState("");
+  const [submitting, setSubmitting] = useState(false);
 
-  function handleSubmit(event: FormEvent<HTMLFormElement>) {
+  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-
-    const authenticatedUser = login(employeeNumber, password, remember);
+    setSubmitting(true);
+    let authenticatedUser;
+    try {
+      authenticatedUser = await login(employeeNumber, password, remember);
+    } catch (loginError) {
+      setError(loginError instanceof Error ? loginError.message : "Unable to sign in.");
+      return;
+    } finally {
+      setSubmitting(false);
+    }
     if (!authenticatedUser) {
       setError("Invalid development employee number or password.");
       return;
@@ -84,9 +93,7 @@ export function LoginPage() {
               />
               Remember me
             </label>
-            <button className="forgot-password" type="button">
-              Forgot password?
-            </button>
+            <span className="login-access-note">Development access</span>
           </div>
 
           {error && (
@@ -95,10 +102,20 @@ export function LoginPage() {
             </p>
           )}
 
-          <button type="submit" className="login-button">
-            Sign In
+          <button type="submit" className="login-button" disabled={submitting}>
+            {submitting ? "Signing in..." : "Sign In"}
           </button>
         </form>
+
+        {import.meta.env.DEV && (
+          <details className="login-demo-accounts">
+            <summary>Development accounts</summary>
+            <p>Employee: DEV001 / Employee@123</p>
+            <p>Manager: DEV004 / Admin@123</p>
+            <p>PR: DEV005 · Transportation: DEV006 · Timing: DEV007 · Salary: DEV008</p>
+            <small>All department accounts use Admin@123.</small>
+          </details>
+        )}
 
         <p className="footer-text">© 2026 EGAS. All rights reserved.</p>
       </section>

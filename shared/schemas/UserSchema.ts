@@ -27,6 +27,7 @@ export const UserSchema = z.object({
   id: z.string(),
   employeeNumber: z.string(),
   displayName: z.string(),
+  department: z.string().trim().min(1),
   jobLevel: JobLevelSchema,
   roles: z.array(SystemRoleSchema),
 });

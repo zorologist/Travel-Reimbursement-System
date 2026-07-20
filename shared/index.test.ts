@@ -2,6 +2,9 @@ import { describe, expect, it } from "vitest";
 
 import {
   SALARY_RATES,
+  LoginInputSchema,
+  RequestAttachmentSchema,
+  ApproveRequestInputSchema,
   TravelRequestSchema,
   UserSchema,
   WorkflowStageSchema,
@@ -17,6 +20,12 @@ describe("shared package public entry point", () => {
     expect(TravelRequestSchema).toBeDefined();
     expect(WorkflowStageSchema.parse("manager-review")).toBe("manager-review");
     expect(SALARY_RATES["Level 1"]).toBe(140);
+  });
+
+  it("validates authentication, attachments, and workflow actions", () => {
+    expect(LoginInputSchema.parse({ employeeNumber: " DEV001 ", password: "Employee@123" })).toMatchObject({ employeeNumber: "DEV001", remember: false });
+    expect(RequestAttachmentSchema.parse({ id: "a1", name: "ticket.pdf", mimeType: "application/pdf", size: 100, url: "data:application/pdf;base64,JVBERi0=" }).name).toBe("ticket.pdf");
+    expect(ApproveRequestInputSchema.parse({ accommodationType: "room-only", reason: "Confirmed" })).toMatchObject({ accommodationType: "room-only" });
   });
 
   it("exports the salary calculator", () => {

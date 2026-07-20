@@ -23,6 +23,7 @@ export interface User {
   id: string;
   employeeNumber: string;
   displayName: string;
+  department: string;
   jobLevel: JobLevel;
   roles: SystemRole[];
 }

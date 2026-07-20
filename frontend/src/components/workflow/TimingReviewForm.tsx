@@ -1,84 +1,58 @@
-import React, { useState } from 'react';
-import { ApprovalQueueItem, workflowApi } from '../../services/workflowApi';
-import { PriceComparison } from '../pricing/PriceComparison';
+import { useState } from "react";
 
-interface Props {
-  request: ApprovalQueueItem;
-  onAction: (actionFn: () => Promise<void>) => Promise<void>;
+import { workflowApi, type ApprovalQueueItem } from "../../services/workflowApi";
+
+function inputDate(value: string) {
+  return value ? new Date(value).toISOString().slice(0, 16) : "";
 }
 
-export const TimingReviewForm: React.FC<Props> = ({ request, onAction }) => {
-  const [departureAt, setDepartureAt] = useState(request.requestDetails?.departureAt || '');
-  const [returnAt, setReturnAt] = useState(request.requestDetails?.returnAt || '');
-  const [timingCost, setTimingCost] = useState(request.currentPrice);
+function isoDate(value: string): string {
+  return value ? new Date(value).toISOString() : "";
+}
+
+export function missionNightCount(departureAt: string, returnAt: string): number | null {
+  const departure = new Date(departureAt);
+  const arrival = new Date(returnAt);
+  if (!Number.isFinite(departure.getTime()) || !Number.isFinite(arrival.getTime()) || arrival <= departure) return null;
+  const departureDay = Date.UTC(departure.getUTCFullYear(), departure.getUTCMonth(), departure.getUTCDate());
+  const arrivalDay = Date.UTC(arrival.getUTCFullYear(), arrival.getUTCMonth(), arrival.getUTCDate());
+  return Math.max(0, Math.round((arrivalDay - departureDay) / 86_400_000));
+}
+
+export function TimingReviewForm({ request, onAction }: { request: ApprovalQueueItem; onAction: (action: () => Promise<void>) => Promise<void> }) {
+  const [departureAt, setDepartureAt] = useState(request.requestDetails.departureAt ?? "");
+  const [returnAt, setReturnAt] = useState(request.requestDetails.returnAt ?? "");
   const [meetsSevenHourRule, setMeetsSevenHourRule] = useState(true);
-
-  const handleApprove = () => {
-    onAction(() => workflowApi.approve(request.id, { 
-      department: 'TIMING',
-      revisedCost: timingCost,
-      departureAt,
-      returnAt,
-      meetsSevenHourRule
-    }));
-  };
-
-  // Helper to convert ISO string to datetime-local format for the input
-  const formatForInput = (isoString: string) => {
-    if (!isoString) return '';
-    return new Date(isoString).toISOString().slice(0, 16);
-  };
+  const nightCount = missionNightCount(departureAt, returnAt);
 
   return (
     <div className="timing-review-form form-panel">
-      <h3>Timing & Hours Review</h3>
-      
+      <h3>Timing &amp; Hours Review</h3>
       <div className="form-group">
-        <label>Verified Departure Time</label>
-        <input 
-          type="datetime-local" 
-          value={formatForInput(departureAt)} 
-          onChange={(e) => setDepartureAt(new Date(e.target.value).toISOString())}
-        />
+        <label>Verified departure time</label>
+        <input type="datetime-local" value={inputDate(departureAt)} onChange={(event) => setDepartureAt(isoDate(event.target.value))} />
       </div>
-
       <div className="form-group">
-        <label>Verified Return Time</label>
-        <input 
-          type="datetime-local" 
-          value={formatForInput(returnAt)} 
-          onChange={(e) => setReturnAt(new Date(e.target.value).toISOString())}
-        />
+        <label>Verified return time</label>
+        <input type="datetime-local" value={inputDate(returnAt)} onChange={(event) => setReturnAt(isoDate(event.target.value))} />
       </div>
-
-      <div className="form-group checkbox-group" style={{ margin: '16px 0' }}>
-        <label style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <input 
-            type="checkbox" 
-            checked={meetsSevenHourRule}
-            onChange={(e) => setMeetsSevenHourRule(e.target.checked)}
-          />
-          <strong>Meets 7-Hour Minimum Result Requirement</strong>
-        </label>
+      <div className={`mission-duration ${nightCount === 0 ? "same-day" : nightCount === null ? "invalid" : "overnight"}`} aria-live="polite">
+        <strong>Mission duration</strong>
+        {nightCount === null ? (
+          <span>Enter a valid return time after the departure time.</span>
+        ) : nightCount === 0 ? (
+          <span>Same-day travel — 1 day, 0 nights</span>
+        ) : (
+          <span>Overnight travel — {nightCount} {nightCount === 1 ? "night" : "nights"}</span>
+        )}
       </div>
-
-      <div className="form-group">
-        <label>Revised Total Request Cost ($)</label>
-        <input 
-          type="number" 
-          value={timingCost} 
-          onChange={(e) => setTimingCost(Number(e.target.value))}
-        />
-      </div>
-
-      <PriceComparison 
-        originalPrice={request.currentPrice} 
-        newPrice={timingCost} 
-      />
-
-      <button className="btn-approve" onClick={handleApprove}>
-        Approve Timing & Forward Request
+      <label className="checkbox-group">
+        <input type="checkbox" checked={meetsSevenHourRule} onChange={(event) => setMeetsSevenHourRule(event.target.checked)} />
+        Verified attendance meets the seven-hour allowance rule
+      </label>
+      <button disabled={nightCount === null} className="btn-approve" type="button" onClick={() => void onAction(() => workflowApi.approve(request.id, { departureAt, returnAt, meetsSevenHourRule, reason: "Attendance dates and qualifying hours verified." }))}>
+        Approve &amp; Pass to Salary
       </button>
     </div>
   );
-};
+}

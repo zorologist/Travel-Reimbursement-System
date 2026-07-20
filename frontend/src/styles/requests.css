@@ -1,1 +1,39 @@
-
+.requests-page .ui-state { margin-top: 30px; }
+.request-filters { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 24px; padding-bottom: 18px; border-bottom: 1px solid #dce7e5; }
+.request-filters button { padding: 8px 14px; border: 1px solid #ccd9d7; border-radius: 999px; background: #fff; color: #566562; font: inherit; font-size: .84rem; font-weight: 700; text-transform: capitalize; cursor: pointer; }
+.request-filters button.active { border-color: #0b6b60; background: #0b6b60; color: #fff; }
+.request-card-link { display: inline-block; margin-top: 12px; color: #0b6b60; font-size: .84rem; font-weight: 750; text-decoration: none; }
+.request-details-page { max-width: 1080px; }
+.detail-eyebrow { color: #0b6b60 !important; font-size: .76rem; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; }
+.request-detail-summary { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 14px; margin-bottom: 22px; }
+.request-detail-summary article, .request-detail-panel, .request-final, .request-cancelled { padding: 20px; border: 1px solid #dce7e5; border-radius: 13px; background: #fff; box-shadow: 0 5px 18px rgba(20, 60, 56, .04); }
+.request-detail-summary article { display: grid; gap: 8px; }
+.request-detail-summary span, .request-final span { color: #71807e; font-size: .75rem; font-weight: 750; text-transform: uppercase; }
+.request-detail-summary strong { color: #243d3a; font-size: .9rem; text-transform: capitalize; }
+.request-detail-summary strong[data-status="completed"] { color: #157257; }
+.request-detail-summary strong[data-status="cancelled"] { color: #b74343; }
+.request-final { display: flex; align-items: center; justify-content: space-between; margin-bottom: 22px; border-color: #9ac8b8; background: #eff9f5; }
+.request-final strong { color: #09604d; font-size: 1.4rem; }
+.request-cancelled { margin-bottom: 22px; border-color: #e6b4b4; background: #fff5f5; color: #9e3434; }
+.request-cancelled p { margin-bottom: 0; }
+.request-details-grid { display: grid; grid-template-columns: 1.15fr .85fr; gap: 20px; }
+.request-detail-panel h2 { margin: 0 0 20px; color: #1d4944; font-size: 1.05rem; }
+.workflow-timeline { display: grid; gap: 0; padding: 0; margin: 0; list-style: none; }
+.workflow-timeline li { min-height: 60px; display: grid; grid-template-columns: 34px 1fr; gap: 12px; position: relative; }
+.workflow-timeline li:not(:last-child)::before { content: ""; position: absolute; left: 16px; top: 32px; bottom: 0; width: 2px; background: #dce7e5; }
+.workflow-timeline i { width: 34px; height: 34px; display: grid; place-items: center; z-index: 1; border: 2px solid #ccd9d7; border-radius: 50%; background: #fff; color: #788683; font-style: normal; font-size: .75rem; font-weight: 800; }
+.workflow-timeline li[data-state="done"] i { border-color: #0b6b60; background: #0b6b60; color: #fff; }
+.workflow-timeline li[data-state="current"] i { border-color: #d29930; background: #fff6df; color: #966412; }
+.workflow-timeline span { display: grid; align-content: start; gap: 3px; padding-top: 2px; }
+.workflow-timeline small { color: #7a8886; }
+.request-detail-panel dl { margin: 0; }
+.request-detail-panel dl div { padding: 12px 0; border-bottom: 1px solid #e9efee; }
+.request-detail-panel dt { color: #74827f; font-size: .76rem; font-weight: 700; }
+.request-detail-panel dd { margin: 5px 0 0; color: #273f3c; }
+.audit-panel { margin-top: 20px; }
+.audit-panel ul { display: grid; gap: 10px; padding: 0; margin: 0; list-style: none; }
+.audit-panel li { display: flex; justify-content: space-between; gap: 16px; padding: 11px 0; border-bottom: 1px solid #e9efee; }
+.audit-panel li span { text-transform: capitalize; }
+.audit-panel li small { color: #71807e; text-align: right; }
+@media (max-width: 850px) { .request-detail-summary { grid-template-columns: repeat(2, 1fr); } .request-details-grid { grid-template-columns: 1fr; } }
+@media (max-width: 520px) { .request-detail-summary { grid-template-columns: 1fr; } .request-final, .audit-panel li { align-items: flex-start; flex-direction: column; } .audit-panel li small { text-align: left; } }

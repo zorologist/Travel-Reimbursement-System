@@ -33,7 +33,7 @@ import {
 
 Do not use repository-relative paths such as `../../../shared/...`. The package also retains documented subpath exports for targeted imports, but the root entry point is the default application-facing API.
 
-Only implemented contracts are exported from the root. The empty Auth, API, and PriceRevision placeholders will be added after their assigned developers define stable contracts.
+Authentication, API envelopes, attachments, request actions, workflow, salary, and price-revision contracts are exported from the package root.
 
 ## Calculation Rules
 

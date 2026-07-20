@@ -15,6 +15,7 @@ import {
   type SalaryAdjustmentInput,
   type SalaryQueueItem,
 } from "../services/salaryApi";
+import { useDevelopmentRepository } from "../services/runtimeMode";
 import "../styles/salary.css";
 
 function errorMessage(error: unknown): string {
@@ -134,9 +135,9 @@ export function SalaryDashboardPage() {
         </div>
       </header>
 
-      {import.meta.env.DEV && (
+      {useDevelopmentRepository && (
         <div className="salary-development-notice" role="status">
-          Development data is active. Production actions will use the salary API endpoints.
+          The browser-only development repository is active for this session.
         </div>
       )}
 

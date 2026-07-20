@@ -45,29 +45,27 @@ The frontend must never:
 
 ## Current Status
 
-Verified: 19 July 2026
+Verified: 20 July 2026
 
 | Area | Current state |
 | --- | --- |
 | Shared dependency | Implemented through `@travel-reimbursement/shared`; workflow types use the root export |
-| Current router | Login, home, dashboard, request, forbidden, and role-restricted `/salary` routes are connected; details and approvals remain |
-| Login/home/dashboard designs | Login and home are connected to the active router; dashboard remains a placeholder assigned to another developer |
-| New request | Designed and partially interactive; uses a temporary local request shape that does not match the shared API contract |
-| My Requests | Page filters and a typed React `RequestList` are implemented; real backend integration remains |
-| Request details/tracker | Visual prototype with hardcoded data |
-| Department approvals | Queue/forms/pricing components type-check and use the central API client; route and backend endpoints remain |
+| Current router | All required public, employee, department, salary, forbidden, and not-found routes are connected and protected |
+| Login/home/dashboard designs | Implemented and browser-smoke-tested with role-aware actions and live personal counts |
+| New request | Implemented with typed shared values, date validation, service submission, and detail redirect |
+| My Requests | Implemented with loading/error/empty states and in-progress/completed/cancelled filtering |
+| Request details/tracker | Dynamic request fields, workflow progress, cancellation, final amount, and audit history implemented |
+| Department approvals | Routed reusable queue; Manager, PR, Transportation, and Timing edit only their assigned inputs |
 | Shared UI states | Loading, empty, error, forbidden, and not-found views are implemented |
-| Authentication | Temporary context/hook, protected routes, and shared-role checks are implemented; backend auth API remains |
-| Salary workspace | Responsive React queue, verified breakdown, revisions, adjustments, and confirmation implemented with development data; backend route integration remains |
-| Frontend tests | Seven API/service tests passing; component/route coverage remains missing |
+| Authentication | All nine safe demo accounts work in development; the production adapter targets login/me/logout HTTP endpoints |
+| Salary workspace | Responsive queue, shared calculations, revisions, adjustments, confirmation, and cross-screen state are implemented |
+| Frontend tests | 18 API, backend-adapter, timing, and integrated workflow service tests pass; browser automation remains optional follow-up |
 | Type-check/build | Passing |
 
-### Current integration priorities
+### External integration priorities
 
-1. Add request details and department approvals to the active router.
-2. Replace temporary frontend request types/direct `fetch` calls with shared contracts and the central API client.
-3. Connect authentication, requests, approvals, and salary to implemented backend HTTP endpoints when available.
-4. Add component and route tests, including salary authorization and confirmation behavior.
+1. Replace the development backend's identity/storage adapters when company infrastructure is selected.
+2. Add browser component/route automation if the team wants CI-level UI interaction coverage.
 
 ## Structure and File Ownership
 
@@ -201,13 +199,13 @@ The frontend needs these backend capabilities in this order:
 | Manager cancellation | `POST /api/requests/:id/reject` |
 | Salary finalization | `POST /api/requests/:id/finalize` |
 
-The frontend may use local example responses while an endpoint is unfinished, but examples must match shared contracts exactly and be removed when integration is complete.
+Normal development uses the backend API. The local repository is an explicit test/demo fallback and matches shared contracts.
 
 ## API Client Rules
 
 `src/services/api.ts` must centralize:
 
-- `VITE_API_URL`
+- `VITE_API_BASE_URL`
 - JSON request and response handling
 - Authentication/session information
 - Network errors

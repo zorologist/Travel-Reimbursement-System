@@ -9,6 +9,9 @@ import MyRequestsPage from "./pages/MyRequestsPage";
 import NewRequestPage from "./pages/NewRequestPage";
 import { NotFoundPage } from "./pages/NotFoundPage";
 import { SalaryDashboardPage } from "./pages/SalaryDashboardPage";
+import { RequestDetailsPage } from "./pages/RequestDetailsPage";
+import { ApprovalsPage } from "./pages/ApprovalsPage";
+import { AppLayout } from "./components/layout/AppLayout";
 import { ProtectedRoute } from "./routes/ProtectedRoute";
 import { RequireRole } from "./routes/RequireRole";
 
@@ -17,7 +20,7 @@ export default function App() {
     <AuthProvider>
       <BrowserRouter>
         <Routes>
-          <Route path="/" element={<Navigate to="/login" replace />} />
+          <Route path="/" element={<Navigate to="/home" replace />} />
           <Route path="/login" element={<LoginPage />} />
           <Route path="/forbidden" element={<ForbiddenPage />} />
           <Route
@@ -28,38 +31,15 @@ export default function App() {
               </ProtectedRoute>
             }
           />
-          <Route
-            path="/dashboard"
-            element={
-              <ProtectedRoute>
-                <DashboardPage />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/my-requests"
-            element={
-              <ProtectedRoute>
-                <MyRequestsPage />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/new-request"
-            element={
-              <ProtectedRoute>
-                <NewRequestPage />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/requests/new"
-            element={
-              <ProtectedRoute>
-                <NewRequestPage />
-              </ProtectedRoute>
-            }
-          />
+          <Route element={<ProtectedRoute><AppLayout /></ProtectedRoute>}>
+            <Route path="/dashboard" element={<DashboardPage />} />
+            <Route path="/my-requests" element={<MyRequestsPage />} />
+            <Route path="/requests" element={<Navigate to="/my-requests" replace />} />
+            <Route path="/new-request" element={<Navigate to="/requests/new" replace />} />
+            <Route path="/requests/new" element={<NewRequestPage />} />
+            <Route path="/approvals" element={<RequireRole roles={["manager", "pr", "transportation", "timing"]}><ApprovalsPage /></RequireRole>} />
+          </Route>
+          <Route path="/requests/:id" element={<ProtectedRoute><RequestDetailsPage /></ProtectedRoute>} />
           <Route
             path="/salary"
             element={

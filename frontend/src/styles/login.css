@@ -127,6 +127,8 @@ input {
   cursor: pointer;
 }
 
+.login-access-note { color: #708078; font-size: .78rem; }
+
 .forgot-password:hover,
 .forgot-password:focus-visible {
   text-decoration: underline;
@@ -171,6 +173,11 @@ input {
   color: #888888;
   font-size: 0.8rem;
 }
+
+.login-demo-accounts { margin-top: 18px; padding: 10px 12px; border: 1px solid #dce7df; border-radius: 8px; background: #f7faf8; color: #52615a; text-align: left; }
+.login-demo-accounts summary { color: #1e5a34; font-size: .82rem; font-weight: 700; cursor: pointer; }
+.login-demo-accounts p { margin: 7px 0; font-size: .74rem; }
+.login-demo-accounts small { color: #718078; }
 
 @media (max-width: 480px) {
   .login-page {

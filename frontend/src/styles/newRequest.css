@@ -6,6 +6,16 @@
   font-family: Cairo, "Segoe UI", Tahoma, Arial, sans-serif;
 }
 
+.new-request-content { max-width: 880px; }
+.new-request-content .page-heading > a { color: #315b58; font-weight: 700; }
+.request-form-section + .request-form-section { margin-top: 28px; padding-top: 24px; border-top: 1px solid #e8eeed; }
+.request-form-section h2 { margin: 0 0 18px; color: #1c4844; font-size: 1.02rem; }
+.request-form-error { margin-bottom: 18px; }
+.request-form-actions { display: flex; justify-content: flex-end; align-items: center; gap: 15px; margin-top: 28px; padding-top: 22px; border-top: 1px solid #e8eeed; }
+.request-form-actions a { color: #5f706e; font-weight: 700; text-decoration: none; }
+.request-form-actions button { padding: 12px 20px; border: 0; border-radius: 10px; background: #0b6b60; color: white; font: inherit; font-weight: 750; cursor: pointer; }
+.request-form-actions button:disabled { opacity: .55; cursor: wait; }
+
 .new-request-page *,
 .new-request-page *::before,
 .new-request-page *::after {

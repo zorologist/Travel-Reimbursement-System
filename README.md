@@ -13,13 +13,13 @@ The most important facts are:
 - The project uses **React, Express, and TypeScript**.
 - The frontend and backend share the same types and calculation rules.
 - Development initially uses temporary in-memory information, not a real company database.
-- Authentication will eventually use the company Active Directory, but development sign-in comes first.
+- Development authentication uses server-issued HTTP-only sessions; company Active Directory remains a replaceable future integration.
 - The backend is always authoritative for permissions, workflow transitions, and final salary amounts.
 - An employee submission is followed by five departments in a fixed order.
 - Only the Manager may reject a request. Manager rejection cancels it.
 - Later departments may edit their assigned information and approve, but cannot reject.
 - Exactly seven verified hours qualifies for same-day and return-day allowance calculations.
-- The repository is currently a **scaffold**. Most feature files contain responsibility comments rather than finished implementations.
+- The frontend, backend API, and shared package are integrated end to end for the in-memory development release.
 
 Do not assume that the presence of a file means its feature has been implemented.
 
@@ -254,7 +254,7 @@ Travel-Reimbursement-System/
 └── package.json                 Workspace commands
 ```
 
-Some planned folders listed above, such as `shared/schemas`, will be created during implementation.
+The listed shared schema and type folders are implemented and exported through the workspace package.
 
 ## What Goes in Every File
 
@@ -650,17 +650,15 @@ The in-memory version is for development and demonstration. It is not production
 
 ## Current Project Status
 
-At the moment:
+Verified 20 July 2026:
 
-- The simplified folder structure exists.
-- Frontend and backend package files exist.
-- Minimal React and Express startup files exist.
-- Feature files mainly contain comments describing their future responsibilities.
-- The shared implementation specification is documented.
-- The four-person backend work division is documented.
-- Shared package/import wiring and the root export entry point are implemented and verified in frontend and backend consumers.
-- Business logic, runtime schemas, storage operations, API routes, interface features, and automated tests still need implementation.
-- Dependencies may not yet be installed in a fresh checkout.
+- The React frontend has development sign-in for all nine demo users, protected and role-aware routes, a shared layout, dashboard, request submission/list/details, dynamic tracking/audit history, department queues, and salary finalization.
+- Normal frontend development uses the Express API through Vite's `/api` proxy. The typed browser repository remains available only through `VITE_USE_DEVELOPMENT_REPOSITORY=true` and during isolated frontend tests.
+- Employee responses hide intermediate calculations and expose a confirmed amount only after Salary finalizes.
+- Feature services use the central HTTP client and the same backend response contracts in development and production builds.
+- The shared npm workspace, contracts, schemas, rates, calculator, and root export are implemented and consumed by both applications.
+- Backend authentication sessions, request routes, ordered workflow actions, salary finalization, privacy views, append-only audits, attachments, and price revisions are implemented.
+- Verification passes: 18 frontend tests, 46 backend tests, 45 shared tests, workspace TypeScript checks, and production builds.
 
 This section should be updated as phases are completed so new developers always know what is real and what is planned.
 

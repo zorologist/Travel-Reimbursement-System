@@ -12,6 +12,9 @@ import {
   findRequestById,
   findUserByEmployeeNumber,
   listRequests,
+  listRequestsByOwner,
+  listRequestsByStage,
+  listRequestsForRole,
   listUsers,
   resetStoreForTests,
   updateRequest,
@@ -77,6 +80,22 @@ describe("development memory store", () => {
 
   it("finds employee numbers case-insensitively", () => {
     expect(findUserByEmployeeNumber(" dev008 ")?.id).toBe("u8");
+  });
+
+  it("filters owner, stage, and department queues without exposing storage arrays", () => {
+    expect(listRequestsByOwner("u1").map((request) => request.id)).toEqual([
+      "TR-2026-001",
+      "TR-2026-004",
+      "TR-2026-007",
+    ]);
+    expect(listRequestsByStage("pr-review").map((request) => request.id)).toEqual(["TR-2026-002"]);
+    expect(listRequestsForRole("transportation").map((request) => request.id)).toEqual(["TR-2026-003"]);
+    expect(listRequestsForRole("employee")).toEqual([]);
+  });
+
+  it("locks completed and cancelled records", () => {
+    expect(() => updateRequest("TR-2026-006", { destinationCity: "Changed" })).toThrow(/locked/);
+    expect(() => updateRequest("TR-2026-007", { destinationCity: "Changed" })).toThrow(/locked/);
   });
 
   it("returns copies that cannot mutate stored records", () => {

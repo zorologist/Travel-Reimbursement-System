@@ -1,1 +1,19 @@
 @import "tailwindcss";
+
+:root {
+  font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  color: #17232c;
+  background: #f3f7f6;
+  --card: #ffffff;
+  --line: #dce7e5;
+  --ink-700: #52615f;
+  --green-700: #0b6b60;
+  --green-800: #07554d;
+  --rose-600: #b64444;
+  --radius-sm: 9px;
+  --radius-lg: 14px;
+  --shadow-card: 0 8px 28px rgba(20, 60, 56, .08);
+}
+
+body { margin: 0; min-width: 320px; min-height: 100vh; }
+button, input, select, textarea { font: inherit; }

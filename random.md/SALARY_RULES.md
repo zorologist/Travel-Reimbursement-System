@@ -1,5 +1,12 @@
-<!-- This document will hold the human-readable salary rules and tested calculation examples. -->
-
 # Salary Rules
 
-The README is currently the source of truth for salary rates and travel rules. This document will contain tested examples when the calculation engine is implemented.
+- Full nights use the employee's daily rate multiplied by the accommodation factor.
+- Same-day travel with at least seven verified hours receives 50% of the daily rate.
+- Overnight travel with at least seven verified return-day hours receives an additional 30% of the daily rate.
+- Same-day and overnight allowances cannot both apply.
+- Transportation cost is separate from allowance.
+- Salary may add a fixed bonus or penalty with an audit note.
+- The backend calculates and stores the official result; browser totals are never trusted.
+- Monetary outputs are rounded to two decimal places.
+
+The tested implementation lives in `shared/salary/calculateSalary.ts` and is used by both applications.

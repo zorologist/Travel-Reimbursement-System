@@ -52,22 +52,26 @@ const NEXT_STAGE: Readonly<Partial<Record<WorkflowStage, WorkflowStage>>> = {
 
 const EDITABLE_FIELDS: Readonly<Record<SystemRole, readonly EditableField[]>> = {
   employee: [
+    "originCity",
     "destinationCity",
     "departureAt",
     "returnAt",
     "accommodationType",
     "transportationMethod",
+    "claimedTransportationCost",
+    "notes",
+    "attachments",
   ],
   manager: [],
   pr: ["accommodationType"],
-  transportation: ["transportationMethod", "transportationCost"],
+  transportation: ["destinationCity", "transportationMethod", "transportationCost"],
   timing: [
     "verifiedDepartureAt",
     "verifiedReturnAt",
     "verifiedSameDayHours",
     "verifiedReturnDayHours",
   ],
-  salary: ["bonusAmount", "penaltyAmount", "finalSalary"],
+  salary: ["bonusAmount", "penaltyAmount"],
 };
 
 function currentTime(options?: WorkflowExecutionOptions): Date {
@@ -153,14 +157,13 @@ function withAuditEvent(
   };
 }
 
-/** A reviewer can approve only the department stage they own. Salary approval is recorded in-place. */
+/** A reviewer can approve only the department stage they own. Salary uses finalization instead. */
 export function canApprove(request: TravelRequest, role: SystemRole): boolean {
   return (
     (request.stage === "manager-review" && role === "manager") ||
     (request.stage === "pr-review" && role === "pr") ||
     (request.stage === "transportation-review" && role === "transportation") ||
-    (request.stage === "timing-review" && role === "timing") ||
-    (request.stage === "salary-finalization" && role === "salary")
+    (request.stage === "timing-review" && role === "timing")
   );
 }
 
@@ -239,12 +242,11 @@ export function approveRequest(
   assertAllowed(canApprove(request, actorRole), "approve");
 
   const now = currentTime(options);
-  // Salary has no separate post-approval stage in the model. Its approval is therefore auditable
-  // but remains in salary-finalization until the explicit, irreversible finalize action.
-  const toStage = NEXT_STAGE[request.stage] ?? request.stage;
+  const toStage = NEXT_STAGE[request.stage];
+  if (!toStage) throw new WorkflowServiceError("INVALID_TRANSITION", `There is no approval transition from ${request.stage}.`);
   const event = createAuditEvent(
     request.id, actorId, actorRole, "approve", request.stage, toStage,
-    toStage === request.stage ? {} : stageChange(request.stage, toStage), note, optionsAt(options, now),
+    stageChange(request.stage, toStage), note, optionsAt(options, now),
   );
   return withAuditEvent(request, event, toIsoString(now), { stage: toStage });
 }
@@ -258,13 +260,16 @@ export function rejectRequest(
 ): TravelRequest {
   assertNotTerminal(request);
   assertAllowed(canReject(request, actorRole), "reject");
+  if (!note?.trim()) {
+    throw new WorkflowServiceError("INVALID_EDIT_FIELDS", "A cancellation reason is required.");
+  }
 
   const now = currentTime(options);
   const event = createAuditEvent(
     request.id, actorId, actorRole, "reject", request.stage, "cancelled",
-    stageChange(request.stage, "cancelled"), note, optionsAt(options, now),
+    { ...stageChange(request.stage, "cancelled"), cancellationReason: { before: request.cancellationReason, after: note.trim() } }, note.trim(), optionsAt(options, now),
   );
-  return withAuditEvent(request, event, toIsoString(now), { stage: "cancelled" });
+  return withAuditEvent(request, event, toIsoString(now), { stage: "cancelled", cancellationReason: note.trim() });
 }
 
 function changesFor(request: TravelRequest, edits: RequestEdits): FieldChanges {
@@ -305,6 +310,7 @@ export function editRequest(
 
   const now = currentTime(options);
   const changes = changesFor(request, edits);
+  if (Object.keys(changes).length === 0) return request;
   const event = createAuditEvent(
     request.id, actorId, actorRole, "edit", request.stage, request.stage, changes, note, optionsAt(options, now),
   );
@@ -324,9 +330,15 @@ export function finalizeRequest(
   const now = currentTime(options);
   const event = createAuditEvent(
     request.id, actorId, actorRole, "finalize", request.stage, "completed",
-    stageChange(request.stage, "completed"), note, optionsAt(options, now),
+    {
+      ...stageChange(request.stage, "completed"),
+      finalSalary: { before: request.finalSalary, after: request.salaryPreview },
+    }, note, optionsAt(options, now),
   );
-  return withAuditEvent(request, event, toIsoString(now), { stage: "completed" });
+  return withAuditEvent(request, event, toIsoString(now), {
+    stage: "completed",
+    finalSalary: request.salaryPreview,
+  });
 }
 
 /** Moves only a valid approval stage forward; included for callers needing transition validation. */
@@ -337,4 +349,3 @@ export function moveToNextStage(stage: WorkflowStage): WorkflowStage {
   }
   return next;
 }
-// Sequential approval and role-permission rules will belong here so workflow steps cannot be skipped.

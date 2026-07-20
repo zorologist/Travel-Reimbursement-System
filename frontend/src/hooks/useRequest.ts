@@ -1,44 +1,50 @@
-import { useState, useEffect } from 'react';
-import { requestApi, TravelRequestData, RequestResponse } from '../services/requestApi';
+import { useCallback, useEffect, useState } from "react";
+
+import {
+  requestApi,
+  type RequestResponse,
+  type TravelRequestData,
+} from "../services/requestApi";
+
+function messageFor(error: unknown): string {
+  return error instanceof Error ? error.message : "Unable to load requests.";
+}
 
 export function useRequests() {
   const [requests, setRequests] = useState<RequestResponse[]>([]);
-  const [loading, setLoading] = useState<boolean>(false);
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const fetchRequests = async () => {
+  const fetchRequests = useCallback(async () => {
     setLoading(true);
     setError(null);
     try {
-      const data = await requestApi.getMyRequests();
-      setRequests(data);
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'SERVER_ERROR';
-      setError(errorMessage);
+      setRequests(await requestApi.getMyRequests());
+    } catch (loadError) {
+      setError(messageFor(loadError));
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
-  const addRequest = async (formData: TravelRequestData) => {
+  const addRequest = useCallback(async (formData: TravelRequestData) => {
     setLoading(true);
     setError(null);
     try {
-      const newReq = await requestApi.createRequest(formData);
-      setRequests((prev: RequestResponse[]) => [newReq, ...prev]);
-      return newReq;
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'SERVER_ERROR';
-      setError(errorMessage);
-      throw err;
+      const created = await requestApi.createRequest(formData);
+      setRequests((current) => [created, ...current]);
+      return created;
+    } catch (createError) {
+      setError(messageFor(createError));
+      throw createError;
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
   useEffect(() => {
-    fetchRequests();
-  }, []);
+    void fetchRequests();
+  }, [fetchRequests]);
 
   return { requests, loading, error, addRequest, refetch: fetchRequests };
 }

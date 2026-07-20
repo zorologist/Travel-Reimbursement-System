@@ -35,6 +35,10 @@ interface SeedRequestInput {
   bonusAmount?: number;
   penaltyAmount?: number;
   cancellationReason?: string | null;
+  originCity?: string;
+  claimedTransportationCost?: number;
+  notes?: string;
+  attachments?: TravelRequest["attachments"];
   createdAt: string;
   history: AuditEvent[];
 }
@@ -160,6 +164,7 @@ function buildRequest(input: SeedRequestInput): TravelRequest {
   return {
     id: input.id,
     employeeId: input.employeeId,
+    originCity: input.originCity ?? "Cairo",
     stage: input.stage,
     destinationCity: input.destinationCity,
     departureAt: input.departureAt,
@@ -171,11 +176,15 @@ function buildRequest(input: SeedRequestInput): TravelRequest {
     verifiedSameDayHours: input.verifiedSameDayHours ?? 0,
     verifiedReturnDayHours: input.verifiedReturnDayHours ?? 0,
     transportationCost: input.transportationCost,
+    claimedTransportationCost: input.claimedTransportationCost ?? input.transportationCost,
     bonusAmount: input.bonusAmount ?? 0,
     penaltyAmount: input.penaltyAmount ?? 0,
     salaryPreview: calculation,
     finalSalary: input.stage === "completed" ? calculation : null,
     cancellationReason: input.cancellationReason ?? null,
+    notes: input.notes ?? "Development travel request.",
+    attachments: input.attachments ?? [],
+    priceRevisions: [],
     createdAt: input.createdAt,
     updatedAt,
     auditEvents: input.history,
@@ -237,6 +246,7 @@ function transportationReviewRequest(): TravelRequest {
     accommodationType: "room-and-food",
     transportationMethod: "Train",
     transportationCost: 220,
+    attachments: [{ id: "attachment-TR-2026-003-1", name: "train-ticket-TR-2026-003.txt", mimeType: "text/plain", size: 91, url: "data:text/plain;charset=utf-8,Travel%20request%20TR-2026-003%0ATrain%20ticket%20attachment%20for%20transportation%20review." }],
     createdAt,
     history: [
       submitted(id, "u3", createdAt),

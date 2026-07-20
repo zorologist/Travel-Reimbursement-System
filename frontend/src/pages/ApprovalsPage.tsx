@@ -3,6 +3,7 @@ import { useApprovalQueue } from '../hooks/useApprovalQueue';
 import { ApprovalQueue } from '../components/workflow/ApprovalQueue';
 import { LoadingState } from '../components/ui/LoadingState';
 import { ErrorState } from '../components/ui/ErrorState';
+import '../styles/approvals.css';
 
 export const ApprovalsPage: React.FC = () => {
   const { queue, loading, error, handleAction, fetchQueue } = useApprovalQueue();
@@ -11,14 +12,16 @@ export const ApprovalsPage: React.FC = () => {
   if (error) return <ErrorState message={error} onRetry={fetchQueue} />;
 
   return (
-    <div className="approvals-page">
-      <header>
+    <main className="content-page approvals-page">
+      <header className="page-heading">
+        <div>
         <h1>Department Approvals</h1>
         <p>Review and process pending travel requests.</p>
+        </div>
       </header>
-      <main>
+      <section>
         <ApprovalQueue queue={queue} onAction={handleAction} />
-      </main>
-    </div>
+      </section>
+    </main>
   );
 };

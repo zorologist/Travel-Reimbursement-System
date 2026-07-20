@@ -1,4 +1,10 @@
-import type { AuditEvent, TravelRequest, User } from "@travel-reimbursement/shared";
+import type {
+  AuditEvent,
+  SystemRole,
+  TravelRequest,
+  User,
+  WorkflowStage,
+} from "@travel-reimbursement/shared";
 import { createDevelopmentRequests } from "../data/requests.js";
 import { developmentUsers } from "../data/users.js";
 
@@ -17,6 +23,14 @@ function auditHistoryIsAppendOnly(
   return currentEvents.every(
     (event, index) => JSON.stringify(event) === JSON.stringify(nextEvents[index]),
   );
+}
+
+function priceHistoryIsAppendOnly(
+  current: readonly TravelRequest["priceRevisions"][number][],
+  next: readonly TravelRequest["priceRevisions"][number][],
+): boolean {
+  if (next.length < current.length) return false;
+  return current.every((revision, index) => JSON.stringify(revision) === JSON.stringify(next[index]));
 }
 
 export function listUsers(): User[] {
@@ -40,6 +54,28 @@ export function listRequests(): TravelRequest[] {
   return clone(requests);
 }
 
+export function listRequestsByOwner(employeeId: string): TravelRequest[] {
+  return clone(requests.filter((request) => request.employeeId === employeeId));
+}
+
+export function listRequestsByStage(stage: WorkflowStage): TravelRequest[] {
+  return clone(requests.filter((request) => request.stage === stage));
+}
+
+const ROLE_STAGE: Readonly<Partial<Record<SystemRole, WorkflowStage>>> = {
+  manager: "manager-review",
+  pr: "pr-review",
+  transportation: "transportation-review",
+  timing: "timing-review",
+  salary: "salary-finalization",
+};
+
+export function listRequestsForRole(role: SystemRole): TravelRequest[] {
+  if (role === "employee") return [];
+  const stage = ROLE_STAGE[role];
+  return stage ? listRequestsByStage(stage) : [];
+}
+
 export function findRequestById(id: string): TravelRequest | undefined {
   const request = requests.find((candidate) => candidate.id === id);
   return request ? clone(request) : undefined;
@@ -51,7 +87,7 @@ export function createRequest(newRequest: TravelRequest): TravelRequest {
   }
 
   const stored = clone(newRequest);
-  requests.push(stored);
+  requests.unshift(stored);
   return clone(stored);
 }
 
@@ -63,9 +99,16 @@ export function updateRequest(
   if (index === -1) return null;
 
   const current = requests[index];
+  if (current.stage === "completed" || current.stage === "cancelled") {
+    throw new Error("Completed and cancelled requests are locked.");
+  }
   const nextAuditEvents = updates.auditEvents ?? current.auditEvents;
   if (!auditHistoryIsAppendOnly(current.auditEvents, nextAuditEvents)) {
     throw new Error("Audit history is append-only and cannot be changed or removed.");
+  }
+  const nextPriceRevisions = updates.priceRevisions ?? current.priceRevisions;
+  if (!priceHistoryIsAppendOnly(current.priceRevisions, nextPriceRevisions)) {
+    throw new Error("Price revision history is append-only and cannot be changed or removed.");
   }
 
   const updated: TravelRequest = {
@@ -76,10 +119,21 @@ export function updateRequest(
     createdAt: current.createdAt,
     updatedAt: updates.updatedAt ?? new Date().toISOString(),
     auditEvents: clone(nextAuditEvents),
+    priceRevisions: clone(nextPriceRevisions),
   };
 
   requests[index] = updated;
   return clone(updated);
+}
+
+export function replaceRequest(
+  id: string,
+  replacement: TravelRequest,
+): TravelRequest | null {
+  if (replacement.id !== id) {
+    throw new Error("Replacement request ID must match the stored request ID.");
+  }
+  return updateRequest(id, replacement);
 }
 
 export function addAuditEvent(

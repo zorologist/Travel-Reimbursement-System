@@ -13,8 +13,8 @@ describe("salary API development adapter", () => {
   it("returns salary-finalization records calculated by the shared rules", async () => {
     const queue = await salaryApi.listQueue();
 
-    expect(queue).toHaveLength(3);
-    expect(queue[0]).toMatchObject({
+    expect(queue).toHaveLength(4);
+    expect(queue.find((item) => item.id === "TR-2026-0841")).toMatchObject({
       id: "TR-2026-0841",
       status: "pending",
       calculation: {

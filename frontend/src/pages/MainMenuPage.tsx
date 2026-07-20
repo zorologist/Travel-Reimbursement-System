@@ -1,14 +1,11 @@
 import { Link, Navigate, useNavigate } from "react-router-dom";
 import logoUrl from "../../EGAS.png";
-import {
-  clearDevelopmentSession,
-  getDevelopmentUser,
-} from "../services/developmentAuth";
+import { useAuth } from "../hooks/useAuth";
 import "../styles/mainMenu.css";
 
 export function MainMenuPage() {
   const navigate = useNavigate();
-  const user = getDevelopmentUser();
+  const { user, logout } = useAuth();
 
   if (!user) return <Navigate to="/login" replace />;
 
@@ -18,7 +15,7 @@ export function MainMenuPage() {
     : "Employee";
 
   function handleSignOut() {
-    clearDevelopmentSession();
+    logout();
     navigate("/login", { replace: true });
   }
 
@@ -89,6 +86,27 @@ export function MainMenuPage() {
               →
             </span>
           </Link>
+
+          <Link className="main-menu-card main-menu-card--dashboard" to="/my-requests">
+            <span className="main-menu-card-icon" aria-hidden="true">✓</span>
+            <span className="main-menu-card-copy"><small>Personal workflow</small><strong>My Requests</strong><span>See status, final amounts, and the audit history.</span></span>
+            <span className="main-menu-card-arrow" aria-hidden="true">→</span>
+          </Link>
+
+          {administrativeRole && administrativeRole !== "salary" && (
+            <Link className="main-menu-card main-menu-card--dashboard" to="/approvals">
+              <span className="main-menu-card-icon" aria-hidden="true">↗</span>
+              <span className="main-menu-card-copy"><small>Department work</small><strong>Approval Queue</strong><span>Review requests currently assigned to {administrativeRole}.</span></span>
+              <span className="main-menu-card-arrow" aria-hidden="true">→</span>
+            </Link>
+          )}
+          {administrativeRole === "salary" && (
+            <Link className="main-menu-card main-menu-card--dashboard" to="/salary">
+              <span className="main-menu-card-icon" aria-hidden="true">£</span>
+              <span className="main-menu-card-copy"><small>Salary work</small><strong>Finalization Queue</strong><span>Verify calculations and confirm reimbursement.</span></span>
+              <span className="main-menu-card-arrow" aria-hidden="true">→</span>
+            </Link>
+          )}
         </section>
 
         <p className="main-menu-help">

@@ -1,11 +1,6 @@
-import type { SystemRole } from "@travel-reimbursement/shared";
+import { developmentEmployees, type DevelopmentEmployee } from "./developmentRepository";
 
-export interface DevelopmentUser {
-  id: string;
-  employeeNumber: string;
-  displayName: string;
-  roles: SystemRole[];
-}
+export type DevelopmentUser = DevelopmentEmployee;
 
 interface DevelopmentAccount extends DevelopmentUser {
   password: string;
@@ -14,33 +9,14 @@ interface DevelopmentAccount extends DevelopmentUser {
 // Version the temporary browser session whenever its shape or routing changes.
 // This prevents an older development login from silently reopening an API-backed
 // page that is not ready yet.
-const SESSION_KEY = "travel-reimbursement-development-user-v2";
-const LEGACY_SESSION_KEYS = ["travel-reimbursement-development-user"] as const;
+const SESSION_KEY = "travel-reimbursement-development-user-v3";
+const LEGACY_SESSION_KEYS = ["travel-reimbursement-development-user", "travel-reimbursement-development-user-v2"] as const;
 
 /** Temporary frontend accounts. Replace with /api/auth/login and /api/auth/me. */
-const developmentAccounts: DevelopmentAccount[] = [
-  {
-    id: "u1",
-    employeeNumber: "DEV001",
-    displayName: "Mariam Hassan (Demo)",
-    roles: ["employee"],
-    password: "Employee@123",
-  },
-  {
-    id: "u4",
-    employeeNumber: "DEV004",
-    displayName: "Karim Adel (Demo Manager)",
-    roles: ["employee", "manager"],
-    password: "Admin@123",
-  },
-  {
-    id: "u8",
-    employeeNumber: "DEV008",
-    displayName: "Tarek Mostafa (Demo Salary)",
-    roles: ["employee", "salary"],
-    password: "Admin@123",
-  },
-];
+const developmentAccounts: DevelopmentAccount[] = developmentEmployees.map((employee) => ({
+  ...employee,
+  password: employee.roles.length > 1 ? "Admin@123" : "Employee@123",
+}));
 
 function publicUser(account: DevelopmentAccount): DevelopmentUser {
   const { password: _password, ...user } = account;

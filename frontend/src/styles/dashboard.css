@@ -1,1 +1,22 @@
-
+.dashboard-stats { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 14px; margin-bottom: 24px; }
+.dashboard-stats article { display: grid; gap: 10px; padding: 20px; border: 1px solid #dce7e5; border-radius: 13px; background: #fff; }
+.dashboard-stats span { color: #6d7c79; font-size: .78rem; font-weight: 700; }
+.dashboard-stats strong { color: #134e48; font-size: 2rem; }
+.dashboard-grid { display: grid; grid-template-columns: 1.4fr .8fr; gap: 20px; }
+.dashboard-panel { padding: 23px; border: 1px solid #dce7e5; border-radius: 14px; background: #fff; box-shadow: 0 5px 18px rgba(20, 60, 56, .04); }
+.dashboard-panel > header { display: flex; justify-content: space-between; gap: 16px; margin-bottom: 17px; }
+.dashboard-panel h2 { margin: 0; color: #1b4843; font-size: 1.08rem; }
+.dashboard-panel p { margin: 5px 0 0; color: #71807e; font-size: .85rem; }
+.dashboard-panel a { color: #0b6b60; text-decoration: none; font-weight: 700; }
+.dashboard-panel ul { padding: 0; margin: 0; list-style: none; }
+.dashboard-panel li + li { border-top: 1px solid #e7eeed; }
+.dashboard-panel li a { display: flex; justify-content: space-between; align-items: center; gap: 16px; padding: 15px 0; color: inherit; }
+.dashboard-panel li span { display: grid; gap: 3px; }
+.dashboard-panel li small { color: #7c8987; }
+.dashboard-panel li b { padding: 5px 9px; border-radius: 999px; background: #eef4f3; color: #526764; font-size: .7rem; text-transform: capitalize; }
+.dashboard-panel li b[data-status="completed"] { background: #e7f5ed; color: #187052; }
+.dashboard-panel li b[data-status="cancelled"] { background: #fff0f0; color: #a94343; }
+.dashboard-actions { display: grid; align-content: start; gap: 12px; }
+.dashboard-actions > a { display: grid; gap: 5px; padding: 15px; border: 1px solid #d8e5e3; border-radius: 10px; background: #f8fbfa; }
+.dashboard-actions > a span { color: #6d7c79; font-size: .8rem; font-weight: 500; }
+@media (max-width: 800px) { .dashboard-stats { grid-template-columns: repeat(2, 1fr); } .dashboard-grid { grid-template-columns: 1fr; } }

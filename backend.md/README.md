@@ -47,33 +47,31 @@ The backend must not:
 
 ## Current Status
 
-Verified: 19 July 2026
+Verified: 20 July 2026
 
 | Area | Current state |
 | --- | --- |
 | Shared dependency | Implemented through the `@travel-reimbursement/shared` workspace and root export |
 | Express application | Builds and starts successfully |
-| Public API | Only `GET /api/health` is exposed |
+| Public API | Health, authentication, requests, department workflow, and Salary endpoints are registered |
 | Error handling | Implemented: JSON 404, expected API errors, workflow errors, Zod errors, malformed JSON, and safe 500 responses |
 | Development data | Implemented: nine fictional users and seven requests covering all workflow outcomes |
-| Memory storage | Implemented and mutation-safe; formal interface/filtering/atomic revision persistence remain |
-| Workflow domain service | Partially implemented; corrections listed in `BACKEND_REMAINING_WORK.md` remain |
-| Authentication | Placeholder only |
-| Request API | Placeholder only |
-| Workflow API | Placeholder only |
-| Salary orchestration | Placeholder only |
-| Price revisions/privacy views | Missing |
-| Verification | Backend type-check and build pass; 25/25 backend tests pass; 44/44 shared tests pass |
+| Memory storage | Implemented with a formal shared-contract interface, filters, append-only audit/revisions, copies, reset, and terminal locking |
+| Workflow domain service | Implemented with ordered transitions, field ownership, edits, rejection, audit, and finalization |
+| Authentication | HTTP-only development sessions with login, current-user restoration, and logout |
+| Request API | Implemented: create, personal list, department queue, authorized detail, and owner correction |
+| Workflow API | Department review/approve, Manager reject, and Salary finalize implemented |
+| Salary orchestration | Server-authoritative previews, revisions, adjustments, and finalization implemented |
+| Price revisions/privacy views | Append-only revisions and role/owner privacy views implemented |
+| Verification | Backend type-check/build pass; 46/46 backend tests pass; 45/45 shared tests pass |
 
-The backend foundation is healthy, but the application is not yet usable end to end because the authentication, request, workflow, and salary routers are not implemented or registered.
+The full request lifecycle is available through authenticated HTTP endpoints. The employee-number header remains enabled only outside production for legacy API tests and diagnostic use.
 
-### Current backend priorities
+### External integration priorities
 
-1. Implement development authentication and trusted request identity.
-2. Complete the storage interface and authorized filtering operations.
-3. Implement request creation/list/detail APIs with financial privacy.
-4. Correct and expose workflow/salary operations.
-5. Add full API journey tests.
+1. Replace development sessions with the company's Active Directory adapter.
+2. Replace memory storage with the selected durable database and file store.
+3. Add deployment-specific TLS, secrets, backups, and monitoring.
 
 `npm audit` currently reports four dependency findings (two moderate, one high, and one critical). They require a separate dependency review; no forced breaking upgrade has been applied.
 
@@ -252,7 +250,7 @@ Do not allow clients to select an arbitrary actor ID on workflow requests. The a
 
 Keep authentication-specific code separate so future Active Directory integration can replace it without rewriting request and workflow services.
 
-## Planned Endpoints
+## Implemented Endpoints
 
 ### Health and authentication
 
@@ -361,7 +359,7 @@ Wait for or coordinate with the shared developer on:
 - Zod schemas
 - Salary rates and calculator
 
-Backend route and service code should not invent replacements for unfinished shared definitions.
+Backend route and service code imports the implemented shared contracts instead of defining local replacements.
 
 ### 2. Storage foundation
 

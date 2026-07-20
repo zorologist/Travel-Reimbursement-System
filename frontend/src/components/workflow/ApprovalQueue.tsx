@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { ApprovalQueueItem } from '../../services/workflowApi';
+import React, { useEffect, useState } from 'react';
+import type { ApprovalQueueItem } from '../../services/workflowApi';
 import { DepartmentReviewPanel } from './DepartmentReviewPanel';
 import { EmptyState } from '../ui/EmptyState';
 
@@ -10,6 +10,10 @@ interface Props {
 
 export const ApprovalQueue: React.FC<Props> = ({ queue, onAction }) => {
   const [selectedItemId, setSelectedItemId] = useState<string | null>(null);
+
+  useEffect(() => {
+    setSelectedItemId((current) => current && queue.some((item) => item.id === current) ? current : (queue[0]?.id ?? null));
+  }, [queue]);
 
   if (queue.length === 0) {
     return (
@@ -26,14 +30,15 @@ export const ApprovalQueue: React.FC<Props> = ({ queue, onAction }) => {
     <div className="approval-queue-container">
       <div className="queue-list">
         {queue.map(item => (
-          <div 
+          <button type="button"
             key={item.id} 
             className={`queue-card ${selectedItemId === item.id ? 'active' : ''}`}
             onClick={() => setSelectedItemId(item.id)}
           >
             <h3>Request #{item.id.slice(-4)}</h3>
-            <p>Stage: {item.currentStage}</p>
-          </div>
+            <p>{item.employeeName}</p>
+            <small>{item.currentStage.replaceAll('-', ' ')}</small>
+          </button>
         ))}
       </div>
       

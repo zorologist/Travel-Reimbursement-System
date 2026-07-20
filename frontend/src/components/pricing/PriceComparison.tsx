@@ -14,11 +14,11 @@ export const PriceComparison: React.FC<Props> = ({ originalPrice, newPrice }) =>
       <div className="price-metrics">
         <div className="metric">
           <span className="label">Incoming Price</span>
-          <span className="value">${originalPrice.toFixed(2)}</span>
+        <span className="value">{originalPrice.toFixed(2)} EGP</span>
         </div>
         <div className="metric">
           <span className="label">Your Revised Price</span>
-          <span className="value">${newPrice.toFixed(2)}</span>
+        <span className="value">{newPrice.toFixed(2)} EGP</span>
         </div>
       </div>
       <PriceDifferenceBadge difference={difference} />

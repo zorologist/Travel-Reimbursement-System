@@ -14,7 +14,7 @@ export const PriceHistoryTimeline: React.FC<Props> = ({ revisions }) => {
           <div className="timeline-content">
             <h4>{rev.department} Revision</h4>
             <p className="price-shift">
-              ${rev.previousPrice} &rarr; ${rev.newPrice}
+              {rev.previousPrice.toFixed(2)} EGP &rarr; {rev.newPrice.toFixed(2)} EGP
             </p>
             {rev.reason && <p className="reason">"{rev.reason}"</p>}
             <span className="timestamp">{new Date(rev.updatedAt).toLocaleDateString()}</span>
