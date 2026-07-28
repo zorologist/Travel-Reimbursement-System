@@ -14,7 +14,8 @@ export type WorkflowAction =
   | "approve"
   | "reject"
   | "edit"
-  | "finalize";
+  | "finalize"
+  | "request-info";
 
 export interface AuditEvent {
   id: string;

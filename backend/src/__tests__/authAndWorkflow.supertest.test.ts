@@ -39,6 +39,25 @@ describe("development authentication", () => {
 });
 
 describe("complete workflow HTTP journey", () => {
+  it("moves a one-way request through timing without inventing a return leg", async () => {
+    const departureAt = "2027-05-01T08:00:00.000Z";
+    const created = await request(app).post("/api/requests").set(as("DEV001")).send({
+      destinationCity: "Suez", departureAt, returnAt: departureAt,
+      tripType: "one-way", managerId: "u4", accommodationType: "none",
+      transportationMethod: "Train",
+      attachments: [{ id: "one-way-ticket", name: "ticket.jpg", mimeType: "image/jpeg", size: 4, url: "data:image/jpeg;base64,AA==" }],
+    });
+    expect(created.status).toBe(201);
+    const id = created.body.request.id as string;
+
+    expect((await request(app).post(`/api/requests/${id}/approve`).set(as("DEV004")).send({ reason: "Approved." })).status).toBe(200);
+    expect((await request(app).post(`/api/requests/${id}/approve`).set(as("DEV005")).send({ accommodationType: "none", reason: "No accommodation." })).status).toBe(200);
+    expect((await request(app).post(`/api/requests/${id}/approve`).set(as("DEV006")).send({ method: "Train", reason: "Ticket checked." })).status).toBe(200);
+    const timing = await request(app).post(`/api/requests/${id}/approve`).set(as("DEV007")).send({ departureAt, reason: "Departure verified." });
+    expect(timing.status).toBe(200);
+    expect(timing.body.request).toMatchObject({ stage: "salary-finalization", verifiedDepartureAt: departureAt, verifiedReturnAt: departureAt, verifiedSameDayHours: 0, verifiedReturnDayHours: 0 });
+  });
+
   it("moves one request through every department, records revisions, finalizes, and reveals only the final amount to its owner", async () => {
     const manager = await request(app).post("/api/requests/TR-2026-001/approve").set(as("DEV004")).send({ reason: "Mission approved." });
     expect(manager.status).toBe(200);
@@ -47,20 +66,25 @@ describe("complete workflow HTTP journey", () => {
     const pr = await request(app).post("/api/requests/TR-2026-001/approve").set(as("DEV005")).send({ accommodationType: "room-only", reason: "Company room confirmed." });
     expect(pr.status).toBe(200);
     expect(pr.body.request.stage).toBe("transportation-review");
-    expect(pr.body.request.priceRevisions).toHaveLength(1);
+    expect(pr.body.request.priceRevisions).toBeUndefined();
+    expect(pr.body.request.salaryPreview).toBeUndefined();
     expect(pr.body.request.auditEvents.at(-1).note).toBe("Company room confirmed.");
 
-    const transportation = await request(app).post("/api/requests/TR-2026-001/approve").set(as("DEV006")).send({ destination: "Alexandria", method: "Train", transportationCost: 250, reason: "Ticket and receipt verified." });
+    const transportation = await request(app).post("/api/requests/TR-2026-001/approve").set(as("DEV006")).send({ destination: "Alexandria", method: "Train", reason: "Ticket and receipt verified." });
     expect(transportation.status).toBe(200);
     expect(transportation.body.request.stage).toBe("timing-review");
-    expect(transportation.body.request.attachments).toEqual([]);
+    expect(transportation.body.request.attachments).toHaveLength(1);
 
     const timing = await request(app).post("/api/requests/TR-2026-001/approve").set(as("DEV007")).send({ departureAt: "2026-08-03T06:00:00.000Z", returnAt: "2026-08-05T18:00:00.000Z", meetsSevenHourRule: true, reason: "Return-day attendance qualifies." });
     expect(timing.status).toBe(200);
     expect(timing.body.request.stage).toBe("salary-finalization");
     expect(timing.body.request.verifiedReturnDayHours).toBe(7);
 
-    const adjusted = await request(app).patch("/api/requests/TR-2026-001/review").set(as("DEV008")).send({ bonusAmount: 25, penaltyAmount: 5, note: "Approved salary adjustment." });
+    const prematureFinalization = await request(app).post("/api/requests/TR-2026-001/finalize").set(as("DEV008")).send({ note: "Price was not entered." });
+    expect(prematureFinalization.status).toBe(409);
+    expect(prematureFinalization.body.error.code).toBe("TICKET_PRICE_REQUIRED");
+
+    const adjusted = await request(app).patch("/api/requests/TR-2026-001/review").set(as("DEV008")).send({ transportationCost: 250, bonusAmount: 25, penaltyAmount: 5, note: "Approved Payroll adjustment." });
     expect(adjusted.status).toBe(200);
     expect(adjusted.body.request.salaryPreview.bonusAmount).toBe(25);
     expect(adjusted.body.request.priceRevisions.length).toBeGreaterThanOrEqual(3);
@@ -102,6 +126,6 @@ describe("complete workflow HTTP journey", () => {
   it("exposes submitted attachments to Transportation", async () => {
     const response = await request(app).get("/api/requests?scope=queue").set(as("DEV006"));
     expect(response.status).toBe(200);
-    expect(response.body.requests[0].attachments[0]).toMatchObject({ name: "train-ticket-TR-2026-003.txt" });
+    expect(response.body.requests[0].attachments[0]).toMatchObject({ name: "train-ticket-TR-2026-003.jpg" });
   });
 });

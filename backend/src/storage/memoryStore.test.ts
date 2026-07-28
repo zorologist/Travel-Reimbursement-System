@@ -27,7 +27,7 @@ describe("development memory store", () => {
 
   it("contains schema-valid users with unique IDs and employee numbers", () => {
     const users = listUsers();
-    expect(users.length).toBe(9);
+    expect(users.length).toBe(10);
     expect(new Set(users.map((user) => user.id)).size).toBe(users.length);
     expect(new Set(users.map((user) => user.employeeNumber)).size).toBe(users.length);
     users.forEach((user) => expect(UserSchema.safeParse(user).success).toBe(true));

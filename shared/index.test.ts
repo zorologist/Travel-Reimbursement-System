@@ -24,7 +24,7 @@ describe("shared package public entry point", () => {
 
   it("validates authentication, attachments, and workflow actions", () => {
     expect(LoginInputSchema.parse({ employeeNumber: " DEV001 ", password: "Employee@123" })).toMatchObject({ employeeNumber: "DEV001", remember: false });
-    expect(RequestAttachmentSchema.parse({ id: "a1", name: "ticket.pdf", mimeType: "application/pdf", size: 100, url: "data:application/pdf;base64,JVBERi0=" }).name).toBe("ticket.pdf");
+    expect(RequestAttachmentSchema.parse({ id: "a1", name: "ticket.jpg", mimeType: "image/jpeg", size: 100, url: "data:image/jpeg;base64,AA==" }).name).toBe("ticket.jpg");
     expect(ApproveRequestInputSchema.parse({ accommodationType: "room-only", reason: "Confirmed" })).toMatchObject({ accommodationType: "room-only" });
   });
 

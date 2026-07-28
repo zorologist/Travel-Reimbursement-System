@@ -7,7 +7,7 @@ import { TimingReviewForm } from './TimingReviewForm';
 import { PriceHistoryTimeline } from '../pricing/PriceHistoryTimeline';
 import { useAuth } from '../../hooks/useAuth';
 import { useLanguage } from '../../hooks/useLanguage';
-import { formatCurrency } from '../../i18n/format';
+import { formatCurrency, formatDateTime, localizeLabel } from '../../i18n/format';
 
 interface Props {
   request: ApprovalQueueItem;
@@ -21,6 +21,8 @@ export const DepartmentReviewPanel: React.FC<Props> = ({ request, onAction }) =>
   if (!user) {
     return <p role="alert">{tr("Sign in to review department requests.", "سجل الدخول لمراجعة طلبات القسم.")}</p>;
   }
+  const isPr = user.roles.includes("pr");
+  const details = request.requestDetails;
   
   // Renders the correct form based on the request's current stage and user's role.
   // Backend authorization ultimately protects the submission.
@@ -46,10 +48,25 @@ export const DepartmentReviewPanel: React.FC<Props> = ({ request, onAction }) =>
       <section className="request-info">
         <p><strong>{tr("Employee", "الموظف")}:</strong> {request.employeeName} ({request.employeeNumber})</p>
         <p><strong>{tr("Department", "القسم")}:</strong> {request.department}</p>
-        <p><strong>{tr("Initial System Calculation", "حساب النظام الأولي")}:</strong> {formatCurrency(request.initialPrice, language)}</p>
+        <p><strong>{tr("Route", "المسار")}:</strong> {localizeLabel(details.originCity ?? "Cairo", language)} → {localizeLabel(details.destinationCity ?? "", language)}</p>
+        <p><strong>{tr("Trip type", "نوع الرحلة")}:</strong> {details.tripType === "one-way" ? tr("One way", "ذهاب فقط") : tr("Round trip", "ذهاب وعودة")}</p>
+        <p><strong>{tr("Departure", "الذهاب")}:</strong> {formatDateTime(details.departureAt ?? "", language)}</p>
+        {details.tripType !== "one-way" && <p><strong>{tr("Return", "العودة")}:</strong> {formatDateTime(details.returnAt ?? "", language)}</p>}
+        <p><strong>{tr("Transportation", "وسيلة الانتقال")}:</strong> {localizeLabel(details.transportationMethod ?? "", language)}</p>
+        <p><strong>{tr("Accommodation", "الإقامة")}:</strong> {localizeLabel(details.accommodationType ?? "none", language)}</p>
+        <p><strong>{tr("Request notes", "ملاحظات الطلب")}:</strong> {details.notes || tr("No notes", "لا توجد ملاحظات")}</p>
+        {!isPr && <p><strong>{tr("Employee-entered ticket amount", "قيمة التذكرة التي أدخلها الموظف")}:</strong> {formatCurrency(details.claimedTransportationCost ?? 0, language)}</p>}
+        {!isPr && <p><strong>{tr("Current system calculation", "حساب النظام الحالي")}:</strong> {formatCurrency(request.currentPrice, language)}</p>}
       </section>
 
-      {request.revisions && request.revisions.length > 0 && (
+      <section className="request-info">
+        <p><strong>{tr("Ticket attachments", "مرفقات التذكرة")}:</strong></p>
+        {request.attachments.length === 0 ? <p>{tr("No attachments", "لا توجد مرفقات")}</p> : request.attachments.map((attachment) => (
+          <p key={attachment.id}><a href={attachment.url} download={attachment.name}>{attachment.name}</a></p>
+        ))}
+      </section>
+
+      {!isPr && request.revisions && request.revisions.length > 0 && (
         <section className="price-history">
           <h3>{tr("Earlier Revisions", "التعديلات السابقة")}</h3>
           <PriceHistoryTimeline revisions={request.revisions} />

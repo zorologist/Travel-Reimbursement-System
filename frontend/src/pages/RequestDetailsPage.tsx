@@ -5,7 +5,10 @@ import type { AuditEvent, WorkflowStage } from "@travel-reimbursement/shared";
 import logoUrl from "../../EGAS.png";
 import { ErrorState } from "../components/ui/ErrorState";
 import { LoadingState } from "../components/ui/LoadingState";
+import { BackButton } from "../components/ui/BackButton";
 import { requestApi, type RequestDetailsResponse } from "../services/requestApi";
+import { workflowApi } from "../services/workflowApi";
+import { useAuth } from "../hooks/useAuth";
 import { useLanguage } from "../hooks/useLanguage";
 import { formatCurrency, formatDate, formatDateTime, localizeLabel } from "../i18n/format";
 import "../styles/requestTracker.css";
@@ -63,9 +66,13 @@ function StepMarker({ state, number, currentLabel }: { state: StepState; number:
 export function RequestDetailsPage() {
   const { id = "" } = useParams();
   const { direction, language, localizeError, tr } = useLanguage();
+  const { user } = useAuth();
   const [request, setRequest] = useState<RequestDetailsResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [actionNote, setActionNote] = useState("");
+  const [actionError, setActionError] = useState<string | null>(null);
+  const [actionLoading, setActionLoading] = useState(false);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -89,7 +96,13 @@ export function RequestDetailsPage() {
       state,
       label: step.stage === "submitted" ? tr("Submitted", "تم التقديم") : localizeLabel(step.stage, language),
       tag: stepTag(request, state, index, tr),
-      meta: event ? formatDateTime(event.createdAt, language) : state === "current" ? tr("Under review now", "قيد المراجعة الآن") : tr("Not started", "لم يبدأ بعد"),
+      meta: event
+        ? formatDateTime(event.createdAt, language)
+        : step.stage === "submitted"
+          ? formatDateTime(request.createdAt, language)
+          : state === "current"
+            ? tr("Under review now", "قيد المراجعة الآن")
+            : "",
     };
   }) : [], [language, request, tr]);
 
@@ -101,10 +114,41 @@ export function RequestDetailsPage() {
   const progress = request.stage === "cancelled" ? Math.round((completedSteps / steps.length) * 100) : Math.round((activeStep / steps.length) * 100);
   const statusClass = request.status === "completed" ? "tracker-status--completed" : request.status === "cancelled" ? "tracker-status--cancelled" : "";
 
+  const isManager = !!user?.roles.includes("manager");
+  const isOwner = !!user && user.id === request.employeeId;
+  const canRequestInfo = isManager && request.stage === "manager-review";
+  const canConfirmTime = isManager && request.timeNeedsVerification === true;
+  const pendingEmployeeBanner = request.pendingEmployeeResponse === true && isOwner;
+
+  async function runManagerAction(kind: "request-info" | "confirm-time") {
+    setActionError(null);
+    if (!actionNote.trim() && kind === "request-info") {
+      setActionError(tr("Enter a note for the employee.", "أدخل ملاحظة للموظف."));
+      return;
+    }
+    setActionLoading(true);
+    try {
+      if (kind === "request-info") {
+        await workflowApi.requestInfo(request!.id, actionNote.trim());
+      } else {
+        await workflowApi.confirmTime(request!.id, actionNote.trim());
+      }
+      setActionNote("");
+      await load();
+    } catch (actionError) {
+      setActionError(localizeError(actionError, "The action could not be completed.", "تعذر إكمال الإجراء."));
+    } finally {
+      setActionLoading(false);
+    }
+  }
+
   return (
     <div className="request-tracker-page" lang={language} dir={direction}>
       <header className="tracker-topbar">
-        <div><h1>{tr("Request Tracking System", "نظام تتبع الطلبات")}</h1><p>{tr("Employee Affairs – EGAS", "إدارة شؤون الموظفين – EGAS")}</p></div>
+        <div className="tracker-topbar-start">
+          <BackButton />
+          <div><h1>{tr("Request Tracking System", "نظام تتبع الطلبات")}</h1><p>{tr("Employee Affairs – EGAS", "إدارة شؤون الموظفين – EGAS")}</p></div>
+        </div>
         <div className="tracker-request-badge">{tr("Request No.", "طلب رقم")} <strong>{request.id}</strong></div>
       </header>
 
@@ -117,6 +161,7 @@ export function RequestDetailsPage() {
             <InfoRow label={tr("Department", "القسم")} value={request.employee.department} />
             <InfoRow label={tr("Employee number", "رقم الموظف")} value={request.employee.employeeNumber} />
             <InfoRow label={tr("Request number", "رقم الطلب")} value={request.id} />
+            <InfoRow label={tr("Trip type", "نوع الرحلة")} value={request.tripType === "one-way" ? tr("One way", "ذهاب فقط") : tr("Round trip", "ذهاب وعودة")} />
             <InfoRow label={tr("Submission date", "تاريخ التقديم")} value={formatDate(request.createdAt, language)} />
           </section>
           <div className="tracker-promo"><label className="tracker-toggle"><input type="checkbox" defaultChecked aria-label={tr("Enable guidance messages", "تفعيل الرسائل الإرشادية")} /><span><i /></span></label><p>{tr("Together for faster, clearer service", "معًا نحو خدمة أسرع وأوضح")}</p></div>
@@ -126,14 +171,64 @@ export function RequestDetailsPage() {
 
         <section className="tracker-panel">
           <div className="tracker-summary">
-            <div><p className="tracker-eyebrow">{tr("Mission information", "بيانات المأمورية")}</p><h2>{localizeLabel(request.originCity, language)} – {localizeLabel(request.destinationCity, language)}</h2><p className="tracker-muted">{formatDate(request.departureAt, language)} – {formatDate(request.returnAt, language)}</p></div>
-            <div><p className="tracker-eyebrow">{tr("Request status", "حالة إتمام الطلب")}</p><span className={`tracker-status ${statusClass}`}>● &nbsp; {localizeLabel(request.stage, language)}</span></div>
+            <div><p className="tracker-eyebrow">{tr("Mission information", "بيانات المأمورية")}</p><h2>{localizeLabel(request.originCity, language)} – {localizeLabel(request.destinationCity, language)}</h2><p className="tracker-muted">{formatDate(request.departureAt, language)}{request.tripType === "one-way" ? "" : ` – ${formatDate(request.returnAt, language)}`}</p></div>
+            <div>
+              <p className="tracker-eyebrow">{tr("Request status", "حالة إتمام الطلب")}</p>
+              <span className={`tracker-status ${statusClass}`}>● &nbsp; {localizeLabel(request.stage, language)}</span>
+              {request.timeNeedsVerification === true && (
+                <span className="tracker-badge tracker-badge--warning" style={{ display: "inline-block", marginTop: 6 }}>
+                  {tr("Pending time verification", "بانتظار التحقق من المواعيد")}
+                </span>
+              )}
+              {request.pendingEmployeeResponse === true && (
+                <span className="tracker-badge tracker-badge--info" style={{ display: "inline-block", marginTop: 6 }}>
+                  {tr("Manager requested more information", "طلب المدير معلومات إضافية")}
+                </span>
+              )}
+            </div>
             <div><p className="tracker-progress-label">{tr(`Stage ${activeStep} of ${steps.length} – ${completedSteps} stages approved`, `المرحلة ${activeStep} من ${steps.length} – تم اعتماد ${completedSteps} مراحل`)}</p><div className="tracker-progress" role="progressbar" aria-valuenow={progress} aria-valuemin={0} aria-valuemax={100}><span style={{ width: `${progress}%` }} /></div><p className="tracker-muted">{tr("Last updated", "آخر تحديث")}: {formatDateTime(request.updatedAt, language)}</p></div>
           </div>
 
+          {pendingEmployeeBanner && (
+            <div className="tracker-note tracker-note--info" role="status">
+              <span aria-hidden="true">✉</span>
+              <div>
+                <strong>{tr("Manager requested more information", "طلب المدير معلومات إضافية")}</strong>
+                <p>{tr("Open the request form if you need to provide the requested clarification.", "افتح نموذج الطلب إذا احتجت إلى تقديم التوضيح المطلوب.")}</p>
+              </div>
+            </div>
+          )}
+
+          {(canRequestInfo || canConfirmTime) && (
+            <div className="tracker-manager-actions" role="group" aria-label={tr("Manager actions", "إجراءات المدير")}>
+              <h3>{canConfirmTime ? tr("Confirm verified times", "تأكيد المواعيد المتحقق منها") : tr("Request more information", "طلب معلومات إضافية")}</h3>
+              <textarea
+                rows={3}
+                value={actionNote}
+                onChange={(event) => setActionNote(event.target.value)}
+                placeholder={canConfirmTime
+                  ? tr("Add an optional confirmation note.", "أضف ملاحظة تأكيد اختيارية.")
+                  : tr("What does the employee need to clarify?", "ما الذي يحتاج الموظف لتوضيحه؟")}
+              />
+              {actionError && <p className="tracker-action-error" role="alert">{actionError}</p>}
+              <div className="tracker-manager-actions-buttons">
+                {canConfirmTime && (
+                  <button type="button" className="tracker-btn tracker-btn--primary" disabled={actionLoading} onClick={() => void runManagerAction("confirm-time")}>
+                    {actionLoading ? tr("Confirming...", "جارٍ التأكيد...") : tr("Confirm time verification", "تأكيد التحقق من المواعيد")}
+                  </button>
+                )}
+                {canRequestInfo && (
+                  <button type="button" className="tracker-btn tracker-btn--secondary" disabled={actionLoading} onClick={() => void runManagerAction("request-info")}>
+                    {actionLoading ? tr("Sending...", "جارٍ الإرسال...") : tr("Request more details", "طلب تفاصيل إضافية")}
+                  </button>
+                )}
+              </div>
+            </div>
+          )}
+
           <div className="tracker-timeline-block">
-            <h2>{tr("Request document workflow", "الدورة المستندية للطلب")}</h2><p className="tracker-muted">{tr("From submission through salary settlement and completion", "من التقديم حتى تسوية الرواتب واكتمال الطلب")}</p>
-            <ol className="tracker-timeline">{steps.map((step, index) => <li key={step.stage} data-state={step.state}><span className="tracker-step-marker"><StepMarker state={step.state} number={index + 1} currentLabel={tr("Current stage", "المرحلة الحالية")} /></span><strong>{step.label}</strong><span className={`tracker-step-tag tracker-step-tag--${step.state}`}>{step.tag}</span><small>{step.meta}</small></li>)}</ol>
+            <h2>{tr("Request document workflow", "الدورة المستندية للطلب")}</h2><p className="tracker-muted">{tr("From submission through Payroll settlement and completion", "من التقديم حتى تسوية الرواتب واكتمال الطلب")}</p>
+            <ol className="tracker-timeline">{steps.map((step, index) => <li key={step.stage} data-state={step.state}><span className="tracker-step-marker"><StepMarker state={step.state} number={index + 1} currentLabel={tr("Current stage", "المرحلة الحالية")} /></span><strong>{step.label}</strong><span className={`tracker-step-tag tracker-step-tag--${step.state}`}>{step.tag}</span>{step.meta && <small>{step.meta}</small>}</li>)}</ol>
           </div>
 
           <div className={`tracker-note ${request.status === "cancelled" ? "tracker-note--cancelled" : request.status === "completed" ? "tracker-note--completed" : ""}`}>
@@ -147,14 +242,10 @@ export function RequestDetailsPage() {
             <InfoCard label={tr("Request notes", "ملاحظات الطلب")} value={request.notes || tr("No notes", "لا توجد ملاحظات")} />
           </section>
 
-          <section className="tracker-audit" aria-labelledby="tracker-audit-title">
-            <h2 id="tracker-audit-title">{tr("Request action history", "سجل إجراءات الطلب")}</h2>
-            <ul>{request.auditEvents.slice().reverse().map((event) => <li key={event.id}><span><strong>{localizeLabel(event.action, language)}</strong><small>{localizeLabel(event.actorRole, language)}</small></span><div><p>{event.note || `${event.fromStage ? localizeLabel(event.fromStage, language) : tr("Request started", "بداية الطلب")} ← ${localizeLabel(event.toStage, language)}`}</p><time dateTime={event.createdAt}>{formatDateTime(event.createdAt, language)}</time></div></li>)}</ul>
-          </section>
         </section>
       </main>
 
-      <footer className="tracker-footer"><span>EGAS © 2026</span><span>{tr("Last updated", "آخر تحديث")}: {formatDateTime(request.updatedAt, language)}</span><span><Link to="/my-requests">{tr("My requests", "طلباتي")}</Link> · <Link to="/dashboard">{tr("Back to dashboard", "العودة إلى لوحة التحكم")}</Link></span></footer>
+      <footer className="tracker-footer"><span>EGAS © 2026</span><span>{tr("Last updated", "آخر تحديث")}: {formatDateTime(request.updatedAt, language)}</span><span><Link to="/my-requests">{tr("Request tracking", "تتبع الطلبات")}</Link> · <Link to="/dashboard">{tr("Back to dashboard", "العودة إلى لوحة التحكم")}</Link></span></footer>
     </div>
   );
 }

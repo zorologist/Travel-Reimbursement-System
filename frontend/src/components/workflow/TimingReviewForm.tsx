@@ -25,22 +25,26 @@ export function TimingReviewForm({ request, onAction }: { request: ApprovalQueue
   const [departureAt, setDepartureAt] = useState(request.requestDetails.departureAt ?? "");
   const [returnAt, setReturnAt] = useState(request.requestDetails.returnAt ?? "");
   const [meetsSevenHourRule, setMeetsSevenHourRule] = useState(true);
-  const nightCount = missionNightCount(departureAt, returnAt);
+  const [comment, setComment] = useState("");
+  const isOneWay = request.requestDetails.tripType === "one-way";
+  const nightCount = isOneWay ? 0 : missionNightCount(departureAt, returnAt);
 
   return (
     <div className="timing-review-form form-panel">
       <h3>{tr("Timing & Hours Review", "مراجعة المواعيد والساعات")}</h3>
-      <div className="form-group">
+      {!isOneWay && <div className="form-group">
         <label>{tr("Verified departure time", "وقت الذهاب المؤكد")}</label>
         <input type="datetime-local" value={inputDate(departureAt)} onChange={(event) => setDepartureAt(isoDate(event.target.value))} />
-      </div>
+      </div>}
       <div className="form-group">
         <label>{tr("Verified return time", "وقت العودة المؤكد")}</label>
         <input type="datetime-local" value={inputDate(returnAt)} onChange={(event) => setReturnAt(isoDate(event.target.value))} />
       </div>
       <div className={`mission-duration ${nightCount === 0 ? "same-day" : nightCount === null ? "invalid" : "overnight"}`} aria-live="polite">
         <strong>{tr("Mission duration", "مدة المأمورية")}</strong>
-        {nightCount === null ? (
+        {isOneWay ? (
+          <span>{tr("One-way trip — departure time verification only", "رحلة ذهاب فقط — يتم التحقق من وقت المغادرة فقط")}</span>
+        ) : nightCount === null ? (
           <span>{tr("Enter a valid return time after the departure time.", "أدخل وقت عودة صحيحاً بعد وقت الذهاب.")}</span>
         ) : nightCount === 0 ? (
           <span>{tr("Same-day travel — 1 day, 0 nights", "سفر في نفس اليوم — يوم واحد، بدون مبيت")}</span>
@@ -48,12 +52,13 @@ export function TimingReviewForm({ request, onAction }: { request: ApprovalQueue
           <span>{tr(`Overnight travel — ${nightCount} ${nightCount === 1 ? "night" : "nights"}`, `سفر بمبيت — ${nightCount} ${nightCount === 1 ? "ليلة" : "ليالٍ"}`)}</span>
         )}
       </div>
-      <label className="checkbox-group">
+      {!isOneWay && <label className="checkbox-group">
         <input type="checkbox" checked={meetsSevenHourRule} onChange={(event) => setMeetsSevenHourRule(event.target.checked)} />
         {tr("Verified attendance meets the seven-hour allowance rule", "تم التحقق من أن الحضور يستوفي قاعدة بدل السبع ساعات")}
-      </label>
-      <button disabled={nightCount === null} className="btn-approve" type="button" onClick={() => void onAction(() => workflowApi.approve(request.id, { departureAt, returnAt, meetsSevenHourRule, reason: tr("Attendance dates and qualifying hours verified.", "تم التحقق من تواريخ الحضور والساعات المستحقة.") }))}>
-        {tr("Approve & Pass to Salary", "اعتماد وتحويل إلى الرواتب")}
+      </label>}
+      <div className="form-group"><label htmlFor={`timing-comment-${request.id}`}>{tr("Timing comment", "تعليق المواعيد")}</label><textarea id={`timing-comment-${request.id}`} rows={4} maxLength={1000} value={comment} onChange={(event) => setComment(event.target.value)} placeholder={tr("Add a review comment...", "أضف تعليق المراجعة...")} /></div>
+      <button disabled={nightCount === null} className="btn-approve" type="button" onClick={() => void onAction(() => workflowApi.approve(request.id, { departureAt, ...(isOneWay ? {} : { returnAt, meetsSevenHourRule }), reason: comment.trim() || tr("Attendance dates and qualifying hours verified.", "تم التحقق من تواريخ الحضور والساعات المستحقة.") }))}>
+        {tr("Approve & Pass to Payroll", "اعتماد وتحويل إلى الرواتب")}
       </button>
     </div>
   );

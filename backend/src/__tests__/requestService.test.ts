@@ -16,8 +16,11 @@ const input: CreateTravelRequestInput = {
   destinationCity: "Suez",
   departureAt: "2027-03-01T08:00:00.000Z",
   returnAt: "2027-03-03T18:00:00.000Z",
+  tripType: "round-trip",
+  managerId: "u4",
   accommodationType: "none",
   transportationMethod: "Company bus",
+  attachments: [{ id: "ticket-1", name: "ticket.jpg", mimeType: "image/jpeg", size: 4, url: "data:image/jpeg;base64,AA==" }],
 };
 
 describe("request lifecycle creation service", () => {
@@ -32,6 +35,7 @@ describe("request lifecycle creation service", () => {
       finalSalary: null,
     });
     expect(request.id).not.toBe("");
+    expect(request.id).toMatch(/^TR-\d{4}-\d{4,}$/);
     expect(request.salaryPreview.totalAmount).toBe(280);
     expect(request.auditEvents).toHaveLength(1);
     expect(request.auditEvents[0]).toMatchObject({

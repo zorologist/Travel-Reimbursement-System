@@ -1,6 +1,7 @@
 import { Router, type NextFunction, type Request, type Response } from "express";
 import type { SystemRole, WorkflowStage } from "@travel-reimbursement/shared";
 
+import { listManagers } from "../data/users.js";
 import { ApiError } from "../errors/ApiError.js";
 import { authMiddleware } from "../middleware/authMiddleware.js";
 import { createNewRequest } from "../services/requestService.js";
@@ -12,7 +13,9 @@ import {
   findRequestById,
   findUserById,
   listRequestsByOwner,
+  listRequests,
   listRequestsForRole,
+  nextRequestId,
   replaceRequest,
 } from "../storage/memoryStore.js";
 import {
@@ -38,6 +41,18 @@ function roleStage(role: SystemRole): WorkflowStage | null {
   return stages[role] ?? null;
 }
 
+requestRouter.get("/managers", authMiddleware, (_request: Request, response: Response) => {
+  response.json({
+    managers: listManagers().map((manager) => ({
+      id: manager.id,
+      employeeNumber: manager.employeeNumber,
+      displayName: manager.displayName,
+      department: manager.department,
+      jobLevel: manager.jobLevel,
+    })),
+  });
+});
+
 requestRouter.get("/requests", (request: Request, response: Response, next: NextFunction) => {
   try {
     const user = request.currentUser!;
@@ -54,11 +69,19 @@ requestRouter.get("/requests", (request: Request, response: Response, next: Next
         throw new ApiError(403, "FORBIDDEN", "Only department reviewers can open an approval queue.");
       }
       response.json({
-        requests: listRequestsForRole(role).map((record) => authorizedView(record, user.id, user.roles, true)),
+        requests: listRequestsForRole(role, user.id).map((record) => authorizedView(record, user.id, user.roles, true)),
       });
       return;
     }
-    throw new ApiError(400, "INVALID_SCOPE", "scope must be either mine or queue.");
+    if (["payroll-track", "payroll-completed"].includes(scope)) {
+      if (!user.roles.includes("salary")) {
+        throw new ApiError(403, "FORBIDDEN", "Only Payroll can open this request scope.");
+      }
+      const records = listRequests().filter((record) => scope === "payroll-track" || record.stage === "completed");
+      response.json({ requests: records.map((record) => authorizedView(record, user.id, user.roles, true)) });
+      return;
+    }
+    throw new ApiError(400, "INVALID_SCOPE", "Unsupported request scope.");
   } catch (error) {
     next(error);
   }
@@ -70,8 +93,10 @@ requestRouter.get("/requests/:id", (request: Request, response: Response, next: 
     const record = findRequestById(String(request.params.id));
     if (!record) throw new ApiError(404, "REQUEST_NOT_FOUND", "Travel request not found.");
     const isOwner = record.employeeId === user.id;
-    const hasAdministrativeRole = administrativeRole(user.roles) !== undefined;
-    if (!isOwner && !hasAdministrativeRole) {
+    const adminRole = administrativeRole(user.roles);
+    const isSelectedManager = adminRole === "manager" && record.managerId === user.id;
+    const hasDepartmentAccess = adminRole !== undefined && adminRole !== "manager";
+    if (!isOwner && !isSelectedManager && !hasDepartmentAccess) {
       throw new ApiError(403, "FORBIDDEN", "You cannot view this travel request.");
     }
     response.json({ request: authorizedView(record, user.id, user.roles) });
@@ -87,7 +112,7 @@ requestRouter.post("/requests", (request: Request, response: Response, next: Nex
       throw new ApiError(403, "FORBIDDEN", "Only employees can create travel requests.");
     }
     const input = CreateRequestBodySchema.parse(request.body);
-    const created = createRequest(createNewRequest(input, user));
+    const created = createRequest(createNewRequest(input, user, nextRequestId()));
     response.status(201).json({ request: authorizedView(created, user.id, user.roles) });
   } catch (error) {
     next(error);
@@ -102,14 +127,22 @@ requestRouter.patch("/requests/:id", (request: Request, response: Response, next
     if (record.employeeId !== user.id) {
       throw new ApiError(403, "FORBIDDEN", "Only the request owner can correct it.");
     }
-    const edits = PatchRequestBodySchema.parse(request.body);
+    const parsedEdits = PatchRequestBodySchema.parse(request.body);
+    const edits = record.tripType === "one-way" && parsedEdits.departureAt
+      ? { ...parsedEdits, returnAt: parsedEdits.departureAt }
+      : parsedEdits;
     if (Object.keys(edits).length === 0) {
       throw new ApiError(400, "EMPTY_REQUEST_UPDATE", "Provide at least one editable request field.");
     }
     const departureAt = edits.departureAt ?? record.departureAt;
     const returnAt = edits.returnAt ?? record.returnAt;
-    if (new Date(returnAt).getTime() <= new Date(departureAt).getTime()) {
-      throw new ApiError(400, "INVALID_TRAVEL_DATES", "returnAt must be after departureAt.");
+    const validDates = record.tripType === "one-way"
+      ? new Date(returnAt).getTime() === new Date(departureAt).getTime()
+      : new Date(returnAt).getTime() > new Date(departureAt).getTime();
+    if (!validDates) {
+      throw new ApiError(400, "INVALID_TRAVEL_DATES", record.tripType === "one-way"
+        ? "A one-way request cannot contain a separate return time."
+        : "returnAt must be after departureAt.");
     }
     const originCity = edits.originCity ?? record.originCity;
     const destinationCity = edits.destinationCity ?? record.destinationCity;

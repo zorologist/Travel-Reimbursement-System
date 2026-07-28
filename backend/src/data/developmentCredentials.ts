@@ -14,4 +14,5 @@ export const developmentCredentials: readonly DevelopmentCredential[] = [
   { employeeNumber: "DEV007", password: "Admin@123" },
   { employeeNumber: "DEV008", password: "Admin@123" },
   { employeeNumber: "DEV009", password: "Admin@123" },
+  { employeeNumber: "DEV010", password: "Admin@123" },
 ];

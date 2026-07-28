@@ -45,9 +45,8 @@ export function MainMenuPage() {
       </header>
 
       <main className="main-menu-content">
-        <section className="main-menu-intro" aria-labelledby="main-menu-title">
+        <section className="main-menu-intro" aria-label={tr(`${roleLabel} Services`, `خدمات ${roleLabel}`)}>
           <p className="main-menu-eyebrow">{tr(`${roleLabel} Services`, `خدمات ${roleLabel}`)}</p>
-          <h1 id="main-menu-title">{tr("What would you like to do?", "ماذا تريد أن تفعل؟")}</h1>
           <p>
             {tr("Start a new travel request or open your dashboard to follow existing requests and their current approval stage.", "أنشئ طلب سفر جديداً أو افتح لوحة التحكم لمتابعة الطلبات الحالية ومرحلة اعتمادها.")}
           </p>
@@ -91,7 +90,7 @@ export function MainMenuPage() {
 
           <Link className="main-menu-card main-menu-card--dashboard" to="/my-requests">
             <span className="main-menu-card-icon" aria-hidden="true">✓</span>
-            <span className="main-menu-card-copy"><small>{tr("Personal workflow", "مسار العمل الشخصي")}</small><strong>{tr("My Requests", "طلباتي")}</strong><span>{tr("See status, final amounts, and the audit history.", "اعرض الحالة والمبالغ النهائية وسجل الإجراءات.")}</span></span>
+            <span className="main-menu-card-copy"><small>{tr("Personal workflow", "مسار العمل الشخصي")}</small><strong>{tr("Request Tracking", "تتبع الطلبات")}</strong><span>{tr("Track status and see the final approved amount.", "تابع الحالة واعرض المبلغ النهائي المعتمد.")}</span></span>
             <span className="main-menu-card-arrow" aria-hidden="true">{tr("→", "←")}</span>
           </Link>
 
@@ -103,9 +102,9 @@ export function MainMenuPage() {
             </Link>
           )}
           {administrativeRole === "salary" && (
-            <Link className="main-menu-card main-menu-card--dashboard" to="/salary">
+            <Link className="main-menu-card main-menu-card--dashboard" to="/payroll">
               <span className="main-menu-card-icon" aria-hidden="true">£</span>
-              <span className="main-menu-card-copy"><small>{tr("Salary work", "عمل الرواتب")}</small><strong>{tr("Finalization Queue", "قائمة الاعتماد النهائي")}</strong><span>{tr("Verify calculations and confirm reimbursement.", "تحقق من الحسابات وأكد مبلغ التعويض.")}</span></span>
+              <span className="main-menu-card-copy"><small>{tr("Payroll work", "عمل الرواتب")}</small><strong>{tr("Finalization Queue", "قائمة الاعتماد النهائي")}</strong><span>{tr("Verify calculations and confirm reimbursement.", "تحقق من الحسابات وأكد مبلغ التعويض.")}</span></span>
               <span className="main-menu-card-arrow" aria-hidden="true">{tr("→", "←")}</span>
             </Link>
           )}

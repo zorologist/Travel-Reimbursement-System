@@ -29,6 +29,7 @@ describe("salary API development adapter", () => {
 
   it("recalculates saved adjustments and records a salary revision", async () => {
     const updated = await salaryApi.updateAdjustments("TR-2026-0841", {
+      transportationCost: 225,
       bonusAmount: 100,
       penaltyAmount: 20,
       note: "Approved mission adjustment.",
@@ -37,12 +38,12 @@ describe("salary API development adapter", () => {
     expect(updated.calculation).toMatchObject({
       bonusAmount: 100,
       penaltyAmount: 20,
-      totalAmount: 882,
+      totalAmount: 907,
     });
     expect(updated.revisions.at(-1)).toMatchObject({
-      department: "Salary",
+      department: "Payroll",
       previousPrice: 802,
-      newPrice: 882,
+      newPrice: 907,
       reason: "Approved mission adjustment.",
     });
   });
@@ -50,6 +51,7 @@ describe("salary API development adapter", () => {
   it("requires an audit note for a non-zero adjustment", async () => {
     await expect(
       salaryApi.updateAdjustments("TR-2026-0841", {
+        transportationCost: 200,
         bonusAmount: 10,
         penaltyAmount: 0,
         note: "",

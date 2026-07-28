@@ -62,16 +62,17 @@ const EDITABLE_FIELDS: Readonly<Record<SystemRole, readonly EditableField[]>> = 
     "notes",
     "attachments",
   ],
-  manager: [],
+  manager: ["timeNeedsVerification"],
   pr: ["accommodationType"],
-  transportation: ["destinationCity", "transportationMethod", "transportationCost"],
+  transportation: ["destinationCity", "transportationMethod"],
   timing: [
     "verifiedDepartureAt",
     "verifiedReturnAt",
     "verifiedSameDayHours",
     "verifiedReturnDayHours",
+    "timeNeedsVerification",
   ],
-  salary: ["bonusAmount", "penaltyAmount"],
+  salary: ["bonusAmount", "penaltyAmount", "transportationCost", "transportationCostVerified"],
 };
 
 function currentTime(options?: WorkflowExecutionOptions): Date {
@@ -188,11 +189,19 @@ export function canEdit(
     return !Number.isNaN(createdAt.getTime()) && elapsed >= 0 && elapsed <= 30 * 60 * 1000;
   }
 
+  // Payroll/Salary can edit the amount in any non-terminal stage — the
+  // assertNotTerminal check above already blocks completed/cancelled requests.
+  if (role === "salary") return true;
+
+  // A manager can clear the timeNeedsVerification flag at any non-terminal stage
+  // (timing-review sets it to true after verifying attendance times; the manager
+  // then needs to confirm those times before salary finalization).
+  if (role === "manager") return true;
+
   return (
     (role === "pr" && request.stage === "pr-review") ||
     (role === "transportation" && request.stage === "transportation-review") ||
-    (role === "timing" && request.stage === "timing-review") ||
-    (role === "salary" && request.stage === "salary-finalization")
+    (role === "timing" && request.stage === "timing-review")
   );
 }
 
@@ -339,6 +348,34 @@ export function finalizeRequest(
     stage: "completed",
     finalSalary: request.salaryPreview,
   });
+}
+
+/**
+ * Manager-only action: marks a request as pending-employee-response so the
+ * employee knows the manager has asked for more details. The note carries the
+ * actual question. The request stage does not change.
+ *
+ * (See Section 7 of the implementation spec. No email/SMS notification is sent —
+ * the employee only sees the banner the next time they open the app.)
+ */
+export function requestMoreInfo(
+  request: TravelRequest,
+  actorId: string,
+  actorRole: SystemRole,
+  note: string,
+  options?: WorkflowExecutionOptions,
+): TravelRequest {
+  assertNotTerminal(request);
+  assertAllowed(actorRole === "manager" && request.stage === "manager-review", "request-info");
+  if (!note?.trim()) {
+    throw new WorkflowServiceError("INVALID_EDIT_FIELDS", "A note is required when requesting more details.");
+  }
+  const now = currentTime(options);
+  const event = createAuditEvent(
+    request.id, actorId, actorRole, "request-info", request.stage, request.stage,
+    { pendingEmployeeResponse: { before: request.pendingEmployeeResponse, after: true } }, note.trim(), optionsAt(options, now),
+  );
+  return withAuditEvent(request, event, toIsoString(now), { pendingEmployeeResponse: true });
 }
 
 /** Moves only a valid approval stage forward; included for callers needing transition validation. */

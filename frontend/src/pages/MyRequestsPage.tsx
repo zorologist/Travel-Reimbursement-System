@@ -21,7 +21,7 @@ export default function MyRequestsPage() {
   return (
     <main className="content-page requests-page">
       <header className="page-heading">
-        <div><h1>{tr("My travel requests", "طلبات السفر الخاصة بي")}</h1><p>{tr("Follow each request from submission through final salary confirmation.", "تابع كل طلب من الإرسال وحتى الاعتماد النهائي للرواتب.")}</p></div>
+        <div><h1>{tr("Request Tracking", "تتبع الطلبات")}</h1><p>{tr("Follow each request from submission through final Payroll confirmation.", "تابع كل طلب من الإرسال وحتى الاعتماد النهائي للرواتب.")}</p></div>
         <Link className="primary-link" to="/requests/new">{tr("New request", "طلب جديد")}</Link>
       </header>
 

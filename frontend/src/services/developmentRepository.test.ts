@@ -6,7 +6,7 @@ beforeEach(() => resetDevelopmentRepositoryForTests());
 
 describe("integrated frontend development repository", () => {
   it("creates an employee request at manager review with an audit event", async () => {
-    const attachment = { id: "receipt-1", name: "receipt.pdf", mimeType: "application/pdf", size: 512, url: "data:application/pdf;base64,JVBERi0=" };
+    const attachment = { id: "receipt-1", name: "receipt.jpg", mimeType: "image/jpeg", size: 512, url: "data:image/jpeg;base64,AA==" };
     const created = await developmentRepository.create({ employeeId: "u1", originCity: "Cairo", destinationCity: "Suez", departureAt: "2026-09-01T06:00:00.000Z", returnAt: "2026-09-02T17:00:00.000Z", accommodationType: "none", transportationMethod: "Company car", transportationCost: 120, notes: "Site visit", attachments: [attachment] });
     expect(created).toMatchObject({ employeeId: "u1", stage: "manager-review", originCity: "Cairo", destinationCity: "Suez" });
     expect(created.attachments).toEqual([attachment]);
@@ -15,7 +15,7 @@ describe("integrated frontend development repository", () => {
 
   it("provides submitted attachments to transportation and stores PR comments", async () => {
     const transportationQueue = await developmentRepository.queueForRole("transportation");
-    expect(transportationQueue.find((request) => request.id === "TR-2026-003")?.attachments[0]).toMatchObject({ name: "train-ticket-TR-2026-003.txt" });
+    expect(transportationQueue.find((request) => request.id === "TR-2026-003")?.attachments[0]).toMatchObject({ name: "train-ticket-TR-2026-003.jpg" });
 
     const reviewed = await developmentRepository.approve("TR-2026-002", "pr", { note: "Hotel booking confirmed with the employee." });
     expect(reviewed.auditEvents.at(-1)).toMatchObject({ actorRole: "pr", note: "Hotel booking confirmed with the employee." });

@@ -4,6 +4,7 @@ import { PriceComparison } from "../pricing/PriceComparison";
 import { workflowApi, type ApprovalQueueItem } from "../../services/workflowApi";
 import { useLanguage } from "../../hooks/useLanguage";
 import { localizeLabel } from "../../i18n/format";
+import { transportationOptions } from "../../constants/transportationOptions";
 
 function formatFileSize(size: number): string {
   if (size < 1024) return `${size} B`;
@@ -16,9 +17,8 @@ export function TransportationReviewForm({ request, onAction }: { request: Appro
   const details = request.requestDetails;
   const [destination, setDestination] = useState(details.destinationCity ?? "");
   const [method, setMethod] = useState(details.transportationMethod ?? "");
-  const [transportationCost, setTransportationCost] = useState(details.transportationCost ?? 0);
+  const [comment, setComment] = useState("");
   const [selectedAttachment, setSelectedAttachment] = useState<ApprovalQueueItem["attachments"][number] | null>(null);
-  const previewTotal = request.currentPrice - (details.transportationCost ?? 0) + transportationCost;
 
   return (
     <div className="transportation-review-form form-panel">
@@ -62,17 +62,19 @@ export function TransportationReviewForm({ request, onAction }: { request: Appro
       <div className="form-group">
         <label>{tr("Transportation method", "وسيلة الانتقال")}</label>
         <select value={method} onChange={(event) => setMethod(event.target.value)}>
-          {method && !["Flight", "Train", "Company bus", "Company car", "Personal car"].includes(method) && <option>{localizeLabel(method, language)}</option>}
+          {method && !transportationOptions.some((option) => option.value === method) && <option value={method}>{localizeLabel(method, language)}</option>}
           <option value="">{tr("Select a method", "اختر وسيلة")}</option>
-          {(["Flight", "Train", "Company bus", "Company car", "Personal car"] as const).map((value) => <option key={value} value={value}>{localizeLabel(value, language)}</option>)}
+          {transportationOptions.map((option) => <option key={option.value} value={option.value}>{tr(option.english, option.arabic)}</option>)}
         </select>
       </div>
+      <p className="transport-cost-readonly" role="note">
+        {tr("Transportation cost is no longer editable at this stage. It will be set by Payroll.", "تكلفة الانتقال لم تعد قابلة للتعديل في هذه المرحلة. سيتم تحديدها من قِبل قسم الرواتب.")}
+      </p>
       <div className="form-group">
-        <label>{tr("Confirmed transportation cost (EGP)", "تكلفة الانتقال المؤكدة (جنيه)")}</label>
-        <input min="0" step="0.01" type="number" value={transportationCost} onChange={(event) => setTransportationCost(Number(event.target.value))} />
+        <label htmlFor={`transport-comment-${request.id}`}>{tr("Transportation comment", "تعليق الانتقالات")}</label>
+        <textarea id={`transport-comment-${request.id}`} rows={4} maxLength={1000} value={comment} onChange={(event) => setComment(event.target.value)} placeholder={tr("Add a review comment...", "أضف تعليق المراجعة...")} />
       </div>
-      <PriceComparison originalPrice={request.currentPrice} newPrice={previewTotal} />
-      <button className="btn-approve" type="button" onClick={() => void onAction(() => workflowApi.approve(request.id, { destination, method, transportationCost, reason: tr("Destination, method, and transport cost verified.", "تم التحقق من الوجهة ووسيلة الانتقال والتكلفة.") }))}>
+      <button className="btn-approve" type="button" onClick={() => void onAction(() => workflowApi.approve(request.id, { destination, method, reason: comment.trim() || tr("Destination and method verified.", "تم التحقق من الوجهة ووسيلة الانتقال.") }))}>
         {tr("Approve & Pass to Timing", "اعتماد وتحويل إلى المواعيد")}
       </button>
     </div>

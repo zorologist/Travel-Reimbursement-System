@@ -28,6 +28,7 @@ interface SeedRequestInput {
   accommodationType: AccommodationType;
   transportationMethod: string;
   transportationCost: number;
+  transportationCostVerified?: boolean;
   verifiedDepartureAt?: string | null;
   verifiedReturnAt?: string | null;
   verifiedSameDayHours?: number;
@@ -39,6 +40,10 @@ interface SeedRequestInput {
   claimedTransportationCost?: number;
   notes?: string;
   attachments?: TravelRequest["attachments"];
+  managerId?: string;
+  tripType?: "one-way" | "round-trip";
+  pendingEmployeeResponse?: boolean;
+  timeNeedsVerification?: boolean;
   createdAt: string;
   history: AuditEvent[];
 }
@@ -160,6 +165,23 @@ function calculationFor(input: SeedRequestInput): SalaryCalculationResult {
 function buildRequest(input: SeedRequestInput): TravelRequest {
   const calculation = calculationFor(input);
   const updatedAt = input.history.at(-1)?.createdAt ?? input.createdAt;
+  const attachments = input.attachments ?? [{
+    id: `attachment-${input.id}-1`, name: `ticket-${input.id}.jpg`, mimeType: "image/jpeg",
+    size: 4, url: "data:image/jpeg;base64,AA==",
+  }];
+  const submittedRequest = {
+    originCity: input.originCity ?? "Cairo",
+    destinationCity: input.destinationCity,
+    departureAt: input.departureAt,
+    returnAt: input.returnAt,
+    tripType: input.tripType ?? "round-trip" as const,
+    managerId: input.managerId ?? actors.manager,
+    accommodationType: input.accommodationType,
+    transportationMethod: input.transportationMethod,
+    claimedTransportationCost: input.claimedTransportationCost ?? input.transportationCost,
+    notes: input.notes ?? "Development travel request.",
+    attachments,
+  };
 
   return {
     id: input.id,
@@ -169,6 +191,8 @@ function buildRequest(input: SeedRequestInput): TravelRequest {
     destinationCity: input.destinationCity,
     departureAt: input.departureAt,
     returnAt: input.returnAt,
+    tripType: input.tripType ?? "round-trip",
+    managerId: input.managerId ?? actors.manager,
     accommodationType: input.accommodationType,
     transportationMethod: input.transportationMethod,
     verifiedDepartureAt: input.verifiedDepartureAt ?? null,
@@ -176,6 +200,8 @@ function buildRequest(input: SeedRequestInput): TravelRequest {
     verifiedSameDayHours: input.verifiedSameDayHours ?? 0,
     verifiedReturnDayHours: input.verifiedReturnDayHours ?? 0,
     transportationCost: input.transportationCost,
+    transportationCostVerified: input.transportationCostVerified
+      ?? (input.stage === "salary-finalization" || input.stage === "completed"),
     claimedTransportationCost: input.claimedTransportationCost ?? input.transportationCost,
     bonusAmount: input.bonusAmount ?? 0,
     penaltyAmount: input.penaltyAmount ?? 0,
@@ -183,11 +209,14 @@ function buildRequest(input: SeedRequestInput): TravelRequest {
     finalSalary: input.stage === "completed" ? calculation : null,
     cancellationReason: input.cancellationReason ?? null,
     notes: input.notes ?? "Development travel request.",
-    attachments: input.attachments ?? [],
+    attachments,
     priceRevisions: [],
+    pendingEmployeeResponse: input.pendingEmployeeResponse ?? false,
+    timeNeedsVerification: input.timeNeedsVerification ?? false,
     createdAt: input.createdAt,
     updatedAt,
     auditEvents: input.history,
+    submittedRequest,
   };
 }
 
@@ -246,7 +275,7 @@ function transportationReviewRequest(): TravelRequest {
     accommodationType: "room-and-food",
     transportationMethod: "Train",
     transportationCost: 220,
-    attachments: [{ id: "attachment-TR-2026-003-1", name: "train-ticket-TR-2026-003.txt", mimeType: "text/plain", size: 91, url: "data:text/plain;charset=utf-8,Travel%20request%20TR-2026-003%0ATrain%20ticket%20attachment%20for%20transportation%20review." }],
+    attachments: [{ id: "attachment-TR-2026-003-1", name: "train-ticket-TR-2026-003.jpg", mimeType: "image/jpeg", size: 4, url: "data:image/jpeg;base64,AA==" }],
     createdAt,
     history: [
       submitted(id, "u3", createdAt),

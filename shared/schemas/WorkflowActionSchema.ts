@@ -17,6 +17,7 @@ export const WorkflowActionSchema = z.enum([
   "reject",
   "edit",
   "finalize",
+  "request-info",
 ]);
 
 export const AuditEventSchema = z.object({

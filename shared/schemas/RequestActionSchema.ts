@@ -8,7 +8,6 @@ export const ApproveRequestInputSchema = z.object({
   accommodationType: AccommodationTypeSchema.optional(),
   destination: z.string().trim().min(1).optional(),
   method: z.string().trim().min(1).optional(),
-  transportationCost: MoneySchema.optional(),
   departureAt: z.string().datetime().optional(),
   returnAt: z.string().datetime().optional(),
   meetsSevenHourRule: z.boolean().optional(),
@@ -19,6 +18,7 @@ export const RejectRequestInputSchema = z.object({
 });
 
 export const SalaryReviewInputSchema = z.object({
+  transportationCost: MoneySchema,
   bonusAmount: MoneySchema,
   penaltyAmount: MoneySchema,
   note: z.string().trim().max(1000),
@@ -38,6 +38,7 @@ export const DepartmentReviewInputSchema = z.object({
   meetsSevenHourRule: z.boolean().optional(),
   bonusAmount: MoneySchema.optional(),
   penaltyAmount: MoneySchema.optional(),
+  timeNeedsVerification: z.boolean().optional(),
   note: z.string().trim().max(1000).optional(),
 }).refine((value) => Object.entries(value).some(([key, item]) => key !== "note" && item !== undefined), {
   message: "Provide at least one review field.",

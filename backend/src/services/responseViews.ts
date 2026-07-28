@@ -23,19 +23,26 @@ function baseView(request: TravelRequest): SafeRequestView {
     destinationCity: request.destinationCity,
     departureAt: request.departureAt,
     returnAt: request.returnAt,
+    tripType: request.tripType,
+    managerId: request.managerId,
     accommodationType: request.accommodationType,
     transportationMethod: request.transportationMethod,
     notes: request.notes,
     attachments: request.attachments,
+    pendingEmployeeResponse: request.pendingEmployeeResponse,
     createdAt: request.createdAt,
     updatedAt: request.updatedAt,
   };
 }
 
+/** Owner-facing summary of a price revision — exposes only the high-level fields the
+ * employee needs to see (no internal calculation breakdown, no raw change set). */
 function ownerView(request: TravelRequest): SafeRequestView {
   const view = {
     ...baseView(request),
-    auditEvents: request.auditEvents.map((event) => ({ ...event, changes: {} })),
+    // Employees track stages only. Internal comments, audit history, calculations,
+    // and revision amounts remain server-side until the final total is approved.
+    auditEvents: [],
   };
   if (request.stage === "completed") {
     return { ...view, finalSalary: request.finalSalary };
@@ -57,6 +64,24 @@ function departmentView(request: TravelRequest): SafeRequestView {
     priceRevisions: request.priceRevisions,
     cancellationReason: request.cancellationReason,
     auditEvents: request.auditEvents,
+    timeNeedsVerification: request.timeNeedsVerification,
+    submittedRequest: request.submittedRequest,
+  };
+}
+
+const FINANCIAL_CHANGE_FIELDS = new Set([
+  "salaryPreview", "finalSalary", "transportationCost", "claimedTransportationCost",
+  "bonusAmount", "penaltyAmount",
+]);
+
+function prView(request: TravelRequest): SafeRequestView {
+  return {
+    ...baseView(request),
+    cancellationReason: request.cancellationReason,
+    auditEvents: request.auditEvents.map((event) => ({
+      ...event,
+      changes: Object.fromEntries(Object.entries(event.changes).filter(([field]) => !FINANCIAL_CHANGE_FIELDS.has(field))),
+    })),
   };
 }
 
@@ -73,6 +98,8 @@ function salaryView(request: TravelRequest): SafeRequestView {
     finalSalary: request.finalSalary,
     cancellationReason: request.cancellationReason,
     claimedTransportationCost: request.claimedTransportationCost,
+    transportationCostVerified: request.transportationCostVerified,
+    submittedRequest: request.submittedRequest,
   };
 }
 
@@ -85,8 +112,9 @@ export function authorizedView(
 ): SafeRequestView {
   if (request.employeeId === viewerId && !departmentContext) return ownerView(request);
   if (viewerRoles.includes("salary")) return salaryView(request);
+  if (viewerRoles.includes("pr")) return prView(request);
   if (viewerRoles.includes("transportation")) return transportationView(request);
-  if (viewerRoles.some((role) => role === "manager" || role === "pr" || role === "timing")) {
+  if (viewerRoles.some((role) => role === "manager" || role === "timing")) {
     return departmentView(request);
   }
   return { id: request.id, stage: request.stage, createdAt: request.createdAt, updatedAt: request.updatedAt };

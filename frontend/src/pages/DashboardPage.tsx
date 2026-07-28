@@ -42,7 +42,7 @@ export function DashboardPage() {
           <h2>{tr("Workspaces", "مساحات العمل")}</h2>
           <Link to="/requests/new"><strong>{tr("New travel request", "طلب سفر جديد")}</strong><span>{tr("Submit a mission for approval →", "إرسال مأمورية للاعتماد ←")}</span></Link>
           {reviewRole && <Link to="/approvals"><strong>{tr(`${localizeLabel(reviewRole, "en")} review queue`, `قائمة مراجعة ${localizeLabel(reviewRole, "ar")}`)}</strong><span>{tr("Process department requests →", "معالجة طلبات القسم ←")}</span></Link>}
-          {user?.roles.includes("salary") && <Link to="/salary"><strong>{tr("Salary finalization", "اعتماد الرواتب")}</strong><span>{tr("Review official amounts →", "مراجعة المبالغ الرسمية ←")}</span></Link>}
+          {user?.roles.includes("salary") && <Link to="/payroll"><strong>{tr("Payroll finalization", "اعتماد الرواتب")}</strong><span>{tr("Review official amounts →", "مراجعة المبالغ الرسمية ←")}</span></Link>}
         </aside>
       </section>
     </main>

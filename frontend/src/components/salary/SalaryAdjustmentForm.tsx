@@ -2,11 +2,13 @@ import type { ChangeEvent } from "react";
 import { useLanguage } from "../../hooks/useLanguage";
 
 interface SalaryAdjustmentFormProps {
+  transportationCost: string;
   bonusAmount: number;
   penaltyAmount: number;
   note: string;
   disabled?: boolean;
   onBonusChange: (value: number) => void;
+  onTransportationCostChange: (value: string) => void;
   onPenaltyChange: (value: number) => void;
   onNoteChange: (value: string) => void;
 }
@@ -17,11 +19,13 @@ function moneyValue(event: ChangeEvent<HTMLInputElement>): number {
 }
 
 export function SalaryAdjustmentForm({
+  transportationCost,
   bonusAmount,
   penaltyAmount,
   note,
   disabled = false,
   onBonusChange,
+  onTransportationCostChange,
   onPenaltyChange,
   onNoteChange,
 }: SalaryAdjustmentFormProps) {
@@ -29,6 +33,20 @@ export function SalaryAdjustmentForm({
   return (
     <section className="salary-panel-section salary-adjustments">
       <h3>{tr("Manual adjustments", "التعديلات اليدوية")}</h3>
+
+      <label className="salary-field">
+        <span>{tr("Verified ticket price (EGP)", "سعر التذكرة المؤكد (جنيه)")} <b>{tr("(required)", "(مطلوب)")}</b></span>
+        <input
+          type="number"
+          min="0"
+          step="0.01"
+          required
+          value={transportationCost}
+          disabled={disabled}
+          onChange={(event) => onTransportationCostChange(event.target.value)}
+        />
+        <small>{tr("Payroll must enter and save the ticket price before finalization.", "يجب على الرواتب إدخال سعر التذكرة وحفظه قبل الاعتماد النهائي.")}</small>
+      </label>
 
       <label className="salary-field">
         <span>{tr("Bonus amount (EGP)", "قيمة المكافأة (جنيه)")}</span>

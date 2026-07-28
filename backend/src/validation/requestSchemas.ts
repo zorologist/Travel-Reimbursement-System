@@ -5,13 +5,9 @@ import {
 import { z } from "zod";
 
 export const CreateRequestBodySchema = CreateTravelRequestInputSchema
-  .extend({
+  .safeExtend({
     destinationCity: z.string().trim().min(1, "Destination city is required."),
     transportationMethod: z.string().trim().min(1, "Transportation method is required."),
-  })
-  .refine((data) => new Date(data.returnAt).getTime() > new Date(data.departureAt).getTime(), {
-    message: "returnAt must be after departureAt.",
-    path: ["returnAt"],
   })
   .refine((data) => !data.originCity || data.originCity.toLowerCase() !== data.destinationCity.toLowerCase(), {
     message: "Origin and destination must be different.",

@@ -74,7 +74,25 @@ function currentReviewRole(): SystemRole {
   return role;
 }
 
-function queueItem(record: DevelopmentRequest): ApprovalQueueItem {
+function queueItem(record: DevelopmentRequest, role: SystemRole): ApprovalQueueItem {
+  const requestDetails: Partial<TravelRequest> = role === "pr" ? {
+    id: record.id,
+    employeeId: record.employeeId,
+    stage: record.stage,
+    originCity: record.originCity,
+    destinationCity: record.destinationCity,
+    departureAt: record.departureAt,
+    returnAt: record.returnAt,
+    tripType: record.tripType,
+    managerId: record.managerId,
+    accommodationType: record.accommodationType,
+    transportationMethod: record.transportationMethod,
+    notes: record.notes,
+    attachments: record.attachments,
+    createdAt: record.createdAt,
+    updatedAt: record.updatedAt,
+    auditEvents: record.auditEvents.map((event) => ({ ...event, changes: {} })),
+  } : record;
   return {
     id: record.id,
     employeeId: record.employeeId,
@@ -84,18 +102,20 @@ function queueItem(record: DevelopmentRequest): ApprovalQueueItem {
     employeeJobLevel: record.employee.jobLevel,
     status: "pending",
     currentStage: record.stage as ReviewStage,
-    initialPrice: record.revisions[0]?.previousPrice ?? record.salaryPreview.totalAmount,
-    currentPrice: record.salaryPreview.totalAmount,
-    revisions: record.revisions,
+    initialPrice: role === "pr" ? 0 : record.revisions[0]?.previousPrice ?? record.salaryPreview.totalAmount,
+    currentPrice: role === "pr" ? 0 : record.salaryPreview.totalAmount,
+    revisions: role === "pr" ? [] : record.revisions,
     attachments: record.attachments,
-    requestDetails: record,
+    requestDetails,
   };
 }
 
 export const workflowApi = {
   async getQueue(): Promise<ApprovalQueueItem[]> {
     if (useDevelopmentRepository) {
-      return (await developmentRepository.queueForRole(currentReviewRole())).map(queueItem);
+      const role = currentReviewRole();
+      const user = getDevelopmentUser();
+      return (await developmentRepository.queueForRole(role, user?.id)).map((record) => queueItem(record, role));
     }
     const response = await api.get<{ requests: BackendQueueView[] }>("/api/requests?scope=queue");
     return response.data.requests.map(mapBackendQueueItem);
@@ -107,23 +127,49 @@ export const workflowApi = {
         note: typeof payload.reason === "string" ? payload.reason : undefined,
         revisedCost: typeof payload.revisedCost === "number" ? payload.revisedCost : undefined,
         accommodationType: typeof payload.accommodationType === "string" ? payload.accommodationType as AccommodationType : undefined,
-        transportationCost: typeof payload.transportationCost === "number" ? payload.transportationCost : undefined,
         destination: typeof payload.destination === "string" ? payload.destination : undefined,
         method: typeof payload.method === "string" ? payload.method : undefined,
         departureAt: typeof payload.departureAt === "string" ? payload.departureAt : undefined,
         returnAt: typeof payload.returnAt === "string" ? payload.returnAt : undefined,
         meetsSevenHourRule: typeof payload.meetsSevenHourRule === "boolean" ? payload.meetsSevenHourRule : undefined,
-      });
+      }, getDevelopmentUser()?.id);
       return;
     }
-    await api.post(`/api/requests/${id}/approve`, payload);
+    // Strip transportationCost from the payload before sending — Transport role can
+    // no longer edit money fields (see shared/schemas/RequestActionSchema.ts).
+    const { transportationCost: _stripped, ...safePayload } = payload;
+    await api.post(`/api/requests/${id}/approve`, safePayload);
   },
 
   async reject(id: string, reason: string): Promise<void> {
     if (useDevelopmentRepository) {
-      await developmentRepository.reject(id, currentReviewRole(), reason);
+      await developmentRepository.reject(id, currentReviewRole(), reason, getDevelopmentUser()?.id);
       return;
     }
     await api.post(`/api/requests/${id}/reject`, { reason });
+  },
+
+  /**
+   * Manager-only: ask the employee for more information. Sets
+   * `pendingEmployeeResponse: true` on the request.
+   */
+  async requestInfo(id: string, note: string): Promise<void> {
+    if (useDevelopmentRepository) {
+      await developmentRepository.requestInfo(id, note, getDevelopmentUser()?.id);
+      return;
+    }
+    await api.post(`/api/requests/${id}/request-info`, { note });
+  },
+
+  /**
+   * Manager-only: clears the `timeNeedsVerification` flag (set by timing-review).
+   * Routed through the same PATCH /review endpoint the salary dashboard uses.
+   */
+  async confirmTime(id: string, note: string): Promise<void> {
+    if (useDevelopmentRepository) {
+      await developmentRepository.confirmTime(id, note);
+      return;
+    }
+    await api.patch(`/api/requests/${id}/review`, { timeNeedsVerification: false, note });
   },
 };

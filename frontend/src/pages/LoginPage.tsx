@@ -12,6 +12,7 @@ export function LoginPage() {
   const { tr, localizeError } = useLanguage();
   const [employeeNumber, setEmployeeNumber] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [remember, setRemember] = useState(false);
   const [error, setError] = useState("");
   const [submitting, setSubmitting] = useState(false);
@@ -33,7 +34,7 @@ export function LoginPage() {
       return;
     }
 
-    navigate(authenticatedUser.roles.includes("salary") ? "/salary" : "/home");
+    navigate("/home");
   }
 
   return (
@@ -70,19 +71,31 @@ export function LoginPage() {
 
           <div className="form-group">
             <label htmlFor="password">{tr("Password", "كلمة المرور")}</label>
-            <input
-              type="password"
-              id="password"
-              name="password"
-              value={password}
-              onChange={(event) => {
-                setPassword(event.target.value);
-                setError("");
-              }}
-              autoComplete="current-password"
-              required
-              placeholder={tr("Enter your password", "أدخل كلمة المرور")}
-            />
+            <div className="password-field">
+              <input
+                type={showPassword ? "text" : "password"}
+                id="password"
+                name="password"
+                value={password}
+                onChange={(event) => {
+                  setPassword(event.target.value);
+                  setError("");
+                }}
+                autoComplete="current-password"
+                required
+                placeholder={tr("Enter your password", "أدخل كلمة المرور")}
+              />
+              <button
+                type="button"
+                className="password-toggle"
+                onClick={() => setShowPassword((visible) => !visible)}
+                aria-controls="password"
+                aria-pressed={showPassword}
+                aria-label={showPassword ? tr("Hide password", "إخفاء كلمة المرور") : tr("Show password", "إظهار كلمة المرور")}
+              >
+                {showPassword ? tr("Hide", "إخفاء") : tr("Show", "إظهار")}
+              </button>
+            </div>
           </div>
 
           <div className="form-options">
@@ -114,7 +127,7 @@ export function LoginPage() {
             <summary>{tr("Development accounts", "حسابات التطوير")}</summary>
             <p>{tr("Employee", "موظف")}: DEV001 / Employee@123</p>
             <p>{tr("Manager", "مدير")}: DEV004 / Admin@123</p>
-            <p>{tr("PR", "العلاقات العامة")}: DEV005 · {tr("Transportation", "الانتقالات")}: DEV006 · {tr("Timing", "المواعيد")}: DEV007 · {tr("Salary", "الرواتب")}: DEV008</p>
+            <p>{tr("PR", "العلاقات العامة")}: DEV005 · {tr("Transportation", "الانتقالات")}: DEV006 · {tr("Timing", "المواعيد")}: DEV007 · {tr("Payroll", "الرواتب")}: DEV008</p>
             <small>{tr("All department accounts use Admin@123.", "تستخدم جميع حسابات الأقسام كلمة المرور Admin@123.")}</small>
           </details>
         )}

@@ -18,4 +18,6 @@ export const ACCOMMODATION_FACTORS = {
   none: 1.0,
   "room-only": 0.75,
   "room-and-food": 0.5,
+  "half-board": 0.625, // TODO: confirm real business value — placeholder midpoint between room-only (0.75) and room-and-food (0.5).
+  "bed-and-breakfast": 0.5,
 } as const;

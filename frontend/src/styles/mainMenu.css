@@ -129,14 +129,6 @@
   text-transform: uppercase;
 }
 
-.main-menu-intro h1 {
-  margin: 0;
-  color: #173c39;
-  font-size: clamp(2rem, 5vw, 3.35rem);
-  line-height: 1.08;
-  letter-spacing: -0.035em;
-}
-
 .main-menu-intro > p:last-child {
   max-width: 610px;
   margin: 18px auto 0;

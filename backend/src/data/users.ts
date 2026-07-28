@@ -78,4 +78,17 @@ export const developmentUsers: readonly User[] = [
     jobLevel: "Assistant General Manager",
     roles: ["employee", "salary"],
   },
+  {
+    id: "u10",
+    employeeNumber: "DEV010",
+    displayName: "Mona Ibrahim (Demo Manager)",
+    department: "Operations",
+    jobLevel: "General Manager",
+    roles: ["employee", "manager"],
+  },
 ];
+
+/** Returns the subset of demo users that have the `manager` role. */
+export function listManagers(): User[] {
+  return developmentUsers.filter((user) => user.roles.includes("manager"));
+}

@@ -1,7 +1,7 @@
 import type { AuditEvent, WorkflowStage } from "./Workflow.js";
 import type { PriceRevision } from "./PriceRevision.js";
 
-export type AccommodationType = "none" | "room-only" | "room-and-food";
+export type AccommodationType = "none" | "room-only" | "room-and-food" | "half-board" | "bed-and-breakfast";
 
 export interface SalaryCalculationResult {
   dailyRate: number;
@@ -28,6 +28,8 @@ export interface CreateTravelRequestInput {
   destinationCity: string;
   departureAt: string; // ISO 8601 string
   returnAt: string; // ISO 8601 string
+  tripType: "one-way" | "round-trip";
+  managerId: string;
   accommodationType: AccommodationType;
   transportationMethod: string;
   claimedTransportationCost?: number;
@@ -45,6 +47,7 @@ export interface TravelRequest extends CreateTravelRequestInput {
   verifiedSameDayHours: number;
   verifiedReturnDayHours: number;
   transportationCost: number;
+  transportationCostVerified: boolean;
   claimedTransportationCost: number;
   bonusAmount: number;
   penaltyAmount: number;
@@ -54,7 +57,11 @@ export interface TravelRequest extends CreateTravelRequestInput {
   notes: string;
   attachments: RequestAttachment[];
   priceRevisions: PriceRevision[];
+  pendingEmployeeResponse: boolean;
+  timeNeedsVerification: boolean;
   createdAt: string;
   updatedAt: string;
   auditEvents: AuditEvent[];
+  /** Immutable copy of the form as it was first submitted. */
+  submittedRequest: CreateTravelRequestInput;
 }

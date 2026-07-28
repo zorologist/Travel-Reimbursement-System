@@ -7,7 +7,7 @@ const workflow: Array<{ stage: WorkflowStage; label: string }> = [
   { stage: "pr-review", label: "PR & accommodation" },
   { stage: "transportation-review", label: "Transportation review" },
   { stage: "timing-review", label: "Timing verification" },
-  { stage: "salary-finalization", label: "Salary finalization" },
+  { stage: "salary-finalization", label: "Payroll finalization" },
   { stage: "completed", label: "Completed" },
 ];
 

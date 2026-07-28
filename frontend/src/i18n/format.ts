@@ -23,6 +23,8 @@ const arabicLabels: Record<string, string> = {
   none: "بدون إقامة",
   "room-only": "غرفة فقط",
   "room-and-food": "غرفة ووجبات",
+  "half-board": "نصف إقامة",
+  "bed-and-breakfast": "إقامة ومبيت وإفطار على نفقة الشركة",
   "company-car": "سيارة الشركة",
   "personal-car": "سيارة خاصة",
   other: "وسيلة أخرى",
@@ -69,17 +71,20 @@ const arabicLabels: Record<string, string> = {
 
 const englishLabels: Record<string, string> = {
   pr: "PR",
+  salary: "Payroll",
   "manager-review": "Manager review",
   "pr-review": "PR review",
   "transportation-review": "Transportation review",
   "timing-review": "Timing and hours review",
-  "salary-finalization": "Salary finalization",
+  "salary-finalization": "Payroll finalization",
   "in-progress": "In progress",
   "company-car": "Company car",
   "personal-car": "Personal car",
   none: "No accommodation",
   "room-only": "Room only",
   "room-and-food": "Room and meals",
+  "half-board": "Half board",
+  "bed-and-breakfast": "Company bed and breakfast",
 };
 
 export function localizeLabel(value: string | null | undefined, language: Language): string {

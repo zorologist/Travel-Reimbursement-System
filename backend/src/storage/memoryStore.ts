@@ -70,8 +70,12 @@ const ROLE_STAGE: Readonly<Partial<Record<SystemRole, WorkflowStage>>> = {
   salary: "salary-finalization",
 };
 
-export function listRequestsForRole(role: SystemRole): TravelRequest[] {
+export function listRequestsForRole(role: SystemRole, userId?: string): TravelRequest[] {
   if (role === "employee") return [];
+  if (role === "manager") {
+    if (!userId) return [];
+    return clone(requests.filter((request) => request.stage === "manager-review" && request.managerId === userId));
+  }
   const stage = ROLE_STAGE[role];
   return stage ? listRequestsByStage(stage) : [];
 }
@@ -79,6 +83,18 @@ export function listRequestsForRole(role: SystemRole): TravelRequest[] {
 export function findRequestById(id: string): TravelRequest | undefined {
   const request = requests.find((candidate) => candidate.id === id);
   return request ? clone(request) : undefined;
+}
+
+/** Allocates the next human-readable request number for the current UTC year. */
+export function nextRequestId(now = new Date()): string {
+  const year = now.getUTCFullYear();
+  const prefix = `TR-${year}-`;
+  const highestSequence = requests.reduce((highest, request) => {
+    if (!request.id.startsWith(prefix)) return highest;
+    const sequence = Number(request.id.slice(prefix.length));
+    return Number.isInteger(sequence) ? Math.max(highest, sequence) : highest;
+  }, 0);
+  return `${prefix}${String(highestSequence + 1).padStart(4, "0")}`;
 }
 
 export function createRequest(newRequest: TravelRequest): TravelRequest {
@@ -117,6 +133,7 @@ export function updateRequest(
     id: current.id,
     employeeId: current.employeeId,
     createdAt: current.createdAt,
+    submittedRequest: clone(current.submittedRequest),
     updatedAt: updates.updatedAt ?? new Date().toISOString(),
     auditEvents: clone(nextAuditEvents),
     priceRevisions: clone(nextPriceRevisions),

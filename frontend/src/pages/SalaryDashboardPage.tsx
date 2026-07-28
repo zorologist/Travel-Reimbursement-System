@@ -5,6 +5,7 @@ import { SalaryReviewPanel } from "../components/salary/SalaryReviewPanel";
 import { EmptyState } from "../components/ui/EmptyState";
 import { ErrorState } from "../components/ui/ErrorState";
 import { LoadingState } from "../components/ui/LoadingState";
+import { BackButton } from "../components/ui/BackButton";
 import { useAuth } from "../hooks/useAuth";
 import { useLanguage } from "../hooks/useLanguage";
 import { formatCurrency, formatDate, localizeLabel } from "../i18n/format";
@@ -15,6 +16,8 @@ import {
 } from "../services/salaryApi";
 import { useDevelopmentRepository } from "../services/runtimeMode";
 import "../styles/salary.css";
+
+type SalaryTab = "track" | "check-request" | "salary";
 
 function initials(displayName: string): string {
   return displayName
@@ -30,34 +33,97 @@ export function SalaryDashboardPage() {
   const { user, logout } = useAuth();
   const { language, localizeError, tr } = useLanguage();
   const navigate = useNavigate();
-  const [queue, setQueue] = useState<SalaryQueueItem[]>([]);
-  const [selectedId, setSelectedId] = useState<string | null>(null);
-  const [search, setSearch] = useState("");
-  const [completedThisSession, setCompletedThisSession] = useState(0);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
+  const [activeTab, setActiveTab] = useState<SalaryTab>("track");
 
-  const loadQueue = useCallback(async () => {
-    setLoading(true);
-    setError("");
+  // Each tab keeps its own queue + selected id + search + loading + error state,
+  // so a bug or stale data in one tab can never clobber another tab's view.
+  const [trackQueue, setTrackQueue] = useState<SalaryQueueItem[]>([]);
+  const [trackSelectedId, setTrackSelectedId] = useState<string | null>(null);
+  const [trackSearch, setTrackSearch] = useState("");
+  const [trackLoading, setTrackLoading] = useState(true);
+  const [trackError, setTrackError] = useState("");
+
+  const [checkQueue, setCheckQueue] = useState<SalaryQueueItem[]>([]);
+  const [checkSelectedId, setCheckSelectedId] = useState<string | null>(null);
+  const [checkSearch, setCheckSearch] = useState("");
+  const [checkLoading, setCheckLoading] = useState(true);
+  const [checkError, setCheckError] = useState("");
+
+  const [salaryQueue, setSalaryQueue] = useState<SalaryQueueItem[]>([]);
+  const [salarySelectedId, setSalarySelectedId] = useState<string | null>(null);
+  const [salarySearch, setSalarySearch] = useState("");
+  const [salaryLoading, setSalaryLoading] = useState(true);
+  const [salaryError, setSalaryError] = useState("");
+
+  const [completedThisSession, setCompletedThisSession] = useState(0);
+
+  const loadTrack = useCallback(async () => {
+    setTrackLoading(true);
+    setTrackError("");
     try {
-      const nextQueue = await salaryApi.listQueue();
-      setQueue(nextQueue);
-      setSelectedId((current) =>
-        current && nextQueue.some((item) => item.id === current)
-          ? current
-          : (nextQueue[0]?.id ?? null),
+      const list = await salaryApi.getTrackList();
+      setTrackQueue(list);
+      setTrackSelectedId((current) =>
+        current && list.some((item) => item.id === current) ? current : (list[0]?.id ?? null),
       );
     } catch (loadError) {
-      setError(localizeError(loadError, "Unable to load the salary review queue.", "تعذر تحميل قائمة مراجعة الرواتب."));
+      setTrackError(localizeError(loadError, "Unable to load the Track queue.", "تعذر تحميل قائمة التتبع."));
     } finally {
-      setLoading(false);
+      setTrackLoading(false);
+    }
+  }, [localizeError]);
+
+  const loadCheck = useCallback(async () => {
+    setCheckLoading(true);
+    setCheckError("");
+    try {
+      const list = await salaryApi.getCheckRequestList();
+      setCheckQueue(list);
+      setCheckSelectedId((current) =>
+        current && list.some((item) => item.id === current) ? current : (list[0]?.id ?? null),
+      );
+    } catch (loadError) {
+      setCheckError(localizeError(loadError, "Unable to load the Check Request queue.", "تعذر تحميل قائمة طلبات المراجعة."));
+    } finally {
+      setCheckLoading(false);
+    }
+  }, [localizeError]);
+
+  const loadSalary = useCallback(async () => {
+    setSalaryLoading(true);
+    setSalaryError("");
+    try {
+      const list = await salaryApi.getSalaryList();
+      setSalaryQueue(list);
+      setSalarySelectedId((current) =>
+        current && list.some((item) => item.id === current) ? current : (list[0]?.id ?? null),
+      );
+    } catch (loadError) {
+      setSalaryError(localizeError(loadError, "Unable to load the Payroll queue.", "تعذر تحميل قائمة الرواتب."));
+    } finally {
+      setSalaryLoading(false);
     }
   }, [localizeError]);
 
   useEffect(() => {
-    void loadQueue();
-  }, [loadQueue]);
+    void loadTrack();
+  }, [loadTrack]);
+  useEffect(() => {
+    if (activeTab === "check-request") void loadCheck();
+  }, [activeTab, loadCheck]);
+  useEffect(() => {
+    if (activeTab === "salary") void loadSalary();
+  }, [activeTab, loadSalary]);
+
+  // The selected request for the side panel always belongs to the active tab.
+  const queue = activeTab === "track" ? trackQueue : activeTab === "check-request" ? checkQueue : salaryQueue;
+  const selectedId = activeTab === "track" ? trackSelectedId : activeTab === "check-request" ? checkSelectedId : salarySelectedId;
+  const search = activeTab === "track" ? trackSearch : activeTab === "check-request" ? checkSearch : salarySearch;
+  const loading = activeTab === "track" ? trackLoading : activeTab === "check-request" ? checkLoading : salaryLoading;
+  const error = activeTab === "track" ? trackError : activeTab === "check-request" ? checkError : salaryError;
+  const setSelectedId = activeTab === "track" ? setTrackSelectedId : activeTab === "check-request" ? setCheckSelectedId : setSalarySelectedId;
+  const setSearch = activeTab === "track" ? setTrackSearch : activeTab === "check-request" ? setCheckSearch : setSalarySearch;
+  const reload = activeTab === "track" ? loadTrack : activeTab === "check-request" ? loadCheck : loadSalary;
 
   const selectedRequest = queue.find((item) => item.id === selectedId) ?? null;
   const filteredQueue = useMemo(() => {
@@ -81,24 +147,23 @@ export function SalaryDashboardPage() {
   async function saveAdjustments(input: SalaryAdjustmentInput): Promise<void> {
     if (!selectedRequest) return;
     const updated = await salaryApi.updateAdjustments(selectedRequest.id, input);
-    setQueue((current) =>
-      current.map((item) => (item.id === updated.id ? updated : item)),
-    );
+    setTrackQueue((current) => current.map((item) => (item.id === updated.id ? updated : item)));
+    setCheckQueue((current) => current.map((item) => (item.id === updated.id ? updated : item)));
+    setSalaryQueue((current) => current.map((item) => (item.id === updated.id ? updated : item)));
   }
 
   async function finalizeRequest(note: string): Promise<void> {
     if (!selectedRequest) return;
     const finalizedId = selectedRequest.id;
-    await salaryApi.finalize(finalizedId, note);
-    setQueue((current) => {
+    const finalized = await salaryApi.finalize(finalizedId, note);
+    setTrackQueue((current) => current.map((item) => item.id === finalizedId ? finalized : item));
+    setCheckQueue((current) => {
       const remaining = current.filter((item) => item.id !== finalizedId);
-      setSelectedId((currentSelection) =>
-        currentSelection === finalizedId
-          ? (remaining[0]?.id ?? null)
-          : currentSelection,
-      );
+      setCheckSelectedId((selection) => selection === finalizedId ? (remaining[0]?.id ?? null) : selection);
       return remaining;
     });
+    setSalaryQueue((current) => [finalized, ...current.filter((item) => item.id !== finalizedId)]);
+    setSalarySelectedId(finalizedId);
     setCompletedThisSession((count) => count + 1);
   }
 
@@ -107,24 +172,30 @@ export function SalaryDashboardPage() {
     navigate("/login", { replace: true });
   }
 
+  const loadingState = loading;
+  const errorState = error;
+
   return (
     <div className="salary-page">
       <header className="salary-navbar">
-        <div className="salary-brand">
-          <h1>{tr("Salary Dashboard", "لوحة تحكم الرواتب")}</h1>
-          <p>{tr("EGAS · Salary management & travel finalization", "إيجاس · إدارة الرواتب والاعتماد النهائي للسفر")}</p>
+        <div className="salary-navbar-start">
+          <BackButton />
+          <div className="salary-brand">
+            <h1>{tr("Payroll Dashboard", "لوحة تحكم الرواتب")}</h1>
+            <p>{tr("EGAS · Payroll management & travel finalization", "إيجاس · إدارة الرواتب والاعتماد النهائي للسفر")}</p>
+          </div>
         </div>
-        <nav className="salary-nav" aria-label={tr("Salary navigation", "التنقل في الرواتب")}>
+        <nav className="salary-nav" aria-label={tr("Payroll navigation", "التنقل في الرواتب")}>
           <span aria-current="page">{tr("Overview", "نظرة عامة")}</span>
           <Link to="/home">{tr("Main menu", "القائمة الرئيسية")}</Link>
         </nav>
         <div className="salary-user">
           <span className="salary-avatar" aria-hidden="true">
-            {initials(user?.displayName ?? tr("Salary User", "مسؤول الرواتب"))}
+            {initials(user?.displayName ?? tr("Payroll User", "مسؤول الرواتب"))}
           </span>
           <span>
             <strong>{user?.displayName}</strong>
-            <small>{tr("Salary administrator", "مسؤول الرواتب")}</small>
+            <small>{tr("Payroll administrator", "مسؤول الرواتب")}</small>
           </span>
           <button type="button" onClick={signOut}>{tr("Sign out", "تسجيل الخروج")}</button>
         </div>
@@ -136,14 +207,26 @@ export function SalaryDashboardPage() {
         </div>
       )}
 
-      {loading ? (
+      <div className="salary-tabs" role="tablist" aria-label={tr("Payroll dashboard sections", "أقسام لوحة الرواتب")}>
+        <button type="button" role="tab" aria-selected={activeTab === "track"} className={`salary-tab ${activeTab === "track" ? "is-active" : ""}`} onClick={() => setActiveTab("track")}>
+          {tr("Track", "التتبع")}
+        </button>
+        <button type="button" role="tab" aria-selected={activeTab === "check-request"} className={`salary-tab ${activeTab === "check-request" ? "is-active" : ""}`} onClick={() => setActiveTab("check-request")}>
+          {tr("Check Request", "طلبات المراجعة")}
+        </button>
+        <button type="button" role="tab" aria-selected={activeTab === "salary"} className={`salary-tab ${activeTab === "salary" ? "is-active" : ""}`} onClick={() => setActiveTab("salary")}>
+          {tr("Payroll", "الرواتب")}
+        </button>
+      </div>
+
+      {loadingState ? (
         <main className="salary-state"><LoadingState message={tr("Loading salary review queue...", "جارٍ تحميل قائمة مراجعة الرواتب...")} /></main>
-      ) : error ? (
-        <main className="salary-state"><ErrorState message={error} onRetry={() => void loadQueue()} /></main>
+      ) : errorState ? (
+        <main className="salary-state"><ErrorState message={errorState} onRetry={() => void reload()} /></main>
       ) : (
         <main className="salary-dashboard">
           <section className="salary-main-content">
-            <section className="salary-stats" aria-label={tr("Salary review summary", "ملخص مراجعة الرواتب")}>
+            <section className="salary-stats" aria-label={tr("Payroll review summary", "ملخص مراجعة الرواتب")}>
               <article className="salary-stat-card">
                 <span>{tr("Review queue", "قائمة المراجعة")}</span>
                 <div><strong>{queue.length}</strong><b>{tr("Pending", "معلق")}</b></div>
@@ -164,7 +247,7 @@ export function SalaryDashboardPage() {
             <section className="salary-queue-section" aria-labelledby="salary-queue-title">
               <header className="salary-queue-header">
                 <h2 id="salary-queue-title">
-                  {tr("Salary review queue", "قائمة مراجعة الرواتب")} <span>{queue.length} {tr("pending", "معلق")}</span>
+                  {tr("Payroll review queue", "قائمة مراجعة الرواتب")} <span>{queue.length} {tr("requests", "طلبات")}</span>
                 </h2>
                 <div>
                   <label>
@@ -176,13 +259,13 @@ export function SalaryDashboardPage() {
                       onChange={(event) => setSearch(event.target.value)}
                     />
                   </label>
-                  <button type="button" onClick={() => void loadQueue()}>{tr("Refresh", "تحديث")}</button>
+                  <button type="button" onClick={() => void reload()}>{tr("Refresh", "تحديث")}</button>
                 </div>
               </header>
 
               {queue.length === 0 ? (
                 <EmptyState
-                  title={tr("Salary queue is clear", "قائمة الرواتب خالية")}
+                  title={tr("Payroll queue is clear", "قائمة الرواتب خالية")}
                   description={tr("There are no requests waiting for salary finalization.", "لا توجد طلبات تنتظر الاعتماد النهائي للرواتب.")}
                 />
               ) : filteredQueue.length === 0 ? (
@@ -222,9 +305,9 @@ export function SalaryDashboardPage() {
                           </td>
                           <td><strong>{item.employee.displayName}</strong><small>{item.employee.department}</small></td>
                           <td>{localizeLabel(item.destinationCity, language)}</td>
-                          <td>{formatDate(item.departureAt, language)} – {formatDate(item.returnAt, language)}</td>
+                          <td>{formatDate(item.departureAt, language)}{item.tripType === "one-way" ? "" : ` – ${formatDate(item.returnAt, language)}`}</td>
                           <td className="salary-table-money">{formatCurrency(item.calculation.totalAmount, language)}</td>
-                          <td><span className="salary-status">{tr("Pending", "معلق")}</span></td>
+                          <td><span className="salary-status">{localizeLabel(item.status === "completed" ? "completed" : item.stage, language)}</span></td>
                         </tr>
                       ))}
                     </tbody>

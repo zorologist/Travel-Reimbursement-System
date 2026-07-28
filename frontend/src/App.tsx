@@ -60,13 +60,14 @@ function AnimatedRoutes() {
         </Route>
         <Route path="/requests/:id" element={<ProtectedRoute><RequestDetailsPage /></ProtectedRoute>} />
         <Route
-          path="/salary"
+          path="/payroll"
           element={
             <RequireRole role="salary">
               <SalaryDashboardPage />
             </RequireRole>
           }
         />
+        <Route path="/salary" element={<Navigate to="/payroll" replace />} />
         <Route path="*" element={<NotFoundPage />} />
       </Routes>
     </div>

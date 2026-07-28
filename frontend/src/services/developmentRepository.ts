@@ -52,6 +52,8 @@ export interface CreateDevelopmentRequestInput {
   transportationCost?: number;
   notes?: string;
   attachments?: DevelopmentAttachment[];
+  managerId?: string;
+  tripType?: "one-way" | "round-trip";
 }
 
 export interface DevelopmentApprovalInput {
@@ -76,6 +78,7 @@ export const developmentEmployees: readonly DevelopmentEmployee[] = [
   { id: "u7", employeeNumber: "DEV007", displayName: "Dina Hany (Demo Timing)", jobLevel: "Level 2", roles: ["employee", "timing"], department: "Timing" },
   { id: "u8", employeeNumber: "DEV008", displayName: "Tarek Mostafa (Demo Salary)", jobLevel: "General Manager", roles: ["employee", "salary"], department: "Salary" },
   { id: "u9", employeeNumber: "DEV009", displayName: "Heba Magdy (Demo Salary)", jobLevel: "Assistant General Manager", roles: ["employee", "salary"], department: "Salary" },
+  { id: "u10", employeeNumber: "DEV010", displayName: "Mona Ibrahim (Demo Manager)", jobLevel: "General Manager", roles: ["employee", "manager"], department: "Operations" },
 ] as const;
 
 const STAGES: readonly WorkflowStage[] = [
@@ -123,6 +126,10 @@ interface SeedInput {
   notes?: string;
   revisions?: DevelopmentPriceRevision[];
   attachments?: DevelopmentAttachment[];
+  managerId?: string;
+  tripType?: "one-way" | "round-trip";
+  pendingEmployeeResponse?: boolean;
+  timeNeedsVerification?: boolean;
 }
 
 function employeeById(employeeId: string): DevelopmentEmployee {
@@ -197,6 +204,7 @@ function seedAudit(input: SeedInput): AuditEvent[] {
 function buildSeed(input: SeedInput): DevelopmentRequest {
   const employee = employeeById(input.employeeId);
   const auditEvents = seedAudit(input);
+  const attachments = input.attachments ?? [{ id: `attachment-${input.id}-1`, name: `ticket-${input.id}.jpg`, mimeType: "image/jpeg", size: 4, url: "data:image/jpeg;base64,AA==" }];
   const record: DevelopmentRequest = {
     id: input.id,
     employeeId: input.employeeId,
@@ -205,6 +213,8 @@ function buildSeed(input: SeedInput): DevelopmentRequest {
     destinationCity: input.destinationCity,
     departureAt: input.departureAt,
     returnAt: input.returnAt,
+    tripType: input.tripType ?? "round-trip",
+    managerId: input.managerId ?? ROLE_ACTOR.manager,
     accommodationType: input.accommodationType,
     transportationMethod: input.transportationMethod,
     stage: input.stage,
@@ -213,6 +223,7 @@ function buildSeed(input: SeedInput): DevelopmentRequest {
     verifiedSameDayHours: input.verifiedSameDayHours ?? 0,
     verifiedReturnDayHours: input.verifiedReturnDayHours ?? 0,
     transportationCost: input.transportationCost,
+    transportationCostVerified: input.stage === "salary-finalization" || input.stage === "completed",
     claimedTransportationCost: input.transportationCost,
     bonusAmount: input.bonusAmount ?? 0,
     penaltyAmount: input.penaltyAmount ?? 0,
@@ -224,8 +235,23 @@ function buildSeed(input: SeedInput): DevelopmentRequest {
     updatedAt: auditEvents.at(-1)?.createdAt ?? input.createdAt,
     auditEvents,
     revisions: input.revisions ?? [],
-    attachments: input.attachments ?? [],
+    attachments,
     priceRevisions: [],
+    pendingEmployeeResponse: input.pendingEmployeeResponse ?? false,
+    timeNeedsVerification: input.timeNeedsVerification ?? false,
+    submittedRequest: {
+      originCity: input.originCity ?? "Cairo",
+      destinationCity: input.destinationCity,
+      departureAt: input.departureAt,
+      returnAt: input.returnAt,
+      tripType: input.tripType ?? "round-trip",
+      managerId: input.managerId ?? ROLE_ACTOR.manager,
+      accommodationType: input.accommodationType,
+      transportationMethod: input.transportationMethod,
+      claimedTransportationCost: input.transportationCost,
+      notes: input.notes ?? "Development travel request.",
+      attachments,
+    },
   };
   record.salaryPreview = calculate(record);
   record.finalSalary = input.stage === "completed" ? record.salaryPreview : null;
@@ -236,7 +262,7 @@ function initialRecords(): DevelopmentRequest[] {
   return [
     buildSeed({ id: "TR-2026-001", employeeId: "u1", stage: "manager-review", destinationCity: "Alexandria", departureAt: "2026-08-03T06:00:00.000Z", returnAt: "2026-08-05T18:00:00.000Z", accommodationType: "none", transportationMethod: "Company car", transportationCost: 200, createdAt: "2026-07-20T08:00:00.000Z", notes: "Operations coordination meeting." }),
     buildSeed({ id: "TR-2026-002", employeeId: "u2", stage: "pr-review", destinationCity: "Suez", departureAt: "2026-08-10T07:00:00.000Z", returnAt: "2026-08-11T17:00:00.000Z", accommodationType: "room-only", transportationMethod: "Company bus", transportationCost: 150, createdAt: "2026-07-19T08:30:00.000Z" }),
-    buildSeed({ id: "TR-2026-003", employeeId: "u3", stage: "transportation-review", destinationCity: "Ismailia", departureAt: "2026-08-12T06:00:00.000Z", returnAt: "2026-08-14T18:00:00.000Z", accommodationType: "room-and-food", transportationMethod: "Train", transportationCost: 220, createdAt: "2026-07-18T07:30:00.000Z", attachments: [{ id: "attachment-TR-2026-003-1", name: "train-ticket-TR-2026-003.txt", mimeType: "text/plain", size: 91, url: "data:text/plain;charset=utf-8,Travel%20request%20TR-2026-003%0ATrain%20ticket%20attachment%20for%20transportation%20review." }] }),
+    buildSeed({ id: "TR-2026-003", employeeId: "u3", stage: "transportation-review", destinationCity: "Ismailia", departureAt: "2026-08-12T06:00:00.000Z", returnAt: "2026-08-14T18:00:00.000Z", accommodationType: "room-and-food", transportationMethod: "Train", transportationCost: 220, createdAt: "2026-07-18T07:30:00.000Z", attachments: [{ id: "attachment-TR-2026-003-1", name: "train-ticket-TR-2026-003.jpg", mimeType: "image/jpeg", size: 4, url: "data:image/jpeg;base64,AA==" }] }),
     buildSeed({ id: "TR-2026-004", employeeId: "u1", stage: "timing-review", destinationCity: "Cairo", departureAt: "2026-08-18T07:00:00.000Z", returnAt: "2026-08-18T16:00:00.000Z", accommodationType: "none", transportationMethod: "Personal car", transportationCost: 100, verifiedSameDayHours: 9, createdAt: "2026-07-17T08:00:00.000Z" }),
     buildSeed({ id: "TR-2026-005", employeeId: "u2", stage: "salary-finalization", destinationCity: "Aswan", departureAt: "2026-08-20T06:00:00.000Z", returnAt: "2026-08-22T15:00:00.000Z", accommodationType: "room-only", transportationMethod: "Train", transportationCost: 250, verifiedReturnDayHours: 7, createdAt: "2026-07-16T08:00:00.000Z" }),
     buildSeed({ id: "TR-2026-006", employeeId: "u3", stage: "completed", destinationCity: "Luxor", departureAt: "2026-08-24T06:00:00.000Z", returnAt: "2026-08-26T16:00:00.000Z", accommodationType: "none", transportationMethod: "Train", transportationCost: 200, verifiedReturnDayHours: 8, bonusAmount: 50, penaltyAmount: 10, createdAt: "2026-07-15T08:00:00.000Z" }),
@@ -259,11 +285,12 @@ function recordById(id: string): DevelopmentRequest {
   return record;
 }
 
-function validateDates(departureAt: string, returnAt: string): void {
+function validateDates(departureAt: string, returnAt: string, tripType: "one-way" | "round-trip"): void {
   const departure = new Date(departureAt).getTime();
   const arrival = new Date(returnAt).getTime();
-  if (!Number.isFinite(departure) || !Number.isFinite(arrival) || arrival <= departure) {
-    throw new ApiClientError(400, "INVALID_TRAVEL_DATES", "Return time must be after departure time.");
+  const valid = tripType === "one-way" ? arrival === departure : arrival > departure;
+  if (!Number.isFinite(departure) || !Number.isFinite(arrival) || !valid) {
+    throw new ApiClientError(400, "INVALID_TRAVEL_DATES", tripType === "one-way" ? "A one-way request cannot contain a return time." : "Return time must be after departure time.");
   }
 }
 
@@ -292,7 +319,10 @@ export const developmentRepository = {
   },
 
   async create(input: CreateDevelopmentRequestInput): Promise<DevelopmentRequest> {
-    validateDates(input.departureAt, input.returnAt);
+    validateDates(input.departureAt, input.returnAt, input.tripType ?? "round-trip");
+    if (!input.attachments || input.attachments.length < 1 || input.attachments.length > 4) {
+      throw new ApiClientError(400, "ATTACHMENT_REQUIRED", "Attach between one and four ticket images.");
+    }
     if (input.originCity.trim().toLowerCase() === input.destinationCity.trim().toLowerCase()) {
       throw new ApiClientError(409, "CONFLICT", "Origin and destination must be different.");
     }
@@ -303,18 +333,24 @@ export const developmentRepository = {
       id,
       stage: "manager-review",
       transportationCost: input.transportationCost ?? 0,
+      managerId: input.managerId ?? ROLE_ACTOR.manager,
+      tripType: input.tripType ?? "round-trip",
       createdAt: new Date().toISOString(),
     });
     records.unshift(record);
     return clone(record);
   },
 
-  async queueForRole(role: SystemRole): Promise<DevelopmentRequest[]> {
+  async queueForRole(role: SystemRole, userId?: string): Promise<DevelopmentRequest[]> {
+    if (role === "manager" && userId) {
+      return clone(records.filter((record) => record.stage === "manager-review" && record.managerId === userId));
+    }
     return clone(records.filter((record) => STAGE_ROLE[record.stage] === role));
   },
 
-  async approve(id: string, role: SystemRole, input: DevelopmentApprovalInput): Promise<DevelopmentRequest> {
+  async approve(id: string, role: SystemRole, input: DevelopmentApprovalInput, actorId = ROLE_ACTOR[role as Exclude<SystemRole, "employee">]): Promise<DevelopmentRequest> {
     const record = recordById(id);
+    if (role === "manager" && record.managerId !== actorId) throw new ApiClientError(403, "FORBIDDEN", "Only the selected manager may review this request.");
     const requiredRole = STAGE_ROLE[record.stage];
     if (!requiredRole || role !== requiredRole || role === "salary" || role === "employee") {
       throw new ApiClientError(409, "INVALID_TRANSITION", "This request is not in your department queue.");
@@ -327,10 +363,9 @@ export const developmentRepository = {
     if (input.destination?.trim()) record.destinationCity = input.destination.trim();
     if (input.method?.trim()) record.transportationMethod = input.method.trim();
     if (input.accommodationType) record.accommodationType = input.accommodationType;
-    if (typeof input.transportationCost === "number") {
-      if (!Number.isFinite(input.transportationCost) || input.transportationCost < 0) throw new ApiClientError(400, "INVALID_PRICE", "Transportation cost must be non-negative.");
-      record.transportationCost = input.transportationCost;
-    } else if (typeof input.revisedCost === "number") {
+    // Transportation role can no longer edit money fields (see Section 4 of the implementation spec).
+    // Only allow `revisedCost` (legacy PR path) — and even then only on the pr-review stage.
+    if (role === "pr" && typeof input.revisedCost === "number") {
       if (!Number.isFinite(input.revisedCost) || input.revisedCost < 0) throw new ApiClientError(400, "INVALID_PRICE", "The revised amount must be non-negative.");
       record.transportationCost = Math.max(0, input.revisedCost - (record.salaryPreview.totalAmount - record.transportationCost));
     }
@@ -346,35 +381,39 @@ export const developmentRepository = {
       record.revisions.push({ id: `revision-${id}-${role}-${record.revisions.length + 1}`, department: role, previousPrice, newPrice: record.salaryPreview.totalAmount, reason: input.note?.trim() || `${role} review adjustment.`, updatedAt: record.updatedAt });
     }
     record.stage = toStage;
-    pushAudit(record, { actorId: ROLE_ACTOR[role], actorRole: role, action: "approve", fromStage, toStage, changes: { stage: { before: fromStage, after: toStage } }, note: input.note?.trim() || null });
+    pushAudit(record, { actorId, actorRole: role, action: "approve", fromStage, toStage, changes: { stage: { before: fromStage, after: toStage } }, note: input.note?.trim() || null });
     return clone(record);
   },
 
-  async reject(id: string, role: SystemRole, reason: string): Promise<DevelopmentRequest> {
+  async reject(id: string, role: SystemRole, reason: string, actorId = ROLE_ACTOR.manager): Promise<DevelopmentRequest> {
     const record = recordById(id);
     if (!reason.trim()) throw new ApiClientError(400, "REJECTION_REASON_REQUIRED", "A rejection reason is required.");
     if (STAGE_ROLE[record.stage] !== role || role !== "manager") {
       throw new ApiClientError(409, "INVALID_TRANSITION", "This request is not in your department queue.");
     }
+    if (record.managerId !== actorId) throw new ApiClientError(403, "FORBIDDEN", "Only the selected manager may reject this request.");
     const fromStage = record.stage;
     record.stage = "cancelled";
     record.cancellationReason = reason.trim();
-    pushAudit(record, { actorId: ROLE_ACTOR[role], actorRole: role, action: "reject", fromStage, toStage: "cancelled", changes: { stage: { before: fromStage, after: "cancelled" }, cancellationReason: { before: null, after: reason.trim() } }, note: reason.trim() });
+    pushAudit(record, { actorId, actorRole: role, action: "reject", fromStage, toStage: "cancelled", changes: { stage: { before: fromStage, after: "cancelled" }, cancellationReason: { before: null, after: reason.trim() } }, note: reason.trim() });
     return clone(record);
   },
 
-  async updateSalary(id: string, bonusAmount: number, penaltyAmount: number, note: string): Promise<DevelopmentRequest> {
+  async updateSalary(id: string, transportationCost: number, bonusAmount: number, penaltyAmount: number, note: string): Promise<DevelopmentRequest> {
     const record = recordById(id);
     if (record.stage !== "salary-finalization") throw new ApiClientError(409, "INVALID_TRANSITION", "This request is not awaiting salary finalization.");
     const previousPrice = record.salaryPreview.totalAmount;
     const previousBonus = record.bonusAmount;
     const previousPenalty = record.penaltyAmount;
+    const previousTransportationCost = record.transportationCost;
+    record.transportationCost = transportationCost;
+    record.transportationCostVerified = true;
     record.bonusAmount = bonusAmount;
     record.penaltyAmount = penaltyAmount;
     updateCalculation(record);
     if (previousPrice !== record.salaryPreview.totalAmount) {
-      record.revisions.push({ id: `revision-${id}-salary-${record.revisions.length + 1}`, department: "Salary", previousPrice, newPrice: record.salaryPreview.totalAmount, reason: note.trim(), updatedAt: record.updatedAt });
-      pushAudit(record, { actorId: ROLE_ACTOR.salary, actorRole: "salary", action: "edit", fromStage: record.stage, toStage: record.stage, changes: { bonusAmount: { before: previousBonus, after: bonusAmount }, penaltyAmount: { before: previousPenalty, after: penaltyAmount } }, note: note.trim() });
+      record.revisions.push({ id: `revision-${id}-salary-${record.revisions.length + 1}`, department: "Payroll", previousPrice, newPrice: record.salaryPreview.totalAmount, reason: note.trim(), updatedAt: record.updatedAt });
+      pushAudit(record, { actorId: ROLE_ACTOR.salary, actorRole: "salary", action: "edit", fromStage: record.stage, toStage: record.stage, changes: { transportationCost: { before: previousTransportationCost, after: transportationCost }, bonusAmount: { before: previousBonus, after: bonusAmount }, penaltyAmount: { before: previousPenalty, after: penaltyAmount } }, note: note.trim() });
     }
     return clone(record);
   },
@@ -382,9 +421,52 @@ export const developmentRepository = {
   async finalizeSalary(id: string, note: string): Promise<DevelopmentRequest> {
     const record = recordById(id);
     if (record.stage !== "salary-finalization") throw new ApiClientError(409, "REQUEST_ALREADY_COMPLETED", "This request is not awaiting salary finalization.");
+    if (!record.transportationCostVerified) throw new ApiClientError(409, "TICKET_PRICE_REQUIRED", "Enter and save the verified ticket price first.");
     record.stage = "completed";
     record.finalSalary = clone(record.salaryPreview);
     pushAudit(record, { actorId: ROLE_ACTOR.salary, actorRole: "salary", action: "finalize", fromStage: "salary-finalization", toStage: "completed", changes: { stage: { before: "salary-finalization", after: "completed" } }, note: note.trim() });
+    return clone(record);
+  },
+
+  async requestInfo(id: string, note: string, actorId = ROLE_ACTOR.manager): Promise<DevelopmentRequest> {
+    const record = recordById(id);
+    if (record.stage !== "manager-review") {
+      throw new ApiClientError(409, "INVALID_TRANSITION", "More information can only be requested during the manager-review stage.");
+    }
+    if (!note.trim()) {
+      throw new ApiClientError(400, "INVALID_EDIT_FIELDS", "A note is required when requesting more details.");
+    }
+    if (record.managerId !== actorId) throw new ApiClientError(403, "FORBIDDEN", "Only the selected manager may request information.");
+    const previous = record.pendingEmployeeResponse;
+    record.pendingEmployeeResponse = true;
+    pushAudit(record, {
+      actorId,
+      actorRole: "manager",
+      action: "request-info",
+      fromStage: record.stage,
+      toStage: record.stage,
+      changes: { pendingEmployeeResponse: { before: previous, after: true } },
+      note: note.trim(),
+    });
+    return clone(record);
+  },
+
+  async confirmTime(id: string, note: string): Promise<DevelopmentRequest> {
+    const record = recordById(id);
+    if (!record.timeNeedsVerification) {
+      throw new ApiClientError(409, "INVALID_TRANSITION", "This request does not require time verification.");
+    }
+    const previous = record.timeNeedsVerification;
+    record.timeNeedsVerification = false;
+    pushAudit(record, {
+      actorId: ROLE_ACTOR.manager,
+      actorRole: "manager",
+      action: "edit",
+      fromStage: record.stage,
+      toStage: record.stage,
+      changes: { timeNeedsVerification: { before: previous, after: false } },
+      note: note.trim() || null,
+    });
     return clone(record);
   },
 };

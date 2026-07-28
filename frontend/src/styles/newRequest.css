@@ -448,6 +448,62 @@
   }
 }
 
+/* Manager select + trip-type radio group (Section 1 of the implementation spec). */
+.trip-type-radio-group {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.trip-type-radio {
+  position: relative;
+  flex: 1 1 0;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 12px 14px;
+  border: 1px solid #d1d5db;
+  border-radius: 12px;
+  background: #f9fafb;
+  color: #374151;
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: border-color 150ms ease, background-color 150ms ease, color 150ms ease;
+}
+
+.trip-type-radio input {
+  position: absolute;
+  opacity: 0;
+  inset: 0;
+  cursor: pointer;
+}
+
+.trip-type-radio.is-active {
+  border-color: #1e5a34;
+  background: #ecf9f3;
+  color: #153f24;
+  box-shadow: 0 0 0 3px rgba(30, 90, 52, 0.08);
+}
+
+.trip-type-radio:hover {
+  border-color: #1e5a34;
+  background: #f2f8f4;
+}
+
+.transport-cost-readonly {
+  margin: 6px 0 14px;
+  padding: 10px 12px;
+  border-radius: 8px;
+  border: 1px dashed #d1d5db;
+  background: #fff7ed;
+  color: #9a3412;
+  font-size: 0.78rem;
+  line-height: 1.55;
+}
+
 .request-footer {
   margin-top: 1.5rem;
   color: #8a94a3;
