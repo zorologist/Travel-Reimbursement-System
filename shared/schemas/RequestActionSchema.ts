@@ -1,13 +1,13 @@
 import { z } from "zod";
 import { AccommodationTypeSchema } from "./TravelRequestSchema.js";
 
-const MoneySchema = z.number().finite().min(0).multipleOf(0.01);
+const MoneySchema = z.number().finite().min(0).max(1_000_000_000).multipleOf(0.01);
 
 export const ApproveRequestInputSchema = z.object({
   reason: z.string().trim().max(1000).optional(),
   accommodationType: AccommodationTypeSchema.optional(),
-  destination: z.string().trim().min(1).optional(),
-  method: z.string().trim().min(1).optional(),
+  destination: z.string().trim().min(1).max(100).optional(),
+  method: z.string().trim().min(1).max(200).optional(),
   departureAt: z.string().datetime().optional(),
   returnAt: z.string().datetime().optional(),
   meetsSevenHourRule: z.boolean().optional(),
@@ -21,17 +21,13 @@ export const SalaryReviewInputSchema = z.object({
   transportationCost: MoneySchema,
   bonusAmount: MoneySchema,
   penaltyAmount: MoneySchema,
-  note: z.string().trim().max(1000),
-}).superRefine((value, context) => {
-  if ((value.bonusAmount > 0 || value.penaltyAmount > 0) && !value.note) {
-    context.addIssue({ code: "custom", message: "A note is required for a non-zero salary adjustment.", path: ["note"] });
-  }
+  note: z.string().trim().max(1000).optional().default(""),
 });
 
 export const DepartmentReviewInputSchema = z.object({
   accommodationType: AccommodationTypeSchema.optional(),
-  destination: z.string().trim().min(1).optional(),
-  method: z.string().trim().min(1).optional(),
+  destination: z.string().trim().min(1).max(100).optional(),
+  method: z.string().trim().min(1).max(200).optional(),
   transportationCost: MoneySchema.optional(),
   departureAt: z.string().datetime().optional(),
   returnAt: z.string().datetime().optional(),
@@ -45,5 +41,5 @@ export const DepartmentReviewInputSchema = z.object({
 });
 
 export const FinalizeRequestInputSchema = z.object({
-  note: z.string().trim().min(1).max(1000),
+  note: z.string().trim().max(1000).optional().default(""),
 });

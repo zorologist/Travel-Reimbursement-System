@@ -66,7 +66,7 @@ workflowRouter.post("/requests/:id/request-info", (request, response, next) => {
 
 workflowRouter.post("/requests/:id/finalize", (request, response, next) => {
   try {
-    const input = FinalizeRequestInputSchema.parse(request.body);
+    const input = FinalizeRequestInputSchema.parse(request.body ?? {});
     const record = finalizeSalaryRequest(String(request.params.id), request.currentUser!, input.note);
     response.json({ request: authorizedView(record, request.currentUser!.id, request.currentUser!.roles, true) });
   } catch (error) {

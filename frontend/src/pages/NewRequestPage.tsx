@@ -1,15 +1,15 @@
 import { useEffect, useState, type ChangeEvent, type FormEvent } from "react";
 import { useNavigate } from "react-router-dom";
-import type { AccommodationType, JobLevel } from "@travel-reimbursement/shared";
-import { JOB_LEVEL_OPTIONS } from "@travel-reimbursement/shared";
+import type { AccommodationType } from "@travel-reimbursement/shared";
 
 import { useRequests } from "../hooks/useRequests";
+import { useAuth } from "../hooks/useAuth";
 import { useLanguage } from "../hooks/useLanguage";
-import { TimeWheelPicker } from "../components/ui/TimeWheelPicker";
 import { accommodationOptions } from "../constants/accommodationOptions";
 import { transportationOptions } from "../constants/transportationOptions";
 import api from "../services/api";
 import { developmentEmployees } from "../services/developmentRepository";
+import { useDevelopmentRepository } from "../services/runtimeMode";
 import type { RequestAttachment, TravelRequestData } from "../services/requestApi";
 import "../styles/newRequest.css";
 
@@ -49,12 +49,12 @@ function readAttachment(file: File): Promise<RequestAttachment> {
 export default function NewRequestPage() {
   const navigate = useNavigate();
   const { direction, language, localizeError, tr } = useLanguage();
+  const { user } = useAuth();
   const { addRequest, loading, error } = useRequests();
   const [localError, setLocalError] = useState<string | null>(null);
   const [attachments, setAttachments] = useState<File[]>([]);
   const [managers, setManagers] = useState<ManagerOption[]>([]);
   const [form, setForm] = useState({
-    jobLevel: "Level 1" as JobLevel,
     travelFrom: "",
     travelTo: "",
     startDate: "",
@@ -79,9 +79,15 @@ export default function NewRequestPage() {
         const list = response.data.managers ?? [];
         setManagers(list);
         setForm((current) => (current.managerId ? current : { ...current, managerId: list[0]?.id ?? "" }));
-      } catch {
-        // The browser-only development repository has no /api/managers endpoint — fall back to a
-        // hard-coded demo manager so the form remains usable in that mode.
+      } catch (managerError) {
+        if (!useDevelopmentRepository) {
+          if (!cancelled) {
+            setManagers([]);
+            setLocalError(localizeError(managerError, "Unable to load the manager list.", "تعذر تحميل قائمة المديرين."));
+          }
+          return;
+        }
+        // The explicit browser-only repository has no /api/managers endpoint.
         const fallback: ManagerOption[] = developmentEmployees
           .filter((employee) => employee.roles.includes("manager"))
           .map(({ id, employeeNumber, displayName, department }) => ({ id, employeeNumber, displayName, department }));
@@ -93,7 +99,7 @@ export default function NewRequestPage() {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [localizeError]);
 
   const handleChange = (event: ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     const { name, value } = event.target;
@@ -137,11 +143,12 @@ export default function NewRequestPage() {
       setLocalError(tr("Please select both departure and destination cities.", "يرجى اختيار مدينة الانطلاق ومدينة الوجهة."));
       return;
     }
-    if (!form.startDate || !form.endDate) {
-      setLocalError(tr("Please enter both departure date and return date.", "يرجى إدخال تاريخ الذهاب وتاريخ العودة."));
+    if (!form.startDate || (form.tripType === "round-trip" && !form.endDate)) {
+      setLocalError(tr("Please enter the required travel dates.", "يرجى إدخال تواريخ السفر المطلوبة."));
       return;
     }
-    const isMultiDay = Boolean(form.startDate && form.endDate && form.startDate !== form.endDate);
+    const isMultiDay = form.tripType === "round-trip"
+      && Boolean(form.startDate && form.endDate && form.startDate !== form.endDate);
     if (isMultiDay && !form.returnTime) {
       setLocalError(tr("Return time is required for trips lasting more than one day.", "يرجى تحديد وقت العودة للمأموريات التي تستغرق أكثر من يوم."));
       return;
@@ -159,7 +166,9 @@ export default function NewRequestPage() {
 
     try {
       const requestAttachments = await Promise.all(attachments.map(readAttachment));
-      const requestReturnDate = form.endDate || form.startDate;
+      const requestReturnDate = form.tripType === "one-way"
+        ? form.startDate
+        : form.endDate || form.startDate;
       const requestReturnTime = form.tripType === "one-way" ? form.startTime : form.returnTime;
       const requestData: TravelRequestData = {
         originCity: form.travelFrom,
@@ -168,7 +177,6 @@ export default function NewRequestPage() {
         returnAt: new Date(`${requestReturnDate}T${requestReturnTime}`).toISOString(),
         tripType: form.tripType,
         managerId: form.managerId,
-        jobLevel: form.jobLevel,
         transportationMethod: transportationOptions.find((option) => option.formValue === form.transport)?.value ?? "Company Car",
         transportationCost: form.ticketAmount ? Number(form.ticketAmount) : 0,
         accommodationType: form.accommodation,
@@ -191,8 +199,8 @@ export default function NewRequestPage() {
 
   const isPersonalTransport = form.transport === "personal-car";
   const isOneWay = form.tripType === "one-way";
-  const isSameDayTrip = form.startDate && (isOneWay || form.startDate === form.endDate);
-  const isMultiDayTrip = Boolean(form.startDate && form.endDate && form.startDate !== form.endDate);
+  const isSameDayTrip = !isOneWay && form.startDate && form.startDate === form.endDate;
+  const isMultiDayTrip = !isOneWay && Boolean(form.startDate && form.endDate && form.startDate !== form.endDate);
   
   // Calculate duration hours for same day trips
   let sameDayHours = 0;
@@ -229,20 +237,15 @@ export default function NewRequestPage() {
           <legend className="text-xs font-semibold text-gray-400 tracking-wider mb-4 px-2">{tr("Employee level, Manager & trip type", "المستوى الوظيفي والمدير ونوع الرحلة")}</legend>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">{tr("Job level", "المستوى الوظيفي")} *</label>
-              <select
-                name="jobLevel"
-                value={form.jobLevel}
-                onChange={handleChange}
-                className="w-full bg-gray-50/50 border border-gray-200 p-3 rounded-lg text-gray-800 focus:bg-white focus:border-[#1E5A34] focus:outline-none transition-all"
-                required
-              >
-                {JOB_LEVEL_OPTIONS.map((option) => (
-                  <option key={option.value} value={option.value}>
-                    {language === "ar" ? option.arabic : option.english}
-                  </option>
-                ))}
-              </select>
+              <label htmlFor="job-level" className="block text-sm font-medium text-gray-700 mb-2">{tr("Job level", "المستوى الوظيفي")}</label>
+              <input
+                id="job-level"
+                value={user?.jobLevel ?? ""}
+                className="w-full bg-gray-100 border border-gray-200 p-3 rounded-lg text-gray-700"
+                readOnly
+                aria-readonly="true"
+              />
+              <p className="text-xs text-gray-500 mt-1">{tr("Loaded from your employee profile.", "يتم تحميله من ملف الموظف.")}</p>
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">{tr("Select manager to review", "اختر المدير المسؤول")} *</label>
@@ -316,11 +319,18 @@ export default function NewRequestPage() {
               <label className="block text-sm font-medium text-gray-700 mb-2">{tr("Departure date", "تاريخ الذهاب")} *</label>
               <input type="date" name="startDate" value={form.startDate} onChange={handleChange} className="w-full bg-gray-50/50 border border-gray-200 p-3 rounded-lg text-gray-800 focus:bg-white focus:border-[#1E5A34] focus:outline-none transition-all" required />
             </div>
-            <div>
+            {!isOneWay && <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">{tr("Return date", "تاريخ العودة")} *</label>
               <input type="date" name="endDate" value={form.endDate} min={form.startDate || undefined} onChange={handleChange} className="w-full bg-gray-50/50 border border-gray-200 p-3 rounded-lg text-gray-800 focus:bg-white focus:border-[#1E5A34] focus:outline-none transition-all" required />
-            </div>
+            </div>}
           </div>
+          {isOneWay && (
+            <div className="bg-emerald-50/50 p-4 rounded-xl border border-emerald-100 max-w-md">
+              <label className="block text-sm font-medium text-gray-700 mb-2">{tr("Departure time", "وقت المغادرة")} *</label>
+              <input type="time" name="startTime" value={form.startTime} onChange={handleChange} className="w-full bg-white border border-gray-200 p-3 rounded-lg text-gray-800 focus:border-[#1E5A34] focus:outline-none transition-all" required />
+              <p className="text-xs text-gray-500 mt-2">{tr("A one-way request has no return date or return time.", "طلب الاتجاه الواحد لا يحتوي على تاريخ أو وقت عودة.")}</p>
+            </div>
+          )}
           {isSameDayTrip && (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 bg-emerald-50/50 p-4 rounded-xl border border-emerald-100">
               <div>

@@ -192,14 +192,12 @@ export function canEdit(
     return !Number.isNaN(createdAt.getTime()) && elapsed >= 0 && elapsed <= 30 * 60 * 1000;
   }
 
-  // Payroll/Salary can edit the amount in any non-terminal stage — the
-  // assertNotTerminal check above already blocks completed/cancelled requests.
-  if (role === "salary") return true;
+  if (role === "salary") return request.stage === "salary-finalization";
 
   // A manager can clear the timeNeedsVerification flag at any non-terminal stage
   // (timing-review sets it to true after verifying attendance times; the manager
   // then needs to confirm those times before salary finalization).
-  if (role === "manager") return true;
+  if (role === "manager") return request.timeNeedsVerification;
 
   return (
     (role === "pr" && request.stage === "pr-review") ||

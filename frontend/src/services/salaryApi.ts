@@ -45,6 +45,7 @@ export interface SalaryQueueItem {
   attachments: TravelRequest["attachments"];
   claimedTransportationCost: number;
   transportationCostVerified: boolean;
+  timeNeedsVerification: boolean;
   submittedRequest: CreateTravelRequestInput;
   auditEvents: AuditEvent[];
   verifiedDepartureAt?: string | null;
@@ -86,6 +87,7 @@ function salaryItem(record: DevelopmentRequest): SalaryQueueItem {
     attachments: record.attachments,
     claimedTransportationCost: record.claimedTransportationCost,
     transportationCostVerified: record.transportationCostVerified,
+    timeNeedsVerification: record.timeNeedsVerification,
     submittedRequest: record.submittedRequest,
     auditEvents: record.auditEvents,
     verifiedDepartureAt: record.verifiedDepartureAt,
@@ -132,6 +134,7 @@ export function mapBackendSalaryItem(record: BackendSalaryView): SalaryQueueItem
     attachments: record.attachments ?? [],
     claimedTransportationCost: record.claimedTransportationCost ?? 0,
     transportationCostVerified: record.transportationCostVerified ?? false,
+    timeNeedsVerification: record.timeNeedsVerification ?? false,
     submittedRequest: record.submittedRequest ?? {
       originCity: record.originCity ?? "Cairo", destinationCity: record.destinationCity,
       departureAt: record.departureAt, returnAt: record.returnAt, tripType: record.tripType ?? "round-trip",
@@ -207,9 +210,6 @@ export const salaryApi = {
     assertMoney(input.transportationCost, "Verified ticket price");
     assertMoney(input.bonusAmount, "Bonus");
     assertMoney(input.penaltyAmount, "Penalty");
-    if ((input.bonusAmount > 0 || input.penaltyAmount > 0) && !input.note.trim()) {
-      throw new ApiClientError(400, "ADJUSTMENT_NOTE_REQUIRED", "Add a note explaining every non-zero bonus or penalty.");
-    }
     if (useDevelopmentRepository) {
       return salaryItem(await developmentRepository.updateSalary(requestId, input.transportationCost, input.bonusAmount, input.penaltyAmount, input.note));
     }
@@ -218,9 +218,6 @@ export const salaryApi = {
   },
 
   async finalize(requestId: string, note: string): Promise<SalaryQueueItem> {
-    if (!note.trim()) {
-      throw new ApiClientError(400, "FINALIZATION_NOTE_REQUIRED", "A finalization note is required.");
-    }
     if (useDevelopmentRepository) return salaryItem(await developmentRepository.finalizeSalary(requestId, note));
     const response = await api.post<{ request: BackendSalaryView }>(`/api/requests/${requestId}/finalize`, { note: note.trim() });
     return mapBackendSalaryItem(response.data.request);

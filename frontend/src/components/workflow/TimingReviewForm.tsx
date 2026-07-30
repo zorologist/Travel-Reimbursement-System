@@ -32,14 +32,14 @@ export function TimingReviewForm({ request, onAction }: { request: ApprovalQueue
   return (
     <div className="timing-review-form form-panel">
       <h3>{tr("Timing & Hours Review", "مراجعة المواعيد والساعات")}</h3>
-      {!isOneWay && <div className="form-group">
+      <div className="form-group">
         <label>{tr("Verified departure time", "وقت الذهاب المؤكد")}</label>
         <input type="datetime-local" value={inputDate(departureAt)} onChange={(event) => setDepartureAt(isoDate(event.target.value))} />
-      </div>}
-      <div className="form-group">
+      </div>
+      {!isOneWay && <div className="form-group">
         <label>{tr("Verified return time", "وقت العودة المؤكد")}</label>
         <input type="datetime-local" value={inputDate(returnAt)} onChange={(event) => setReturnAt(isoDate(event.target.value))} />
-      </div>
+      </div>}
       <div className={`mission-duration ${nightCount === 0 ? "same-day" : nightCount === null ? "invalid" : "overnight"}`} aria-live="polite">
         <strong>{tr("Mission duration", "مدة المأمورية")}</strong>
         {isOneWay ? (

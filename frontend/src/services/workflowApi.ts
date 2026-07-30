@@ -167,7 +167,7 @@ export const workflowApi = {
    */
   async confirmTime(id: string, note: string): Promise<void> {
     if (useDevelopmentRepository) {
-      await developmentRepository.confirmTime(id, note);
+      await developmentRepository.confirmTime(id, note, getDevelopmentUser()?.id);
       return;
     }
     await api.patch(`/api/requests/${id}/review`, { timeNeedsVerification: false, note });

@@ -17,16 +17,21 @@ beforeEach(() => {
 describe("development authentication", () => {
   it("logs in, restores the server session, and logs out", async () => {
     const agent = request.agent(app);
-    const login = await agent.post("/api/auth/login").send({ employeeNumber: "dev004", password: "Admin@123", remember: true });
+    const login = await agent.post("/api/auth/login").send({
+      employeeNumber: "dev004",
+      password: "Admin@123",
+      remember: true,
+    });
     expect(login.status).toBe(200);
     expect(login.headers["set-cookie"]?.[0]).toContain("HttpOnly");
+    expect(login.body.csrfToken).toEqual(expect.any(String));
     expect(login.body.user).toMatchObject({ employeeNumber: "DEV004", department: "Pipeline Engineering", roles: ["employee", "manager"] });
 
     const current = await agent.get("/api/auth/me");
     expect(current.status).toBe(200);
     expect(current.body.user.id).toBe("u4");
 
-    const logout = await agent.post("/api/auth/logout");
+    const logout = await agent.post("/api/auth/logout").set("x-csrf-token", login.body.csrfToken);
     expect(logout.status).toBe(204);
     expect((await agent.get("/api/auth/me")).status).toBe(401);
   });
@@ -36,15 +41,55 @@ describe("development authentication", () => {
     expect(response.status).toBe(401);
     expect(response.body.error).toMatchObject({ code: "INVALID_CREDENTIALS", message: "The employee number or password is incorrect." });
   });
+
+  it("requires a session-bound CSRF token for cookie-authenticated writes", async () => {
+    const agent = request.agent(app);
+    const login = await agent.post("/api/auth/login").send({
+      employeeNumber: "DEV001",
+      password: "Employee@123",
+      remember: false,
+    });
+    expect(login.status).toBe(200);
+
+    const rejected = await agent.post("/api/auth/logout");
+    expect(rejected.status).toBe(403);
+    expect(rejected.body.error.code).toBe("INVALID_CSRF_TOKEN");
+
+    expect(
+      (await agent.post("/api/auth/logout").set("x-csrf-token", login.body.csrfToken)).status,
+    ).toBe(204);
+  });
+
+  it("does not accept the development identity header without explicit opt-in", async () => {
+    const previous = process.env.ALLOW_DEV_AUTH_HEADER;
+    process.env.ALLOW_DEV_AUTH_HEADER = "false";
+    try {
+      const response = await request(app).get("/api/auth/me").set(as("DEV008"));
+      expect(response.status).toBe(401);
+      expect(response.body.error.code).toBe("AUTHENTICATION_REQUIRED");
+    } finally {
+      process.env.ALLOW_DEV_AUTH_HEADER = previous;
+    }
+  });
 });
 
 describe("complete workflow HTTP journey", () => {
+  it("prevents Payroll from editing a request before salary finalization", async () => {
+    const response = await request(app)
+      .patch("/api/requests/TR-2026-001/review")
+      .set(as("DEV008"))
+      .send({ transportationCost: 100, note: "Too early." });
+    expect(response.status).toBe(409);
+    expect(response.body.error.code).toBe("INVALID_TRANSITION");
+  });
+
   it("moves a one-way request through timing without inventing a return leg", async () => {
     const departureAt = "2027-05-01T08:00:00.000Z";
     const created = await request(app).post("/api/requests").set(as("DEV001")).send({
       destinationCity: "Suez", departureAt, returnAt: departureAt,
       tripType: "one-way", managerId: "u4", accommodationType: "none",
       transportationMethod: "Train",
+      notes: "One-way operational visit.",
       attachments: [{ id: "one-way-ticket", name: "ticket.jpg", mimeType: "image/jpeg", size: 4, url: "data:image/jpeg;base64,AA==" }],
     });
     expect(created.status).toBe(201);
@@ -84,7 +129,7 @@ describe("complete workflow HTTP journey", () => {
     expect(prematureFinalization.status).toBe(409);
     expect(prematureFinalization.body.error.code).toBe("TICKET_PRICE_REQUIRED");
 
-    const adjusted = await request(app).patch("/api/requests/TR-2026-001/review").set(as("DEV008")).send({ transportationCost: 250, bonusAmount: 25, penaltyAmount: 5, note: "Approved Payroll adjustment." });
+    const adjusted = await request(app).patch("/api/requests/TR-2026-001/review").set(as("DEV008")).send({ transportationCost: 250, bonusAmount: 25, penaltyAmount: 5 });
     expect(adjusted.status).toBe(200);
     expect(adjusted.body.request.salaryPreview.bonusAmount).toBe(25);
     expect(adjusted.body.request.priceRevisions.length).toBeGreaterThanOrEqual(3);
@@ -93,8 +138,16 @@ describe("complete workflow HTTP journey", () => {
     expect(ownerBefore.body.request.salaryPreview).toBeUndefined();
     expect(ownerBefore.body.request.finalSalary).toBeUndefined();
 
-    const finalized = await request(app).post("/api/requests/TR-2026-001/finalize").set(as("DEV008")).send({ note: "Final amount checked and approved." });
-    expect(finalized.status).toBe(200);
+    const confirmationRequired = await request(app).post("/api/requests/TR-2026-001/finalize").set(as("DEV008")).send({ note: "Final amount checked and approved." });
+    expect(confirmationRequired.status).toBe(409);
+    expect(confirmationRequired.body.error.code).toBe("TIME_CONFIRMATION_REQUIRED");
+
+    const managerConfirmation = await request(app).patch("/api/requests/TR-2026-001/review").set(as("DEV004")).send({ timeNeedsVerification: false, note: "Verified times confirmed." });
+    expect(managerConfirmation.status).toBe(200);
+    expect(managerConfirmation.body.request.timeNeedsVerification).toBe(false);
+
+    const finalized = await request(app).post("/api/requests/TR-2026-001/finalize").set(as("DEV008")).send({});
+    expect(finalized.status, JSON.stringify(finalized.body)).toBe(200);
     expect(finalized.body.request.stage).toBe("completed");
     expect(finalized.body.request.finalSalary.totalAmount).toBe(finalized.body.request.salaryPreview.totalAmount);
 

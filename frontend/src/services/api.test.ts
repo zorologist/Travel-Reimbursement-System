@@ -1,8 +1,9 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 
-import api from "./api";
+import api, { setCsrfToken } from "./api";
 
 afterEach(() => {
+  setCsrfToken(null);
   vi.unstubAllGlobals();
 });
 
@@ -50,6 +51,23 @@ describe("api client", () => {
       message: "The request is at the wrong stage.",
       details: null,
     });
+  });
+
+  it("sends the CSRF token on state-changing requests", async () => {
+    const fetchMock = vi.fn().mockResolvedValue(
+      new Response(undefined, { status: 204 }),
+    );
+    vi.stubGlobal("fetch", fetchMock);
+    setCsrfToken("session-bound-token");
+
+    await api.post("/api/auth/logout");
+
+    expect(fetchMock).toHaveBeenCalledWith(
+      "/api/auth/logout",
+      expect.objectContaining({
+        headers: expect.objectContaining({ "X-CSRF-Token": "session-bound-token" }),
+      }),
+    );
   });
 
   it("normalizes network failures", async () => {

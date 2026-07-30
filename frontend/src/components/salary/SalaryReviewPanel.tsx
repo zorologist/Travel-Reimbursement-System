@@ -45,6 +45,10 @@ export function SalaryReviewPanel({
 
   async function saveAdjustments() {
     setError("");
+    if (transportationCost === "") {
+      setError(tr("Enter the verified ticket price, including zero when no cost applies.", "أدخل قيمة التذكرة المتحقق منها، بما في ذلك صفر عند عدم وجود تكلفة."));
+      return;
+    }
     setSaving(true);
     try {
       const cost = transportationCost === "" ? request.calculation.transportationCost : Number(transportationCost);
@@ -58,6 +62,14 @@ export function SalaryReviewPanel({
 
   async function requestFinalization() {
     setError("");
+    if (request.timeNeedsVerification) {
+      setError(tr("The selected manager must confirm the verified times before finalization.", "يجب أن يؤكد المدير المحدد المواعيد المتحقق منها قبل الاعتماد النهائي."));
+      return;
+    }
+    if (transportationCost === "") {
+      setError(tr("Enter and save the verified ticket price before finalization.", "أدخل واحفظ قيمة التذكرة المتحقق منها قبل الاعتماد النهائي."));
+      return;
+    }
     if (dirty) {
       setSaving(true);
       try {
@@ -89,7 +101,7 @@ export function SalaryReviewPanel({
   }
 
   const calculation = request.calculation;
-  const canFinalize = request.stage === "salary-finalization";
+  const canFinalize = request.stage === "salary-finalization" && !request.timeNeedsVerification;
 
   return (
     <aside className="salary-review" aria-label={tr(`Payroll review for ${request.id}`, `مراجعة الرواتب للطلب ${request.id}`)}>
@@ -219,6 +231,12 @@ export function SalaryReviewPanel({
               </li>
             ))}
           </ol>
+        </section>
+      )}
+
+      {request.timeNeedsVerification && (
+        <section className="salary-panel-section" role="status">
+          <p>{tr("Waiting for the selected manager to confirm the verified travel times.", "بانتظار تأكيد المدير المحدد لمواعيد السفر المتحقق منها.")}</p>
         </section>
       )}
 

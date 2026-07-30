@@ -7,6 +7,23 @@ describe("application routes", () => {
     const response = await request(app).get("/api/health");
     expect(response.status).toBe(200);
     expect(response.body).toEqual({ status: "ok" });
+    expect(response.headers["x-content-type-options"]).toBe("nosniff");
+    expect(response.headers["x-frame-options"]).toBe("SAMEORIGIN");
+    expect(response.headers["cache-control"]).toBe("no-store");
+  });
+
+  it("allows configured development origins and rejects unknown origins", async () => {
+    const allowed = await request(app)
+      .get("/api/health")
+      .set("Origin", "http://localhost:5173");
+    expect(allowed.status).toBe(200);
+    expect(allowed.headers["access-control-allow-origin"]).toBe("http://localhost:5173");
+
+    const rejected = await request(app)
+      .get("/api/health")
+      .set("Origin", "https://untrusted.example");
+    expect(rejected.status).toBe(403);
+    expect(rejected.body.error.code).toBe("CORS_ORIGIN_DENIED");
   });
 
   it("returns normalized JSON for an unknown route", async () => {

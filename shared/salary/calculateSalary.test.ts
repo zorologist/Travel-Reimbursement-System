@@ -301,6 +301,15 @@ describe("calculateSalary", () => {
   // ─── Invalid Input Rejection ───────────────────────────────────────────────
 
   describe("invalid input rejection", () => {
+    it("rejects non-finite values and fractional overnight counts", () => {
+      expect(() => calculateSalary({ ...defaultInput, transportationCost: Number.POSITIVE_INFINITY })).toThrow(
+        "transportationCost must be finite",
+      );
+      expect(() => calculateSalary({ ...defaultInput, overnightCount: 1.5 })).toThrow(
+        "overnightCount must be an integer",
+      );
+    });
+
     it("rejects negative overnightCount", () => {
       expect(() => calculateSalary({ ...defaultInput, overnightCount: -1 })).toThrow(
         "overnightCount cannot be negative"

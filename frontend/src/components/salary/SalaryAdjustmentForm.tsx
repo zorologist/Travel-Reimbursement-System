@@ -35,7 +35,7 @@ export function SalaryAdjustmentForm({
       <h3>{tr("Manual adjustments", "التعديلات اليدوية")}</h3>
 
       <label className="salary-field">
-        <span>{tr("Verified ticket price (EGP)", "سعر التذكرة المؤكد (جنيه)")} <b>{tr("(optional)", "(اختياري)")}</b></span>
+        <span>{tr("Verified ticket price (EGP)", "سعر التذكرة المؤكد (جنيه)")} <b>{tr("(required)", "(مطلوب)")}</b></span>
         <input
           type="text"
           inputMode="decimal"
@@ -49,7 +49,7 @@ export function SalaryAdjustmentForm({
             }
           }}
         />
-        <small>{tr("Optional ticket price.", "سعر التذكرة (اختياري).")}</small>
+        <small>{tr("Enter zero when no transportation cost applies.", "أدخل صفر عند عدم وجود تكلفة انتقال.")}</small>
       </label>
 
       <label className="salary-field">
@@ -97,7 +97,7 @@ export function SalaryAdjustmentForm({
           value={note}
           disabled={disabled}
           maxLength={1000}
-          placeholder={tr("Add audit note (optional)...", "أضف ملاحظة التدقيق (اختياري)...")}
+          placeholder={tr("Add an audit or finalization note (optional)...", "أضف ملاحظة التدقيق أو الاعتماد (اختياري)...")}
           onChange={(event) => onNoteChange(event.target.value)}
         />
         <small>{tr("This note is permanently attached to the audit trail when provided.", "تُرفق هذه الملاحظة بسجل الإجراءات عند إدخالها.")}</small>

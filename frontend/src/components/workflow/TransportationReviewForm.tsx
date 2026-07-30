@@ -54,7 +54,7 @@ export function TransportationReviewForm({ request, onAction }: { request: Appro
               <h4 id={`attachment-preview-${selectedAttachment.id}`}>{selectedAttachment.name}</h4>
               <button type="button" onClick={() => setSelectedAttachment(null)} aria-label={tr("Close attachment preview", "إغلاق معاينة المرفق")}>×</button>
             </header>
-            <iframe src={selectedAttachment.url} title={tr(`Preview of ${selectedAttachment.name}`, `معاينة ${selectedAttachment.name}`)} sandbox="" />
+            <img src={selectedAttachment.url} alt={tr(`Preview of ${selectedAttachment.name}`, `معاينة ${selectedAttachment.name}`)} />
             <a href={selectedAttachment.url} download={selectedAttachment.name}>{tr("Download attachment", "تنزيل المرفق")}</a>
           </div>
         </div>

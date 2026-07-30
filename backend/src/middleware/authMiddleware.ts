@@ -11,11 +11,12 @@ declare global {
   namespace Express {
     interface Request {
       currentUser?: User;
+      sessionToken?: string;
     }
   }
 }
 
-function cookie(request: Parameters<RequestHandler>[0], name: string): string | undefined {
+export function cookieValue(request: Parameters<RequestHandler>[0], name: string): string | undefined {
   const header = request.header("cookie");
   if (!header) return undefined;
   for (const item of header.split(";")) {
@@ -31,18 +32,21 @@ export const authMiddleware: RequestHandler = (request, _response, next) => {
     next();
     return;
   }
-  const bearer = request.header("authorization")?.match(/^Bearer\s+(.+)$/i)?.[1];
-  const token = cookie(request, SESSION_COOKIE) ?? bearer;
+  const token = cookieValue(request, SESSION_COOKIE);
   const sessionUser = token ? userForSession(token) : null;
   if (sessionUser) {
     request.currentUser = sessionUser;
+    request.sessionToken = token;
     next();
     return;
   }
 
-  const employeeNumber = process.env.NODE_ENV === "production" ? undefined : request.header("x-employee-number");
+  const devHeaderEnabled =
+    process.env.ALLOW_DEV_AUTH_HEADER === "true"
+    && process.env.NODE_ENV !== "production";
+  const employeeNumber = devHeaderEnabled ? request.header("x-employee-number") : undefined;
   if (!employeeNumber) {
-    next(new ApiError(401, "AUTHENTICATION_REQUIRED", "A development employee identity is required."));
+    next(new ApiError(401, "AUTHENTICATION_REQUIRED", "A valid session is required."));
     return;
   }
   const user = findUserByEmployeeNumber(employeeNumber);

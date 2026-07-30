@@ -80,6 +80,7 @@ function prView(request: TravelRequest): SafeRequestView {
     cancellationReason: request.cancellationReason,
     auditEvents: request.auditEvents.map((event) => ({
       ...event,
+      note: event.actorRole === "salary" ? null : event.note,
       changes: Object.fromEntries(Object.entries(event.changes).filter(([field]) => !FINANCIAL_CHANGE_FIELDS.has(field))),
     })),
   };

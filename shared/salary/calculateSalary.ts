@@ -27,12 +27,21 @@ const round = (value: number): number => {
  */
 export function calculateSalary(input: SalaryCalculationInput): SalaryCalculationResult {
   // Validate inputs
-  if (input.overnightCount < 0) throw new Error("overnightCount cannot be negative");
-  if (input.sameDayVerifiedHours < 0) throw new Error("sameDayVerifiedHours cannot be negative");
-  if (input.returnDayVerifiedHours < 0) throw new Error("returnDayVerifiedHours cannot be negative");
-  if (input.transportationCost < 0) throw new Error("transportationCost cannot be negative");
-  if (input.bonusAmount < 0) throw new Error("bonusAmount cannot be negative");
-  if (input.penaltyAmount < 0) throw new Error("penaltyAmount cannot be negative");
+  const numericInputs = {
+    overnightCount: input.overnightCount,
+    sameDayVerifiedHours: input.sameDayVerifiedHours,
+    returnDayVerifiedHours: input.returnDayVerifiedHours,
+    transportationCost: input.transportationCost,
+    bonusAmount: input.bonusAmount,
+    penaltyAmount: input.penaltyAmount,
+  };
+  for (const [field, value] of Object.entries(numericInputs)) {
+    if (!Number.isFinite(value)) throw new Error(`${field} must be finite`);
+    if (value < 0) throw new Error(`${field} cannot be negative`);
+  }
+  if (!Number.isInteger(input.overnightCount)) {
+    throw new Error("overnightCount must be an integer");
+  }
 
   const dailyRate = SALARY_RATES[input.jobLevel];
   const accommodationFactor = ACCOMMODATION_FACTORS[input.accommodationType];

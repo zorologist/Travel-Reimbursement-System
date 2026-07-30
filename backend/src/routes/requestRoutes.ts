@@ -93,10 +93,12 @@ requestRouter.get("/requests/:id", (request: Request, response: Response, next: 
     const record = findRequestById(String(request.params.id));
     if (!record) throw new ApiError(404, "REQUEST_NOT_FOUND", "Travel request not found.");
     const isOwner = record.employeeId === user.id;
-    const adminRole = administrativeRole(user.roles);
-    const isSelectedManager = adminRole === "manager" && record.managerId === user.id;
-    const hasDepartmentAccess = adminRole !== undefined && adminRole !== "manager";
-    if (!isOwner && !isSelectedManager && !hasDepartmentAccess) {
+    const hasDepartmentAccess = user.roles.some((role) => {
+      if (role === "manager") return record.stage === "manager-review" && record.managerId === user.id;
+      if (role === "salary") return true;
+      return roleStage(role) === record.stage;
+    });
+    if (!isOwner && !hasDepartmentAccess) {
       throw new ApiError(403, "FORBIDDEN", "You cannot view this travel request.");
     }
     response.json({ request: authorizedView(record, user.id, user.roles) });

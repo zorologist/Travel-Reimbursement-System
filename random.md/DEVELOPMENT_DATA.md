@@ -44,7 +44,10 @@ All accounts are fictional. Administrative users also have the `employee` role, 
 
 Two Salary accounts exist so separation-of-duties behavior can be tested without allowing a Salary user to finalize their own personal request.
 
-DEV001–DEV003 use `Employee@123`. DEV004–DEV009 use `Admin@123`. These are fictional development-only credentials and are kept separate from user records.
+DEV001-DEV003 use `Employee@123`. DEV004-DEV010 use `Admin@123`.
+The backend stores only bcrypt hashes. Set `ENABLE_DEVELOPMENT_ACCOUNTS=true`
+only on the separate development deployment; keep it false on the active
+published deployment.
 
 ## Stable Request Scenarios
 

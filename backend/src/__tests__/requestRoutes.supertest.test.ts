@@ -12,6 +12,7 @@ const validRequest = {
   managerId: "u4",
   accommodationType: "none",
   transportationMethod: "Company bus",
+  notes: "Operational site visit.",
   attachments: [{ id: "ticket-1", name: "ticket.jpg", mimeType: "image/jpeg", size: 4, url: "data:image/jpeg;base64,AA==" }],
 };
 
@@ -40,6 +41,15 @@ describe("request lifecycle HTTP API", () => {
     expect(response.body.request.salaryPreview).toBeUndefined();
   });
 
+  it("rejects an employee-supplied job level", async () => {
+    const response = await request(app)
+      .post("/api/requests")
+      .set(as("DEV001"))
+      .send({ ...validRequest, jobLevel: "Chairman" });
+    expect(response.status).toBe(400);
+    expect(response.body.error.code).toBe("VALIDATION_ERROR");
+  });
+
   it("validates required fields and travel date order", async () => {
     const missing = await request(app).post("/api/requests").set(as("DEV001")).send({ destinationCity: "Suez" });
     expect(missing.status).toBe(400);
@@ -48,6 +58,18 @@ describe("request lifecycle HTTP API", () => {
     const reversed = await request(app).post("/api/requests").set(as("DEV001")).send({ ...validRequest, returnAt: "2027-03-01T08:00:00.000Z" });
     expect(reversed.status).toBe(400);
     expect(reversed.body.error.code).toBe("VALIDATION_ERROR");
+
+    const noPurpose = await request(app)
+      .post("/api/requests")
+      .set(as("DEV001"))
+      .send({ ...validRequest, notes: "   " });
+    expect(noPurpose.status).toBe(400);
+
+    const zeroDurationRoundTrip = await request(app)
+      .post("/api/requests")
+      .set(as("DEV001"))
+      .send({ ...validRequest, returnAt: validRequest.departureAt });
+    expect(zeroDurationRoundTrip.status).toBe(400);
   });
 
   it("accepts one-way requests without a return leg and requires ticket images", async () => {
@@ -74,6 +96,18 @@ describe("request lifecycle HTTP API", () => {
       attachments: [{ id: "ticket-pdf", name: "ticket.pdf", mimeType: "application/pdf", size: 4, url: "data:application/pdf;base64,AA==" }],
     });
     expect(pdfTicket.status).toBe(400);
+
+    const mismatchedDataUrl = await request(app).post("/api/requests").set(as("DEV001")).send({
+      ...validRequest,
+      attachments: [{
+        id: "fake-image",
+        name: "ticket.jpg",
+        mimeType: "image/jpeg",
+        size: 4,
+        url: "data:text/html;base64,PGgxPk5vdCBhbiBpbWFnZTwvaDE+",
+      }],
+    });
+    expect(mismatchedDataUrl.status).toBe(400);
   });
 
   it("returns only the signed-in employee's personal requests", async () => {
@@ -101,6 +135,18 @@ describe("request lifecycle HTTP API", () => {
     const selectedManager = await request(app).get(`/api/requests/${id}`).set(as("DEV010"));
     expect(selectedManager.status).toBe(200);
     expect(selectedManager.body.request.submittedRequest.managerId).toBe("u10");
+  });
+
+  it("prevents department reviewers from opening requests outside their current stage", async () => {
+    expect(
+      (await request(app).get("/api/requests/TR-2026-001").set(as("DEV005"))).status,
+    ).toBe(403);
+    expect(
+      (await request(app).get("/api/requests/TR-2026-002").set(as("DEV005"))).status,
+    ).toBe(200);
+    expect(
+      (await request(app).get("/api/requests/TR-2026-002").set(as("DEV006"))).status,
+    ).toBe(403);
   });
 
   it("prevents a pure employee from opening a department queue", async () => {

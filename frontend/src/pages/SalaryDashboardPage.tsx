@@ -29,6 +29,13 @@ function initials(displayName: string): string {
     .join("");
 }
 
+/** Prevents commas/quotes and spreadsheet formulas from escaping a CSV cell. */
+export function safeCsvCell(value: string | number): string {
+  if (typeof value === "number") return Number.isFinite(value) ? String(value) : "0";
+  const formulaSafe = /^[\s]*[=+\-@]/.test(value) ? `'${value}` : value;
+  return `"${formulaSafe.replace(/"/g, '""')}"`;
+}
+
 function exportToExcel(items: SalaryQueueItem[]) {
   const headers = [
     "م",
@@ -67,19 +74,19 @@ function exportToExcel(items: SalaryQueueItem[]) {
 
     const row = [
       index + 1,
-      `"${item.employee.employeeNumber}"`,
-      `"${item.employee.displayName.replace(/"/g, '""')}"`,
-      `"${localizeLabel(item.employee.jobLevel, "ar")}"`,
-      `"${item.employee.department.replace(/"/g, '""')}"`,
-      `"${(item.notes || "مأمورية عمل").replace(/"/g, '""')}"`,
-      `"${localizeLabel(item.destinationCity, "ar")}"`,
-      `"${departureDate}"`,
-      `"${returnDate}"`,
+      safeCsvCell(item.employee.employeeNumber),
+      safeCsvCell(item.employee.displayName),
+      safeCsvCell(localizeLabel(item.employee.jobLevel, "ar")),
+      safeCsvCell(item.employee.department),
+      safeCsvCell(item.notes || "مأمورية عمل"),
+      safeCsvCell(localizeLabel(item.destinationCity, "ar")),
+      safeCsvCell(departureDate),
+      safeCsvCell(returnDate),
       item.calculation.overnightCount,
-      `"${depTime}"`,
-      `"${retTime}"`,
-      `"${localizeLabel(item.transportationMethod, "ar")}"`,
-      `"${localizeLabel(item.accommodationType, "ar")}"`,
+      safeCsvCell(depTime),
+      safeCsvCell(retTime),
+      safeCsvCell(localizeLabel(item.transportationMethod, "ar")),
+      safeCsvCell(localizeLabel(item.accommodationType, "ar")),
       travelAllowance,
       item.calculation.transportationCost,
       item.calculation.bonusAmount,
@@ -97,6 +104,7 @@ function exportToExcel(items: SalaryQueueItem[]) {
   document.body.appendChild(link);
   link.click();
   document.body.removeChild(link);
+  URL.revokeObjectURL(url);
 }
 
 export function SalaryDashboardPage() {
@@ -238,7 +246,7 @@ export function SalaryDashboardPage() {
   }
 
   function signOut() {
-    logout();
+    void logout();
     navigate("/login", { replace: true });
   }
 

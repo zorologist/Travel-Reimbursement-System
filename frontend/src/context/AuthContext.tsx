@@ -9,6 +9,7 @@ import {
 
 import { getDevelopmentUser, type DevelopmentUser } from "../services/developmentAuth";
 import { authApi } from "../services/authApi";
+import { AUTHENTICATION_EXPIRED_EVENT } from "../services/api";
 import { useDevelopmentRepository } from "../services/runtimeMode";
 
 interface AuthContextValue {
@@ -20,7 +21,7 @@ interface AuthContextValue {
     password: string,
     remember: boolean,
   ) => Promise<DevelopmentUser | null>;
-  logout: () => void;
+  logout: () => Promise<void>;
   restore: () => Promise<void>;
 }
 
@@ -52,9 +53,13 @@ export function AuthProvider({ children }: AuthProviderProps) {
     [],
   );
 
-  const logout = useCallback(() => {
-    void authApi.logout();
+  const logout = useCallback(async () => {
     setUser(null);
+    try {
+      await authApi.logout();
+    } catch {
+      // Local sign-out must still succeed if the server session already expired.
+    }
   }, []);
 
   const restore = useCallback(async () => {
@@ -66,6 +71,12 @@ export function AuthProvider({ children }: AuthProviderProps) {
   useEffect(() => {
     if (!useDevelopmentRepository) void restore();
   }, [restore]);
+
+  useEffect(() => {
+    const expireAuthentication = () => setUser(null);
+    window.addEventListener(AUTHENTICATION_EXPIRED_EVENT, expireAuthentication);
+    return () => window.removeEventListener(AUTHENTICATION_EXPIRED_EVENT, expireAuthentication);
+  }, []);
 
   const value = useMemo<AuthContextValue>(
     () => ({

@@ -12,7 +12,7 @@ export function Header() {
   const location = useLocation();
 
   function signOut() {
-    logout();
+    void logout();
     navigate("/login", { replace: true });
   }
 

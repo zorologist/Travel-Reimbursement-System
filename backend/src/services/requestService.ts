@@ -22,34 +22,34 @@ export function createNewRequest(
   user: User,
   requestId?: string,
 ): TravelRequest {
+  const { jobLevel: _untrustedJobLevel, ...trustedInput } = input;
   const now = new Date();
   const thirtyDaysMs = 30 * 24 * 60 * 60 * 1000;
-  if (now.getTime() - new Date(input.departureAt).getTime() > thirtyDaysMs) {
+  if (now.getTime() - new Date(trustedInput.departureAt).getTime() > thirtyDaysMs) {
     throw new WorkflowServiceError("INVALID_DATE", "A request cannot be submitted for a trip that took place more than one month in the past.");
   }
   // Validate the selected manager: must reference a real user that has the manager role.
-  const manager = input.managerId ? findUserById(input.managerId) : undefined;
+  const manager = trustedInput.managerId ? findUserById(trustedInput.managerId) : undefined;
   if (!manager || !manager.roles.includes("manager")) {
     throw new WorkflowServiceError("INVALID_EDIT_FIELDS", "managerId must reference a user with the manager role.");
   }
 
   // PDF Item 5 & 6: Auto calculate Tango fare for Employee's Private Car when amount is omitted.
-  const isPersonalCar = input.transportationMethod.includes("personal-car") || input.transportationMethod.includes("Private Car") || input.transportationMethod.includes("العامل");
-  let claimedCost = input.claimedTransportationCost ?? 0;
+  const isPersonalCar = trustedInput.transportationMethod.includes("personal-car") || trustedInput.transportationMethod.includes("Private Car") || trustedInput.transportationMethod.includes("العامل");
+  let claimedCost = trustedInput.claimedTransportationCost ?? 0;
   if (isPersonalCar && claimedCost <= 0) {
-    const tangoFare = getTangoFare(input.destinationCity);
-    claimedCost = input.tripType === "round-trip" ? tangoFare * 2 : tangoFare;
+    const tangoFare = getTangoFare(trustedInput.destinationCity);
+    claimedCost = trustedInput.tripType === "round-trip" ? tangoFare * 2 : tangoFare;
   }
 
   // One-way trips must still provide a returnAt for schema compatibility, but the
   // salary preview only cares about the departure date — keep both timestamps.
   const id = requestId ?? standaloneRequestId(now);
-  const effectiveUser: User = input.jobLevel ? { ...user, jobLevel: input.jobLevel } : user;
   const salaryPreview = computeInitialSalaryPreview(
-    input.departureAt,
-    input.returnAt,
-    input.accommodationType,
-    effectiveUser,
+    trustedInput.departureAt,
+    trustedInput.returnAt,
+    trustedInput.accommodationType,
+    user,
   );
   const submitEvent = createAuditEvent(
     id,
@@ -58,16 +58,16 @@ export function createNewRequest(
     "submit",
     null,
     "manager-review",
-    { managerId: { before: null, after: manager.id }, tripType: { before: null, after: input.tripType } },
+    { managerId: { before: null, after: manager.id }, tripType: { before: null, after: trustedInput.tripType } },
     null,
     { now },
   );
 
   return {
-    ...input,
+    ...trustedInput,
     id,
     employeeId: user.id,
-    originCity: input.originCity ?? "Cairo",
+    originCity: trustedInput.originCity ?? "Cairo",
     stage: "manager-review",
     verifiedDepartureAt: null,
     verifiedReturnAt: null,
@@ -81,14 +81,14 @@ export function createNewRequest(
     salaryPreview,
     finalSalary: null,
     cancellationReason: null,
-    notes: input.notes ?? "",
-    attachments: input.attachments ?? [],
+    notes: trustedInput.notes ?? "",
+    attachments: trustedInput.attachments ?? [],
     priceRevisions: [],
     pendingEmployeeResponse: false,
     timeNeedsVerification: false,
     createdAt: now.toISOString(),
     updatedAt: now.toISOString(),
     auditEvents: [submitEvent],
-    submittedRequest: structuredClone(input),
+    submittedRequest: structuredClone({ ...trustedInput, jobLevel: user.jobLevel }),
   };
 }

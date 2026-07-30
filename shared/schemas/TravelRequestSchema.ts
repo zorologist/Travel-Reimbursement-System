@@ -26,25 +26,43 @@ export const SalaryCalculationResultSchema = z.object({
 });
 
 export const RequestAttachmentSchema = z.object({
-  id: z.string().min(1),
-  name: z.string().trim().min(1).max(255),
+  id: z.string().min(1).max(100),
+  name: z.string().trim().min(1).max(255).refine((name) => !/[\u0000-\u001f\u007f]/.test(name), {
+    message: "Attachment names cannot contain control characters.",
+  }),
   mimeType: z.string().trim().min(1).max(100),
-  size: z.number().int().min(0).max(5 * 1024 * 1024),
+  size: z.number().int().min(1).max(5 * 1024 * 1024),
   url: z.string().min(1).max(7 * 1024 * 1024),
-}).refine((attachment) => ["image/jpeg", "image/png", "image/webp"].includes(attachment.mimeType), {
-  message: "Ticket attachments must be JPEG, PNG, or WebP images.",
-  path: ["mimeType"],
+}).superRefine((attachment, context) => {
+  if (!["image/jpeg", "image/png", "image/webp"].includes(attachment.mimeType)) {
+    context.addIssue({
+      code: "custom",
+      message: "Ticket attachments must be JPEG, PNG, or WebP images.",
+      path: ["mimeType"],
+    });
+  }
+  const expectedPrefix = `data:${attachment.mimeType};base64,`;
+  const payload = attachment.url.startsWith(expectedPrefix)
+    ? attachment.url.slice(expectedPrefix.length)
+    : "";
+  if (!payload || payload.length % 4 !== 0 || !/^[A-Za-z0-9+/]*={0,2}$/.test(payload)) {
+    context.addIssue({
+      code: "custom",
+      message: "The attachment must be a valid base64 data URL matching its MIME type.",
+      path: ["url"],
+    });
+  }
 });
 
 export const CreateTravelRequestInputSchema = z.object({
-  originCity: z.string().trim().min(1).optional(),
-  destinationCity: z.string(),
+  originCity: z.string().trim().min(1).max(100).optional(),
+  destinationCity: z.string().trim().min(1).max(100),
   departureAt: z.string().datetime(),
   returnAt: z.string().datetime(),
   tripType: z.enum(["one-way", "round-trip"]),
-  managerId: z.string().min(1),
+  managerId: z.string().trim().min(1).max(100),
   accommodationType: AccommodationTypeSchema,
-  transportationMethod: z.string(),
+  transportationMethod: z.string().trim().min(1).max(200),
   jobLevel: z.enum([
     "Chairman",
     "Deputy",
@@ -58,17 +76,21 @@ export const CreateTravelRequestInputSchema = z.object({
     "Level 2",
     "Level 3",
   ]).optional(),
-  claimedTransportationCost: z.number().min(0).optional(),
+  claimedTransportationCost: z.number().finite().min(0).max(1_000_000_000).multipleOf(0.01).optional(),
   notes: z.string().trim().max(1000).optional(),
   attachments: z.array(RequestAttachmentSchema).max(4).optional(),
 }).superRefine((data, context) => {
   const departure = new Date(data.departureAt).getTime();
   const arrival = new Date(data.returnAt).getTime();
-  const valid = arrival >= departure;
+  const valid = data.tripType === "one-way"
+    ? arrival === departure
+    : arrival > departure;
   if (!valid) {
     context.addIssue({
       code: "custom",
-      message: "returnAt must be on or after departureAt.",
+      message: data.tripType === "one-way"
+        ? "A one-way request must use the departure time as returnAt."
+        : "returnAt must be after departureAt.",
       path: ["returnAt"],
     });
   }

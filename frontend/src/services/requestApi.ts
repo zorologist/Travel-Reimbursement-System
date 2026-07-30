@@ -1,7 +1,6 @@
 import type {
   AccommodationType,
   AuditEvent,
-  JobLevel,
   PriceRevision,
   WorkflowStage,
   RequestAttachment,
@@ -24,7 +23,6 @@ export interface TravelRequestData {
   returnAt: string;
   tripType: "one-way" | "round-trip";
   managerId: string;
-  jobLevel?: JobLevel;
   accommodationType: AccommodationType;
   transportationMethod: string;
   transportationCost?: number;
@@ -241,6 +239,16 @@ export const requestApi = {
       }
       if (user?.roles.includes("manager") && record.employeeId !== user.id && record.managerId !== user.id) {
         throw new ApiClientError(403, "FORBIDDEN", "Only the selected manager can view this request.");
+      }
+      if (user && record.employeeId !== user.id && !user.roles.includes("salary")) {
+        const hasCurrentStageRole =
+          (record.stage === "manager-review" && user.roles.includes("manager") && record.managerId === user.id)
+          || (record.stage === "pr-review" && user.roles.includes("pr"))
+          || (record.stage === "transportation-review" && user.roles.includes("transportation"))
+          || (record.stage === "timing-review" && user.roles.includes("timing"));
+        if (!hasCurrentStageRole) {
+          throw new ApiClientError(403, "FORBIDDEN", "You cannot view this request outside your department stage.");
+        }
       }
       return publicRequest(record);
     }

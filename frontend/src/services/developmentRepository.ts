@@ -47,7 +47,6 @@ export interface CreateDevelopmentRequestInput {
   destinationCity: string;
   departureAt: string;
   returnAt: string;
-  jobLevel?: JobLevel;
   accommodationType: AccommodationType;
   transportationMethod: string;
   transportationCost?: number;
@@ -323,8 +322,12 @@ export const developmentRepository = {
 
   async create(input: CreateDevelopmentRequestInput): Promise<DevelopmentRequest> {
     validateDates(input.departureAt, input.returnAt, input.tripType ?? "round-trip");
-    if (!input.attachments || input.attachments.length < 1 || input.attachments.length > 4) {
-      throw new ApiClientError(400, "ATTACHMENT_REQUIRED", "Attach between one and four ticket images.");
+    const isPersonalCar = input.transportationMethod === "Employee's Private Car";
+    if (isPersonalCar && (!input.attachments || input.attachments.length < 1)) {
+      throw new ApiClientError(400, "ATTACHMENT_REQUIRED", "Attach a ticket image for Employee's Private Car.");
+    }
+    if ((input.attachments?.length ?? 0) > 4) {
+      throw new ApiClientError(400, "TOO_MANY_ATTACHMENTS", "Attach no more than four ticket images.");
     }
     if (input.originCity.trim().toLowerCase() === input.destinationCity.trim().toLowerCase()) {
       throw new ApiClientError(409, "CONFLICT", "Origin and destination must be different.");
@@ -374,10 +377,13 @@ export const developmentRepository = {
     }
     if (role === "timing") {
       if (input.departureAt) record.verifiedDepartureAt = input.departureAt;
-      if (input.returnAt) record.verifiedReturnAt = input.returnAt;
+      record.verifiedReturnAt = record.tripType === "one-way"
+        ? record.verifiedDepartureAt ?? record.departureAt
+        : input.returnAt ?? record.returnAt;
       const days = dateDifferenceInDays(record.verifiedDepartureAt ?? record.departureAt, record.verifiedReturnAt ?? record.returnAt);
-      record.verifiedSameDayHours = days === 0 && input.meetsSevenHourRule ? 7 : 0;
-      record.verifiedReturnDayHours = days > 0 && input.meetsSevenHourRule ? 7 : 0;
+      record.verifiedSameDayHours = record.tripType !== "one-way" && days === 0 && input.meetsSevenHourRule ? 7 : 0;
+      record.verifiedReturnDayHours = record.tripType !== "one-way" && days > 0 && input.meetsSevenHourRule ? 7 : 0;
+      record.timeNeedsVerification = true;
     }
     updateCalculation(record);
     if (record.salaryPreview.totalAmount !== previousPrice) {
@@ -425,6 +431,7 @@ export const developmentRepository = {
     const record = recordById(id);
     if (record.stage !== "salary-finalization") throw new ApiClientError(409, "REQUEST_ALREADY_COMPLETED", "This request is not awaiting salary finalization.");
     if (!record.transportationCostVerified) throw new ApiClientError(409, "TICKET_PRICE_REQUIRED", "Enter and save the verified ticket price first.");
+    if (record.timeNeedsVerification) throw new ApiClientError(409, "TIME_CONFIRMATION_REQUIRED", "The selected manager must confirm the verified times first.");
     record.stage = "completed";
     record.finalSalary = clone(record.salaryPreview);
     pushAudit(record, { actorId: ROLE_ACTOR.salary, actorRole: "salary", action: "finalize", fromStage: "salary-finalization", toStage: "completed", changes: { stage: { before: "salary-finalization", after: "completed" } }, note: note.trim() });
@@ -454,15 +461,18 @@ export const developmentRepository = {
     return clone(record);
   },
 
-  async confirmTime(id: string, note: string): Promise<DevelopmentRequest> {
+  async confirmTime(id: string, note: string, actorId = ROLE_ACTOR.manager): Promise<DevelopmentRequest> {
     const record = recordById(id);
+    if (record.managerId !== actorId) {
+      throw new ApiClientError(403, "FORBIDDEN", "Only the selected manager may confirm the verified times.");
+    }
     if (!record.timeNeedsVerification) {
       throw new ApiClientError(409, "INVALID_TRANSITION", "This request does not require time verification.");
     }
     const previous = record.timeNeedsVerification;
     record.timeNeedsVerification = false;
     pushAudit(record, {
-      actorId: ROLE_ACTOR.manager,
+      actorId,
       actorRole: "manager",
       action: "edit",
       fromStage: record.stage,

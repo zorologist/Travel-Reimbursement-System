@@ -27,6 +27,12 @@ export class ApiClientError extends Error {
 
 const configuredBaseUrl = import.meta.env.VITE_API_BASE_URL?.trim() ?? "";
 const apiBaseUrl = configuredBaseUrl.replace(/\/$/, "");
+export const AUTHENTICATION_EXPIRED_EVENT = "travel-reimbursement:authentication-expired";
+let csrfToken: string | null = null;
+
+export function setCsrfToken(token: string | null): void {
+  csrfToken = token;
+}
 
 async function parseResponse(response: Response): Promise<unknown> {
   if (response.status === 204) return undefined;
@@ -60,6 +66,9 @@ async function request<T>(path: string, init: RequestInit = {}): Promise<ApiResp
       headers: {
         Accept: "application/json",
         ...(init.body ? { "Content-Type": "application/json" } : {}),
+        ...(csrfToken && init.method && !["GET", "HEAD"].includes(init.method)
+          ? { "X-CSRF-Token": csrfToken }
+          : {}),
         ...init.headers,
       },
     });
@@ -74,6 +83,12 @@ async function request<T>(path: string, init: RequestInit = {}): Promise<ApiResp
   const data = await parseResponse(response);
 
   if (!response.ok) {
+    if (response.status === 401 && path !== "/api/auth/login") {
+      setCsrfToken(null);
+      if (typeof window !== "undefined") {
+        window.dispatchEvent(new Event(AUTHENTICATION_EXPIRED_EVENT));
+      }
+    }
     const envelope = errorEnvelope(data)?.error;
     throw new ApiClientError(
       response.status,

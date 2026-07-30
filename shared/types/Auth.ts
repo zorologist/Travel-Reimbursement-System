@@ -8,4 +8,5 @@ export interface LoginInput {
 
 export interface AuthResponse {
   user: User;
+  csrfToken: string;
 }

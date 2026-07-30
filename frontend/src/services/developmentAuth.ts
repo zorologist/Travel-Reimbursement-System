@@ -2,54 +2,26 @@ import { developmentEmployees, type DevelopmentEmployee } from "./developmentRep
 
 export type DevelopmentUser = DevelopmentEmployee;
 
-interface DevelopmentAccount extends DevelopmentUser {
-  password: string;
-}
-
 // Version the temporary browser session whenever its shape or routing changes.
 // This prevents an older development login from silently reopening an API-backed
 // page that is not ready yet.
 const SESSION_KEY = "travel-reimbursement-development-user-v3";
 const LEGACY_SESSION_KEYS = ["travel-reimbursement-development-user", "travel-reimbursement-development-user-v2"] as const;
 
-/** Temporary frontend accounts. Replace with /api/auth/login and /api/auth/me. */
-const developmentAccounts: DevelopmentAccount[] = developmentEmployees.map((employee) => ({
-  ...employee,
-  password: employee.roles.length > 1 ? "Admin@123" : "Employee@123",
-}));
-
-function publicUser(account: DevelopmentAccount): DevelopmentUser {
-  const { password: _password, ...user } = account;
-  return user;
-}
-
-const USERNAME_ALIASES: Record<string, string> = {
-  admin: "DEV004",
-  manager: "DEV004",
-  pr: "DEV005",
-  transport: "DEV006",
-  transportation: "DEV006",
-  timing: "DEV007",
-  payroll: "DEV008",
-  salary: "DEV008",
-  employee: "DEV001",
-  user: "DEV001",
-};
-
-function resolveEmployeeNumber(input: string): string {
-  const normalized = input.trim().toLowerCase();
-  if (USERNAME_ALIASES[normalized]) {
-    return USERNAME_ALIASES[normalized];
+/**
+ * Browser-only test accounts must be explicitly supplied for the opt-in mock
+ * repository as a JSON object, for example {"DEV001":"local secret"}.
+ * Normal development uses the API and never includes these values.
+ */
+function configuredPasswords(): Record<string, string> {
+  const raw = import.meta.env.VITE_DEVELOPMENT_ACCOUNTS;
+  if (!raw) return {};
+  try {
+    const value = JSON.parse(raw) as unknown;
+    return typeof value === "object" && value !== null ? value as Record<string, string> : {};
+  } catch {
+    return {};
   }
-  return input.trim().toUpperCase();
-}
-
-function matchesPassword(inputPass: string, expectedPass: string): boolean {
-  const normInput = inputPass.trim().toLowerCase();
-  const normExpected = expectedPass.trim().toLowerCase();
-  if (normInput === normExpected) return true;
-  const flexible = ["admin", "admin123", "admin@123", "employee", "employee123", "employee@123", "123456", "password"];
-  return flexible.includes(normInput);
 }
 
 export function loginDevelopmentUser(
@@ -57,16 +29,15 @@ export function loginDevelopmentUser(
   password: string,
   remember: boolean,
 ): DevelopmentUser | null {
-  const normalizedEmployeeNumber = resolveEmployeeNumber(employeeNumber);
-  const account = developmentAccounts.find(
-    (candidate) =>
-      candidate.employeeNumber === normalizedEmployeeNumber &&
-      matchesPassword(password, candidate.password),
+  const normalizedEmployeeNumber = employeeNumber.trim().toUpperCase();
+  const expectedPassword = configuredPasswords()[normalizedEmployeeNumber];
+  const account = developmentEmployees.find(
+    (candidate) => candidate.employeeNumber === normalizedEmployeeNumber,
   );
 
-  if (!account) return null;
+  if (!account || !expectedPassword || password !== expectedPassword) return null;
 
-  const user = publicUser(account);
+  const user = account;
   clearDevelopmentSession();
   const storage = remember ? localStorage : sessionStorage;
   storage.setItem(SESSION_KEY, JSON.stringify(user));

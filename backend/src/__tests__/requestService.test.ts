@@ -51,6 +51,13 @@ describe("request lifecycle creation service", () => {
     expect(request.auditEvents[0].actorRole).toBe("employee");
   });
 
+  it("uses and snapshots the trusted employee profile job level", () => {
+    const request = createNewRequest({ ...input, jobLevel: "Chairman" }, employee);
+    expect(request.jobLevel).toBeUndefined();
+    expect(request.submittedRequest.jobLevel).toBe("Level 1");
+    expect(request.salaryPreview.dailyRate).toBe(140);
+  });
+
   it("rejects requests created more than one month in the past", () => {
     expect(() => createNewRequest({ ...input, departureAt: "2020-01-01T08:00:00.000Z" }, employee)).toThrow(/more than one month in the past/);
   });

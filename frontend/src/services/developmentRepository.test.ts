@@ -13,6 +13,21 @@ describe("integrated frontend development repository", () => {
     expect(created.auditEvents.at(-1)).toMatchObject({ action: "submit", actorRole: "employee" });
   });
 
+  it("allows company transportation without an attachment", async () => {
+    const created = await developmentRepository.create({
+      employeeId: "u1",
+      originCity: "Cairo",
+      destinationCity: "Suez",
+      departureAt: "2026-09-01T06:00:00.000Z",
+      returnAt: "2026-09-02T17:00:00.000Z",
+      accommodationType: "none",
+      transportationMethod: "Company Car",
+      notes: "Site visit",
+      attachments: [],
+    });
+    expect(created.attachments).toEqual([]);
+  });
+
   it("provides submitted attachments to transportation and stores PR comments", async () => {
     const transportationQueue = await developmentRepository.queueForRole("transportation");
     expect(transportationQueue.find((request) => request.id === "TR-2026-003")?.attachments[0]).toMatchObject({ name: "train-ticket-TR-2026-003.jpg" });

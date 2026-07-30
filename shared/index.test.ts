@@ -23,8 +23,15 @@ describe("shared package public entry point", () => {
   });
 
   it("validates authentication, attachments, and workflow actions", () => {
-    expect(LoginInputSchema.parse({ employeeNumber: " DEV001 ", password: "Employee@123" })).toMatchObject({ employeeNumber: "DEV001", remember: false });
+    expect(LoginInputSchema.parse({ employeeNumber: " DEV001 ", password: "a-test-password" })).toMatchObject({ employeeNumber: "DEV001", remember: false });
     expect(RequestAttachmentSchema.parse({ id: "a1", name: "ticket.jpg", mimeType: "image/jpeg", size: 100, url: "data:image/jpeg;base64,AA==" }).name).toBe("ticket.jpg");
+    expect(() => RequestAttachmentSchema.parse({
+      id: "a2",
+      name: "ticket.jpg",
+      mimeType: "image/jpeg",
+      size: 100,
+      url: "data:text/html;base64,PGgxPk5vdCBhbiBpbWFnZTwvaDE+",
+    })).toThrow();
     expect(ApproveRequestInputSchema.parse({ accommodationType: "room-only", reason: "Confirmed" })).toMatchObject({ accommodationType: "room-only" });
   });
 

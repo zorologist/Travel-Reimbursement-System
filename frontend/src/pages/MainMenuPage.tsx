@@ -18,7 +18,7 @@ export function MainMenuPage() {
     : localizeLabel("employee", language);
 
   function handleSignOut() {
-    logout();
+    void logout();
     navigate("/login", { replace: true });
   }
 

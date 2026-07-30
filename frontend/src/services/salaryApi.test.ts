@@ -48,24 +48,21 @@ describe("salary API development adapter", () => {
     });
   });
 
-  it("requires an audit note for a non-zero adjustment", async () => {
-    await expect(
-      salaryApi.updateAdjustments("TR-2026-0841", {
-        transportationCost: 200,
-        bonusAmount: 10,
-        penaltyAmount: 0,
-        note: "",
-      }),
-    ).rejects.toMatchObject({
-      code: "ADJUSTMENT_NOTE_REQUIRED",
-      status: 400,
+  it("allows a non-zero adjustment without an audit note", async () => {
+    const updated = await salaryApi.updateAdjustments("TR-2026-0841", {
+      transportationCost: 200,
+      bonusAmount: 10,
+      penaltyAmount: 0,
+      note: "",
     });
+
+    expect(updated.calculation.bonusAmount).toBe(10);
   });
 
   it("removes finalized records from the pending queue", async () => {
     const finalized = await salaryApi.finalize(
       "TR-2026-0841",
-      "Calculation checked and approved.",
+      "",
     );
     const queue = await salaryApi.listQueue();
 

@@ -41,7 +41,6 @@ const arabicErrors: Record<string, string> = {
   CONFLICT: "توجد بيانات متعارضة في الطلب. راجعها وحاول مرة أخرى.",
   INVALID_TRANSITION: "لا يمكن نقل الطلب إلى هذه المرحلة حالياً.",
   INVALID_EDIT_FIELDS: "توجد حقول لا يملك هذا القسم صلاحية تعديلها.",
-  ADJUSTMENT_NOTE_REQUIRED: "يجب إضافة ملاحظة عند إدخال تعديل مالي.",
   NETWORK_ERROR: "تعذر الاتصال بالخادم. تحقق من الاتصال ثم حاول مرة أخرى.",
   NOT_FOUND: "تعذر العثور على العنصر المطلوب.",
   ROUTE_NOT_FOUND: "مسار واجهة النظام المطلوب غير موجود.",
@@ -53,7 +52,12 @@ const arabicErrors: Record<string, string> = {
 function initialLanguage(): Language {
   if (typeof window === "undefined") return "en";
 
-  const saved = window.localStorage.getItem(STORAGE_KEY);
+  let saved: string | null = null;
+  try {
+    saved = window.localStorage.getItem(STORAGE_KEY);
+  } catch {
+    // Storage can be unavailable in hardened/private browser contexts.
+  }
   if (saved === "en" || saved === "ar") return saved;
 
   return window.navigator.language.toLowerCase().startsWith("ar") ? "ar" : "en";
@@ -66,13 +70,21 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
 
   const setLanguage = useCallback((nextLanguage: Language) => {
     updateLanguage(nextLanguage);
-    window.localStorage.setItem(STORAGE_KEY, nextLanguage);
+    try {
+      window.localStorage.setItem(STORAGE_KEY, nextLanguage);
+    } catch {
+      // The in-memory preference still applies for the current page.
+    }
   }, []);
 
   const toggleLanguage = useCallback(() => {
     updateLanguage((currentLanguage) => {
       const nextLanguage = currentLanguage === "en" ? "ar" : "en";
-      window.localStorage.setItem(STORAGE_KEY, nextLanguage);
+      try {
+        window.localStorage.setItem(STORAGE_KEY, nextLanguage);
+      } catch {
+        // The in-memory preference still applies for the current page.
+      }
       return nextLanguage;
     });
   }, []);

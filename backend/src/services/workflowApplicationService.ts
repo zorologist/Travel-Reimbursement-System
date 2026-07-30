@@ -211,8 +211,20 @@ export function reviewWorkflowRequest(id: string, actor: User, input: Department
     const provided = Object.keys(input).filter((field) => field !== "note" && input[field as keyof DepartmentReviewInput] !== undefined);
     const prohibited = provided.filter((field) => field !== "timeNeedsVerification");
     if (prohibited.length > 0) throw new ApiError(400, "INVALID_EDIT_FIELDS", `The manager role cannot submit: ${prohibited.join(", ")}.`);
-    edits = input.timeNeedsVerification === false ? { timeNeedsVerification: false } : {};
+    if (!record.timeNeedsVerification || input.timeNeedsVerification !== false) {
+      throw new ApiError(409, "TIME_CONFIRMATION_NOT_REQUIRED", "This request is not awaiting manager time confirmation.");
+    }
+    edits = { timeNeedsVerification: false };
   } else if (role === "salary") {
+    if (record.stage === "completed") {
+      throw new ApiError(409, "REQUEST_ALREADY_COMPLETED", "Completed requests cannot be changed.");
+    }
+    if (record.stage === "cancelled") {
+      throw new ApiError(409, "REQUEST_ALREADY_CANCELLED", "Cancelled requests cannot be changed.");
+    }
+    if (record.stage !== "salary-finalization") {
+      throw new ApiError(409, "INVALID_TRANSITION", "Payroll adjustments are allowed only during salary finalization.");
+    }
     const provided = Object.keys(input).filter((field) => field !== "note" && input[field as keyof DepartmentReviewInput] !== undefined);
     const prohibited = provided.filter((field) => field !== "bonusAmount" && field !== "penaltyAmount" && field !== "transportationCost");
     if (prohibited.length > 0) throw new ApiError(400, "INVALID_EDIT_FIELDS", `The salary role cannot submit: ${prohibited.join(", ")}.`);
@@ -224,9 +236,6 @@ export function reviewWorkflowRequest(id: string, actor: User, input: Department
         transportationCostVerified: true,
       } : {}),
     };
-    if (((input.bonusAmount ?? 0) > 0 || (input.penaltyAmount ?? 0) > 0) && !note) {
-      throw new ApiError(400, "ADJUSTMENT_NOTE_REQUIRED", "A note is required for a non-zero salary adjustment.");
-    }
   } else {
     const approvalInput: ApprovalInput = { ...input, reason: note };
     assertApprovalFields(role, approvalInput);
@@ -246,6 +255,9 @@ export function finalizeSalaryRequest(id: string, actor: User, note: string): Tr
   if (role !== "salary") throw new ApiError(403, "FORBIDDEN", "Only Salary may finalize a request.");
   if (!record.transportationCostVerified) {
     throw new ApiError(409, "TICKET_PRICE_REQUIRED", "Payroll must enter and save the verified ticket price before finalization.");
+  }
+  if (record.timeNeedsVerification) {
+    throw new ApiError(409, "TIME_CONFIRMATION_REQUIRED", "The selected manager must confirm the verified times before Payroll finalization.");
   }
   const recalculated = { ...record, salaryPreview: recalculateSalaryPreview(record, ownerOrThrow(record)) };
   const finalized = finalizeRequest(recalculated, actor.id, role, note.trim());
