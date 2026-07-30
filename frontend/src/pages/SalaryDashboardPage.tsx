@@ -29,6 +29,76 @@ function initials(displayName: string): string {
     .join("");
 }
 
+function exportToExcel(items: SalaryQueueItem[]) {
+  const headers = [
+    "م",
+    "رقم العامل",
+    "الاسم",
+    "الوظيفة",
+    "الإدارة",
+    "الجهة / غرض المأمورية",
+    "المدينة",
+    "من",
+    "إلى",
+    "عدد الليالي",
+    "وقت الذهاب",
+    "وقت العودة",
+    "وسيلة الانتقال",
+    "الإقامة",
+    "بدل السفر",
+    "بدل الانتقال",
+    "فروق / إضافة",
+    "الخصم",
+    "الإجمالي",
+  ];
+
+  const csvRows = [
+    ["تقرير بدل السفر والانتقالات للموظفين — الشركة المصرية القابضة للغازات الطبيعية (إيجاس)"].join(","),
+    [],
+    headers.join(","),
+  ];
+
+  items.forEach((item, index) => {
+    const travelAllowance = item.calculation.overnightAmount + item.calculation.sameDayAmount + item.calculation.returnDayAmount;
+    const departureDate = item.departureAt.slice(0, 10);
+    const returnDate = item.returnAt.slice(0, 10);
+    const depTime = new Date(item.departureAt).toLocaleTimeString("ar-EG", { hour: "2-digit", minute: "2-digit", hour12: true });
+    const retTime = new Date(item.returnAt).toLocaleTimeString("ar-EG", { hour: "2-digit", minute: "2-digit", hour12: true });
+
+    const row = [
+      index + 1,
+      `"${item.employee.employeeNumber}"`,
+      `"${item.employee.displayName.replace(/"/g, '""')}"`,
+      `"${localizeLabel(item.employee.jobLevel, "ar")}"`,
+      `"${item.employee.department.replace(/"/g, '""')}"`,
+      `"${(item.notes || "مأمورية عمل").replace(/"/g, '""')}"`,
+      `"${localizeLabel(item.destinationCity, "ar")}"`,
+      `"${departureDate}"`,
+      `"${returnDate}"`,
+      item.calculation.overnightCount,
+      `"${depTime}"`,
+      `"${retTime}"`,
+      `"${localizeLabel(item.transportationMethod, "ar")}"`,
+      `"${localizeLabel(item.accommodationType, "ar")}"`,
+      travelAllowance,
+      item.calculation.transportationCost,
+      item.calculation.bonusAmount,
+      item.calculation.penaltyAmount,
+      item.calculation.totalAmount,
+    ];
+    csvRows.push(row.join(","));
+  });
+
+  const blob = new Blob(["\uFEFF" + csvRows.join("\n")], { type: "text/csv;charset=utf-8;" });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.setAttribute("href", url);
+  link.setAttribute("download", `تقرير_بدل_السفر_والانتقالات_${new Date().toISOString().slice(0, 10)}.csv`);
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+}
+
 export function SalaryDashboardPage() {
   const { user, logout } = useAuth();
   const { language, localizeError, tr } = useLanguage();
@@ -260,6 +330,13 @@ export function SalaryDashboardPage() {
                     />
                   </label>
                   <button type="button" onClick={() => void reload()}>{tr("Refresh", "تحديث")}</button>
+                  <button
+                    type="button"
+                    style={{ backgroundColor: "#059669", color: "#ffffff", border: "none", borderRadius: "0.5rem", padding: "0.5rem 1rem", fontWeight: 600, cursor: "pointer", marginLeft: "0.5rem" }}
+                    onClick={() => exportToExcel(filteredQueue)}
+                  >
+                    📊 {tr("Export to Excel", "تصدير إلى إكسيل")}
+                  </button>
                 </div>
               </header>
 

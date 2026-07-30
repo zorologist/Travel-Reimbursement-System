@@ -1,7 +1,8 @@
-import type {
-  CreateTravelRequestInput,
-  TravelRequest,
-  User,
+import {
+  getTangoFare,
+  type CreateTravelRequestInput,
+  type TravelRequest,
+  type User,
 } from "@travel-reimbursement/shared";
 
 import { findUserById } from "../storage/memoryStore.js";
@@ -22,22 +23,33 @@ export function createNewRequest(
   requestId?: string,
 ): TravelRequest {
   const now = new Date();
-  if (new Date(input.departureAt).getTime() <= now.getTime()) {
-    throw new WorkflowServiceError("INVALID_DATE", "A request must be created before its departure time.");
+  const thirtyDaysMs = 30 * 24 * 60 * 60 * 1000;
+  if (now.getTime() - new Date(input.departureAt).getTime() > thirtyDaysMs) {
+    throw new WorkflowServiceError("INVALID_DATE", "A request cannot be submitted for a trip that took place more than one month in the past.");
   }
   // Validate the selected manager: must reference a real user that has the manager role.
   const manager = input.managerId ? findUserById(input.managerId) : undefined;
   if (!manager || !manager.roles.includes("manager")) {
     throw new WorkflowServiceError("INVALID_EDIT_FIELDS", "managerId must reference a user with the manager role.");
   }
+
+  // PDF Item 5 & 6: Auto calculate Tango fare for Employee's Private Car when amount is omitted.
+  const isPersonalCar = input.transportationMethod.includes("personal-car") || input.transportationMethod.includes("Private Car") || input.transportationMethod.includes("العامل");
+  let claimedCost = input.claimedTransportationCost ?? 0;
+  if (isPersonalCar && claimedCost <= 0) {
+    const tangoFare = getTangoFare(input.destinationCity);
+    claimedCost = input.tripType === "round-trip" ? tangoFare * 2 : tangoFare;
+  }
+
   // One-way trips must still provide a returnAt for schema compatibility, but the
   // salary preview only cares about the departure date — keep both timestamps.
   const id = requestId ?? standaloneRequestId(now);
+  const effectiveUser: User = input.jobLevel ? { ...user, jobLevel: input.jobLevel } : user;
   const salaryPreview = computeInitialSalaryPreview(
     input.departureAt,
     input.returnAt,
     input.accommodationType,
-    user,
+    effectiveUser,
   );
   const submitEvent = createAuditEvent(
     id,
@@ -59,11 +71,11 @@ export function createNewRequest(
     stage: "manager-review",
     verifiedDepartureAt: null,
     verifiedReturnAt: null,
-    verifiedSameDayHours: 0,
-    verifiedReturnDayHours: 0,
+    verifiedSameDayHours: salaryPreview.sameDayAmount > 0 ? 7 : 0,
+    verifiedReturnDayHours: salaryPreview.returnDayAmount > 0 ? 7 : 0,
     transportationCost: 0,
     transportationCostVerified: false,
-    claimedTransportationCost: input.claimedTransportationCost ?? 0,
+    claimedTransportationCost: claimedCost,
     bonusAmount: 0,
     penaltyAmount: 0,
     salaryPreview,

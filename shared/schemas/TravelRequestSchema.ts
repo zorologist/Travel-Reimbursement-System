@@ -2,7 +2,16 @@ import { z } from "zod";
 import { AuditEventSchema, WorkflowStageSchema } from "./WorkflowActionSchema.js";
 import { PriceRevisionSchema } from "./PriceRevisionSchema.js";
 
-export const AccommodationTypeSchema = z.enum(["none", "room-only", "room-and-food", "half-board", "bed-and-breakfast"]);
+export const AccommodationTypeSchema = z.enum([
+  "none",
+  "room-only",
+  "room-and-food",
+  "half-board",
+  "bed-and-breakfast",
+  "egas-arranged",
+  "other-company-arranged",
+  "employee-arranged",
+]);
 
 export const SalaryCalculationResultSchema = z.object({
   dailyRate: z.number(),
@@ -36,20 +45,40 @@ export const CreateTravelRequestInputSchema = z.object({
   managerId: z.string().min(1),
   accommodationType: AccommodationTypeSchema,
   transportationMethod: z.string(),
+  jobLevel: z.enum([
+    "Chairman",
+    "Deputy",
+    "Advisor",
+    "Expert",
+    "Assistant",
+    "Deputy Assistant",
+    "General Manager",
+    "Assistant General Manager",
+    "Level 1",
+    "Level 2",
+    "Level 3",
+  ]).optional(),
   claimedTransportationCost: z.number().min(0).optional(),
   notes: z.string().trim().max(1000).optional(),
-  attachments: z.array(RequestAttachmentSchema).min(1).max(4),
+  attachments: z.array(RequestAttachmentSchema).max(4).optional(),
 }).superRefine((data, context) => {
   const departure = new Date(data.departureAt).getTime();
   const arrival = new Date(data.returnAt).getTime();
-  const valid = data.tripType === "one-way" ? arrival === departure : arrival > departure;
+  const valid = arrival >= departure;
   if (!valid) {
     context.addIssue({
       code: "custom",
-      message: data.tripType === "one-way"
-        ? "A one-way request must use its departure time as the return placeholder."
-        : "returnAt must be after departureAt.",
+      message: "returnAt must be on or after departureAt.",
       path: ["returnAt"],
+    });
+  }
+
+  const isPersonalCar = data.transportationMethod.includes("personal-car") || data.transportationMethod.includes("Private Car") || data.transportationMethod.includes("العامل");
+  if (isPersonalCar && (!data.attachments || data.attachments.length === 0)) {
+    context.addIssue({
+      code: "custom",
+      message: "Attach the required ticket/supporting document when using Employee's Private Car.",
+      path: ["attachments"],
     });
   }
 });

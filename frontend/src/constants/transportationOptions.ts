@@ -7,7 +7,7 @@ export interface TransportationOption {
 
 /** Shared by the employee request and Transportation review selectors. */
 export const transportationOptions: readonly TransportationOption[] = [
-  { formValue: "company-car", value: "Company car", english: "Company car", arabic: "سيارة الشركة" },
-  { formValue: "personal-car", value: "Personal car", english: "Personal car", arabic: "سيارة خاصة (شخصية)" },
-  { formValue: "other", value: "Other transport", english: "Other non-company transportation", arabic: "وسيلة أخرى غير تابعة للشركة" },
+  { formValue: "personal-car", value: "Employee's Private Car", english: "Employee's Private Car", arabic: "بمعرفة العامل" },
+  { formValue: "company-car", value: "Company Car", english: "Company Car", arabic: "سيارة الشركة" },
+  { formValue: "other", value: "Other Transportation Method", english: "Other Transportation Method", arabic: "وسيلة أخرى" },
 ];

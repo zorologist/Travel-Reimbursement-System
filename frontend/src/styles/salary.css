@@ -576,6 +576,17 @@
   font-size: 0.78rem;
 }
 
+.salary-field input::-webkit-outer-spin-button,
+.salary-field input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+.salary-field input[type="number"] {
+  -moz-appearance: textfield;
+  appearance: textfield;
+}
+
 .salary-field textarea {
   resize: vertical;
   line-height: 1.45;

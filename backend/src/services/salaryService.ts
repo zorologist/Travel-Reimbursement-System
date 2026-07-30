@@ -14,6 +14,14 @@ function overnightCount(departureAt: string, returnAt: string): number {
   return Math.max(0, Math.round((arrivalDay - departureDay) / 86_400_000));
 }
 
+function returnDayHours(returnAt: string): number {
+  const arrival = new Date(returnAt);
+  const hours = arrival.getUTCHours() + arrival.getUTCMinutes() / 60;
+  // Constant start time on the last day is 08:00 AM (8.0).
+  // Returning at 3:00 PM (15.0) or later equals 7+ hours (15 - 8 = 7).
+  return Math.max(0, hours - 8);
+}
+
 export function computeInitialSalaryPreview(
   departureAt: string,
   returnAt: string,
@@ -21,13 +29,14 @@ export function computeInitialSalaryPreview(
   employee: User,
 ): SalaryCalculationResult {
   const nights = overnightCount(departureAt, returnAt);
+  const initialReturnHours = nights > 0 ? returnDayHours(returnAt) : 0;
   return calculateSalary({
     jobLevel: employee.jobLevel,
     accommodationType,
     overnightCount: nights,
     isSameDayMission: nights === 0,
     sameDayVerifiedHours: 0,
-    returnDayVerifiedHours: 0,
+    returnDayVerifiedHours: initialReturnHours,
     transportationCost: 0,
     bonusAmount: 0,
     penaltyAmount: 0,

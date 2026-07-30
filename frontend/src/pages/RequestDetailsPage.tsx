@@ -161,10 +161,9 @@ export function RequestDetailsPage() {
             <InfoRow label={tr("Department", "القسم")} value={request.employee.department} />
             <InfoRow label={tr("Employee number", "رقم الموظف")} value={request.employee.employeeNumber} />
             <InfoRow label={tr("Request number", "رقم الطلب")} value={request.id} />
-            <InfoRow label={tr("Trip type", "نوع الرحلة")} value={request.tripType === "one-way" ? tr("One way", "ذهاب فقط") : tr("Round trip", "ذهاب وعودة")} />
-            <InfoRow label={tr("Submission date", "تاريخ التقديم")} value={formatDate(request.createdAt, language)} />
+            <InfoRow label={tr("Trip type", "نوع الرحلة")} value={request.tripType === "one-way" ? tr("One way", "اتجاه واحد") : tr("Round trip", "ذهاب وعودة")} />
           </section>
-          <div className="tracker-promo"><label className="tracker-toggle"><input type="checkbox" defaultChecked aria-label={tr("Enable guidance messages", "تفعيل الرسائل الإرشادية")} /><span><i /></span></label><p>{tr("Together for faster, clearer service", "معًا نحو خدمة أسرع وأوضح")}</p></div>
+          <div className="tracker-promo"><label className="tracker-toggle"><input type="checkbox" defaultChecked aria-label={tr("Enable guidance messages", "تفعيل الرسائل الإرشادية")} /><span><i /></span></label></div>
           <p className="tracker-footnote">{tr("Internal Request Tracking System – Version 2.0", "نظام تتبع الطلبات الداخلي – الإصدار 2.0")}</p>
           <p className="tracker-footnote">{tr("Employee Affairs – EGAS", "إدارة شؤون الموظفين – EGAS")}</p>
         </aside>
@@ -239,7 +238,7 @@ export function RequestDetailsPage() {
           <section className="tracker-details-grid" aria-label={tr("Mission details", "تفاصيل المأمورية")}>
             <InfoCard label={tr("Transportation", "وسيلة الانتقال")} value={localizeLabel(request.transportationMethod, language)} />
             <InfoCard label={tr("Accommodation type", "نوع الإقامة")} value={localizeLabel(request.accommodationType, language)} />
-            <InfoCard label={tr("Request notes", "ملاحظات الطلب")} value={request.notes || tr("No notes", "لا توجد ملاحظات")} />
+            <InfoCard label={tr("Purpose of the Mission", "غرض المأمورية")} value={request.notes || tr("No notes", "لا توجد ملاحظات")} />
           </section>
 
         </section>

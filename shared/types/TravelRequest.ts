@@ -1,7 +1,16 @@
 import type { AuditEvent, WorkflowStage } from "./Workflow.js";
 import type { PriceRevision } from "./PriceRevision.js";
+import type { JobLevel } from "./User.js";
 
-export type AccommodationType = "none" | "room-only" | "room-and-food" | "half-board" | "bed-and-breakfast";
+export type AccommodationType =
+  | "none"
+  | "room-only"
+  | "room-and-food"
+  | "half-board"
+  | "bed-and-breakfast"
+  | "egas-arranged"
+  | "other-company-arranged"
+  | "employee-arranged";
 
 export interface SalaryCalculationResult {
   dailyRate: number;
@@ -30,6 +39,7 @@ export interface CreateTravelRequestInput {
   returnAt: string; // ISO 8601 string
   tripType: "one-way" | "round-trip";
   managerId: string;
+  jobLevel?: JobLevel;
   accommodationType: AccommodationType;
   transportationMethod: string;
   claimedTransportationCost?: number;

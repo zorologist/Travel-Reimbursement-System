@@ -16,7 +16,11 @@ export function TransportationReviewForm({ request, onAction }: { request: Appro
   const { language, tr } = useLanguage();
   const details = request.requestDetails;
   const [destination, setDestination] = useState(details.destinationCity ?? "");
-  const [method, setMethod] = useState(details.transportationMethod ?? "");
+  const [method, setMethod] = useState(() => {
+    const initial = details.transportationMethod ?? "";
+    const match = transportationOptions.find((option) => option.value === initial || option.formValue === initial);
+    return match ? match.value : transportationOptions[0].value;
+  });
   const [comment, setComment] = useState("");
   const [selectedAttachment, setSelectedAttachment] = useState<ApprovalQueueItem["attachments"][number] | null>(null);
 
@@ -62,9 +66,11 @@ export function TransportationReviewForm({ request, onAction }: { request: Appro
       <div className="form-group">
         <label>{tr("Transportation method", "وسيلة الانتقال")}</label>
         <select value={method} onChange={(event) => setMethod(event.target.value)}>
-          {method && !transportationOptions.some((option) => option.value === method) && <option value={method}>{localizeLabel(method, language)}</option>}
-          <option value="">{tr("Select a method", "اختر وسيلة")}</option>
-          {transportationOptions.map((option) => <option key={option.value} value={option.value}>{tr(option.english, option.arabic)}</option>)}
+          {transportationOptions.map((option) => (
+            <option key={option.value} value={option.value}>
+              {tr(option.english, option.arabic)}
+            </option>
+          ))}
         </select>
       </div>
       <p className="transport-cost-readonly" role="note">

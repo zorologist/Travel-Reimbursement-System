@@ -35,58 +35,72 @@ export function SalaryAdjustmentForm({
       <h3>{tr("Manual adjustments", "التعديلات اليدوية")}</h3>
 
       <label className="salary-field">
-        <span>{tr("Verified ticket price (EGP)", "سعر التذكرة المؤكد (جنيه)")} <b>{tr("(required)", "(مطلوب)")}</b></span>
+        <span>{tr("Verified ticket price (EGP)", "سعر التذكرة المؤكد (جنيه)")} <b>{tr("(optional)", "(اختياري)")}</b></span>
         <input
-          type="number"
-          min="0"
-          step="0.01"
-          required
+          type="text"
+          inputMode="decimal"
+          placeholder="0.00"
           value={transportationCost}
           disabled={disabled}
-          onChange={(event) => onTransportationCostChange(event.target.value)}
+          onChange={(event) => {
+            const val = event.target.value;
+            if (val === "" || /^\d*\.?\d*$/.test(val)) {
+              onTransportationCostChange(val);
+            }
+          }}
         />
-        <small>{tr("Payroll must enter and save the ticket price before finalization.", "يجب على الرواتب إدخال سعر التذكرة وحفظه قبل الاعتماد النهائي.")}</small>
+        <small>{tr("Optional ticket price.", "سعر التذكرة (اختياري).")}</small>
       </label>
 
       <label className="salary-field">
-        <span>{tr("Bonus amount (EGP)", "قيمة المكافأة (جنيه)")}</span>
+        <span>{tr("Addition amount (EGP)", "قيمة الإضافة (جنيه)")} <b>{tr("(optional)", "(اختياري)")}</b></span>
         <input
-          type="number"
-          min="0"
-          step="0.01"
-          value={bonusAmount}
+          type="text"
+          inputMode="decimal"
+          placeholder="0.00"
+          value={bonusAmount === 0 ? "" : String(bonusAmount)}
           disabled={disabled}
-          onChange={(event) => onBonusChange(moneyValue(event))}
+          onChange={(event) => {
+            const val = event.target.value;
+            if (val === "" || /^\d*\.?\d*$/.test(val)) {
+              onBonusChange(val === "" || val === "." ? 0 : Number(val));
+            }
+          }}
         />
-        <small>{tr("Performance or mission bonus, when applicable.", "مكافأة الأداء أو المأمورية عند انطباقها.")}</small>
+        <small>{tr("Performance or mission addition, when applicable (optional).", "مبلغ إضافة للمأمورية عند انطباقه (اختياري).")}</small>
       </label>
 
       <label className="salary-field">
-        <span>{tr("Penalty deduction (EGP)", "قيمة الخصم (جنيه)")}</span>
+        <span>{tr("Penalty deduction (EGP)", "قيمة الخصم (جنيه)")} <b>{tr("(optional)", "(اختياري)")}</b></span>
         <input
-          type="number"
-          min="0"
-          step="0.01"
-          value={penaltyAmount}
+          type="text"
+          inputMode="decimal"
+          placeholder="0.00"
+          value={penaltyAmount === 0 ? "" : String(penaltyAmount)}
           disabled={disabled}
-          onChange={(event) => onPenaltyChange(moneyValue(event))}
+          onChange={(event) => {
+            const val = event.target.value;
+            if (val === "" || /^\d*\.?\d*$/.test(val)) {
+              onPenaltyChange(val === "" || val === "." ? 0 : Number(val));
+            }
+          }}
         />
-        <small>{tr("Policy deduction, when applicable.", "خصم وفقاً للائحة عند انطباقه.")}</small>
+        <small>{tr("Policy deduction, when applicable (optional).", "خصم وفقاً للائحة عند انطباقه (اختياري).")}</small>
       </label>
 
       <label className="salary-field">
         <span>
-          {tr("Audit / finalization note", "ملاحظة التدقيق / الاعتماد")} <b>{tr("(required)", "(مطلوبة)")}</b>
+          {tr("Audit / finalization note", "ملاحظة التدقيق / الاعتماد")} <b>{tr("(optional)", "(اختياري)")}</b>
         </span>
         <textarea
           rows={4}
           value={note}
           disabled={disabled}
           maxLength={1000}
-          placeholder={tr("Explain the adjustment or add the final audit note...", "اشرح التعديل أو أضف ملاحظة التدقيق النهائية...")}
+          placeholder={tr("Add audit note (optional)...", "أضف ملاحظة التدقيق (اختياري)...")}
           onChange={(event) => onNoteChange(event.target.value)}
         />
-        <small>{tr("This note is permanently attached to the audit trail.", "تُرفق هذه الملاحظة بسجل الإجراءات بشكل دائم.")}</small>
+        <small>{tr("This note is permanently attached to the audit trail when provided.", "تُرفق هذه الملاحظة بسجل الإجراءات عند إدخالها.")}</small>
       </label>
     </section>
   );
