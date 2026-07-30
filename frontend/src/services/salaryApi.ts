@@ -47,6 +47,8 @@ export interface SalaryQueueItem {
   transportationCostVerified: boolean;
   submittedRequest: CreateTravelRequestInput;
   auditEvents: AuditEvent[];
+  verifiedDepartureAt?: string | null;
+  verifiedReturnAt?: string | null;
   verifiedSameDayHours: number;
   verifiedReturnDayHours: number;
   calculation: SalaryCalculationResult;
@@ -86,6 +88,8 @@ function salaryItem(record: DevelopmentRequest): SalaryQueueItem {
     transportationCostVerified: record.transportationCostVerified,
     submittedRequest: record.submittedRequest,
     auditEvents: record.auditEvents,
+    verifiedDepartureAt: record.verifiedDepartureAt,
+    verifiedReturnAt: record.verifiedReturnAt,
     verifiedSameDayHours: record.verifiedSameDayHours,
     verifiedReturnDayHours: record.verifiedReturnDayHours,
     calculation: record.finalSalary ?? record.salaryPreview,

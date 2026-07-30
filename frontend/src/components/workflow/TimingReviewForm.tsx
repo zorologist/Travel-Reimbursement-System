@@ -43,7 +43,7 @@ export function TimingReviewForm({ request, onAction }: { request: ApprovalQueue
       <div className={`mission-duration ${nightCount === 0 ? "same-day" : nightCount === null ? "invalid" : "overnight"}`} aria-live="polite">
         <strong>{tr("Mission duration", "مدة المأمورية")}</strong>
         {isOneWay ? (
-          <span>{tr("One-way trip — departure time verification only", "رحلة ذهاب فقط — يتم التحقق من وقت المغادرة فقط")}</span>
+          <span>{tr("One-way trip — departure time verification only", "رحلة اتجاه واحد — يتم التحقق من وقت المغادرة فقط")}</span>
         ) : nightCount === null ? (
           <span>{tr("Enter a valid return time after the departure time.", "أدخل وقت عودة صحيحاً بعد وقت الذهاب.")}</span>
         ) : nightCount === 0 ? (
@@ -57,9 +57,23 @@ export function TimingReviewForm({ request, onAction }: { request: ApprovalQueue
         {tr("Verified attendance meets the seven-hour allowance rule", "تم التحقق من أن الحضور يستوفي قاعدة بدل السبع ساعات")}
       </label>}
       <div className="form-group"><label htmlFor={`timing-comment-${request.id}`}>{tr("Timing comment", "تعليق المواعيد")}</label><textarea id={`timing-comment-${request.id}`} rows={4} maxLength={1000} value={comment} onChange={(event) => setComment(event.target.value)} placeholder={tr("Add a review comment...", "أضف تعليق المراجعة...")} /></div>
-      <button disabled={nightCount === null} className="btn-approve" type="button" onClick={() => void onAction(() => workflowApi.approve(request.id, { departureAt, ...(isOneWay ? {} : { returnAt, meetsSevenHourRule }), reason: comment.trim() || tr("Attendance dates and qualifying hours verified.", "تم التحقق من تواريخ الحضور والساعات المستحقة.") }))}>
-        {tr("Approve & Pass to Payroll", "اعتماد وتحويل إلى الرواتب")}
-      </button>
+      <div className="form-actions-row" style={{ display: "flex", gap: "1rem", marginTop: "1rem" }}>
+        <button disabled={nightCount === null} className="btn-approve" type="button" onClick={() => void onAction(() => workflowApi.approve(request.id, { departureAt, ...(isOneWay ? {} : { returnAt, meetsSevenHourRule }), reason: comment.trim() || tr("Attendance dates and qualifying hours verified.", "تم التحقق من تواريخ الحضور والساعات المستحقة.") }))}>
+          {tr("Approve & Pass to Payroll", "اعتماد وتحويل إلى الرواتب")}
+        </button>
+        <button
+          className="btn-reject"
+          type="button"
+          style={{ backgroundColor: "#dc2626", color: "#ffffff", padding: "0.75rem 1.5rem", borderRadius: "0.5rem", fontWeight: 600, border: "none", cursor: "pointer" }}
+          onClick={() => {
+            const reason = comment.trim() || prompt(tr("Please enter a rejection reason:", "يرجى إدخال سبب الرفض:"));
+            if (!reason) return;
+            void onAction(() => workflowApi.reject(request.id, reason));
+          }}
+        >
+          {tr("Reject Request", "رفض الطلب")}
+        </button>
+      </div>
     </div>
   );
 }

@@ -1,6 +1,7 @@
 import type {
   AccommodationType,
   AuditEvent,
+  JobLevel,
   PriceRevision,
   WorkflowStage,
   RequestAttachment,
@@ -23,6 +24,7 @@ export interface TravelRequestData {
   returnAt: string;
   tripType: "one-way" | "round-trip";
   managerId: string;
+  jobLevel?: JobLevel;
   accommodationType: AccommodationType;
   transportationMethod: string;
   transportationCost?: number;

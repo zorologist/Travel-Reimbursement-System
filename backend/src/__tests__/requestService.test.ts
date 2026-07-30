@@ -36,7 +36,7 @@ describe("request lifecycle creation service", () => {
     });
     expect(request.id).not.toBe("");
     expect(request.id).toMatch(/^TR-\d{4}-\d{4,}$/);
-    expect(request.salaryPreview.totalAmount).toBe(280);
+    expect(request.salaryPreview.totalAmount).toBe(322);
     expect(request.auditEvents).toHaveLength(1);
     expect(request.auditEvents[0]).toMatchObject({
       actorId: employee.id,
@@ -51,8 +51,8 @@ describe("request lifecycle creation service", () => {
     expect(request.auditEvents[0].actorRole).toBe("employee");
   });
 
-  it("rejects requests created after their departure time", () => {
-    expect(() => createNewRequest({ ...input, departureAt: "2025-01-01T08:00:00.000Z" }, employee)).toThrow(/before its departure/);
+  it("rejects requests created more than one month in the past", () => {
+    expect(() => createNewRequest({ ...input, departureAt: "2020-01-01T08:00:00.000Z" }, employee)).toThrow(/more than one month in the past/);
   });
 
   it("generates a unique ID for every request", () => {

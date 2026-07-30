@@ -45,13 +45,10 @@ export function SalaryReviewPanel({
 
   async function saveAdjustments() {
     setError("");
-    if (transportationCost === "") {
-      setError(tr("Enter the verified ticket price before saving.", "أدخل سعر التذكرة المؤكد قبل الحفظ."));
-      return;
-    }
     setSaving(true);
     try {
-      await onSave({ transportationCost: Number(transportationCost), bonusAmount, penaltyAmount, note: note.trim() });
+      const cost = transportationCost === "" ? request.calculation.transportationCost : Number(transportationCost);
+      await onSave({ transportationCost: cost, bonusAmount, penaltyAmount, note: note.trim() });
     } catch (saveError) {
       setError(localizeError(saveError, "The Payroll adjustment could not be saved.", "تعذر حفظ تعديل الرواتب."));
     } finally {
@@ -59,19 +56,20 @@ export function SalaryReviewPanel({
     }
   }
 
-  function requestFinalization() {
+  async function requestFinalization() {
     setError("");
-    if (!request.transportationCostVerified || transportationCost === "") {
-      setError(tr("Enter and save the verified ticket price before finalizing.", "أدخل سعر التذكرة المؤكد واحفظه قبل الاعتماد النهائي."));
-      return;
-    }
     if (dirty) {
-      setError(tr("Save the adjustment preview before finalizing this request.", "احفظ معاينة التعديل قبل اعتماد هذا الطلب نهائياً."));
-      return;
-    }
-    if (!note.trim()) {
-      setError(tr("Add the required audit note before finalizing this request.", "أضف ملاحظة التدقيق المطلوبة قبل اعتماد هذا الطلب نهائياً."));
-      return;
+      setSaving(true);
+      try {
+        const cost = transportationCost === "" ? request.calculation.transportationCost : Number(transportationCost);
+        await onSave({ transportationCost: cost, bonusAmount, penaltyAmount, note: note.trim() });
+      } catch (saveError) {
+        setError(localizeError(saveError, "The Payroll adjustment could not be saved.", "تعذر حفظ تعديل الرواتب."));
+        setSaving(false);
+        return;
+      } finally {
+        setSaving(false);
+      }
     }
     setDialogOpen(true);
   }
@@ -107,7 +105,7 @@ export function SalaryReviewPanel({
         <h3>{tr("Original submitted request", "الطلب الأصلي المقدم")}</h3>
         <dl className="salary-info-list">
           <div><dt>{tr("Route", "المسار")}</dt><dd>{localizeLabel(request.submittedRequest.originCity ?? "Cairo", language)} → {localizeLabel(request.submittedRequest.destinationCity, language)}</dd></div>
-          <div><dt>{tr("Trip type", "نوع الرحلة")}</dt><dd>{request.submittedRequest.tripType === "one-way" ? tr("One way", "ذهاب فقط") : tr("Round trip", "ذهاب وعودة")}</dd></div>
+          <div><dt>{tr("Trip type", "نوع الرحلة")}</dt><dd>{request.submittedRequest.tripType === "one-way" ? tr("One way", "اتجاه واحد") : tr("Round trip", "ذهاب وعودة")}</dd></div>
           <div><dt>{tr("Submitted travel dates", "تواريخ السفر المقدمة")}</dt><dd>{formatDate(request.submittedRequest.departureAt, language)}{request.submittedRequest.tripType === "one-way" ? "" : ` – ${formatDate(request.submittedRequest.returnAt, language)}`}</dd></div>
           <div><dt>{tr("Submitted accommodation", "الإقامة المقدمة")}</dt><dd>{localizeLabel(request.submittedRequest.accommodationType, language)}</dd></div>
           <div><dt>{tr("Submitted transportation", "وسيلة الانتقال المقدمة")}</dt><dd>{localizeLabel(request.submittedRequest.transportationMethod, language)}</dd></div>
@@ -125,12 +123,52 @@ export function SalaryReviewPanel({
           <div><dt>{tr("Full name", "الاسم الكامل")}</dt><dd>{request.employee.displayName}</dd></div>
           <div><dt>{tr("Department", "القسم")}</dt><dd>{request.employee.department}</dd></div>
           <div><dt>{tr("Job grade", "الدرجة الوظيفية")}</dt><dd>{localizeLabel(request.employee.jobLevel, language)}</dd></div>
-          <div><dt>{tr("Destination", "الوجهة")}</dt><dd>{localizeLabel(request.destinationCity, language)}</dd></div>
-          <div><dt>{tr("Travel dates", "تواريخ السفر")}</dt><dd>{formatDate(request.departureAt, language)}{request.tripType === "one-way" ? "" : ` – ${formatDate(request.returnAt, language)}`}</dd></div>
-          <div><dt>{tr("Accommodation", "الإقامة")}</dt><dd>{localizeLabel(request.accommodationType, language)}</dd></div>
-          <div><dt>{tr("Transportation", "الانتقالات")}</dt><dd>{localizeLabel(request.transportationMethod, language)}</dd></div>
+          <div>
+            <dt>{tr("Destination", "الوجهة")}</dt>
+            <dd>
+              {localizeLabel(request.destinationCity, language)}
+              {request.submittedRequest && request.submittedRequest.destinationCity !== request.destinationCity && (
+                <span className="ml-2 text-xs font-bold text-amber-700 bg-amber-100 px-1.5 py-0.5 rounded">{tr("Edited", "تم التعديل")}</span>
+              )}
+            </dd>
+          </div>
+          <div>
+            <dt>{tr("Travel dates", "تواريخ السفر")}</dt>
+            <dd>
+              {formatDate(request.departureAt, language)}{request.tripType === "one-way" ? "" : ` – ${formatDate(request.returnAt, language)}`}
+              {(request.verifiedDepartureAt !== null || request.verifiedReturnAt !== null || (request.submittedRequest && (request.submittedRequest.departureAt !== request.departureAt || request.submittedRequest.returnAt !== request.returnAt))) && (
+                <span className="ml-2 text-xs font-bold text-amber-700 bg-amber-100 px-1.5 py-0.5 rounded">{tr("Edited", "تم التعديل")}</span>
+              )}
+            </dd>
+          </div>
+          <div>
+            <dt>{tr("Accommodation", "الإقامة")}</dt>
+            <dd>
+              {localizeLabel(request.accommodationType, language)}
+              {request.submittedRequest && request.submittedRequest.accommodationType !== request.accommodationType && (
+                <span className="ml-2 text-xs font-bold text-amber-700 bg-amber-100 px-1.5 py-0.5 rounded">{tr("Edited", "تم التعديل")}</span>
+              )}
+            </dd>
+          </div>
+          <div>
+            <dt>{tr("Transportation", "الانتقالات")}</dt>
+            <dd>
+              {localizeLabel(request.transportationMethod, language)}
+              {request.submittedRequest && request.submittedRequest.transportationMethod !== request.transportationMethod && (
+                <span className="ml-2 text-xs font-bold text-amber-700 bg-amber-100 px-1.5 py-0.5 rounded">{tr("Edited", "تم التعديل")}</span>
+              )}
+            </dd>
+          </div>
           <div><dt>{tr("Overnight count", "عدد ليالي المبيت")}</dt><dd>{calculation.overnightCount}</dd></div>
-          <div><dt>{tr("Verified return hours", "ساعات العودة المؤكدة")}</dt><dd>{request.verifiedReturnDayHours}</dd></div>
+          <div>
+            <dt>{tr("Verified return hours", "ساعات العودة المؤكدة")}</dt>
+            <dd>
+              {request.verifiedReturnDayHours}
+              {(request.verifiedDepartureAt !== null || request.verifiedReturnAt !== null) && (
+                <span className="ml-2 text-xs font-bold text-amber-700 bg-amber-100 px-1.5 py-0.5 rounded">{tr("Edited", "تم التعديل")}</span>
+              )}
+            </dd>
+          </div>
         </dl>
       </section>
 
@@ -144,9 +182,9 @@ export function SalaryReviewPanel({
       </section>
 
       {request.auditEvents.length > 0 && (
-        <section className="salary-panel-section">
-          <h3>{tr("Complete request history", "سجل الطلب الكامل")}</h3>
-          <ol className="salary-history">{request.auditEvents.slice().reverse().map((event) => <li key={event.id}><div><strong>{localizeLabel(event.actorRole, language)} · {localizeLabel(event.action, language)}</strong><time dateTime={event.createdAt}>{formatDateTime(event.createdAt, language)}</time></div><p>{event.note || tr("No comment", "لا يوجد تعليق")}</p></li>)}</ol>
+        <section className="salary-panel-section bg-slate-50 p-4 rounded-xl border border-slate-200">
+          <h3 className="text-sm font-bold text-slate-800 mb-3">{tr("Admin Edit & Approval History", "سجل تعديلات واعتمادات المسؤولين")}</h3>
+          <ol className="salary-history space-y-2">{request.auditEvents.slice().reverse().map((event) => <li key={event.id} className="text-xs"><div><strong>{localizeLabel(event.actorRole, language)} · {localizeLabel(event.action, language)}</strong> <time dateTime={event.createdAt}>{formatDateTime(event.createdAt, language)}</time></div><p>{event.note || tr("No comment", "لا يوجد تعليق")}</p></li>)}</ol>
         </section>
       )}
 
@@ -160,7 +198,7 @@ export function SalaryReviewPanel({
           <div><dt>{tr("Same-day allowance", "بدل اليوم الواحد")}</dt><dd>{formatCurrency(calculation.sameDayAmount, language)}</dd></div>
           <div><dt>{tr("Return-day allowance", "بدل يوم العودة")}</dt><dd>{formatCurrency(calculation.returnDayAmount, language)}</dd></div>
           <div><dt>{tr("Transportation cost", "تكلفة الانتقال")}</dt><dd>{formatCurrency(calculation.transportationCost, language)}</dd></div>
-          <div><dt>{tr("Saved bonus", "المكافأة المحفوظة")}</dt><dd>+ {formatCurrency(calculation.bonusAmount, language)}</dd></div>
+          <div><dt>{tr("Saved addition", "الإضافة المحفوظة")}</dt><dd>+ {formatCurrency(calculation.bonusAmount, language)}</dd></div>
           <div><dt>{tr("Saved penalty", "الخصم المحفوظ")}</dt><dd>− {formatCurrency(calculation.penaltyAmount, language)}</dd></div>
           <div className="salary-breakdown-total"><dt>{tr("Official saved total", "الإجمالي الرسمي المحفوظ")}</dt><dd>{formatCurrency(calculation.totalAmount, language)}</dd></div>
         </dl>
@@ -214,7 +252,7 @@ export function SalaryReviewPanel({
           disabled={!dirty || saving || finalizing}
           onClick={saveAdjustments}
         >
-          {saving ? tr("Saving adjustments...", "جارٍ حفظ التعديلات...") : tr("Save adjustments", "حفظ التعديلات")}
+          {saving ? tr("Saving changes...", "جارٍ حفظ التعديلات...") : tr("Save Changes Without Approving the Request", "حفظ التعديلات دون اعتماد الطلب")}
         </button>
         <button
           className="salary-btn salary-btn--primary salary-btn--wide"

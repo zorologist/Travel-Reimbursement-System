@@ -63,6 +63,7 @@ describe("request lifecycle HTTP API", () => {
 
     const missingTicket = await request(app).post("/api/requests").set(as("DEV001")).send({
       ...validRequest,
+      transportationMethod: "Employee's Private Car",
       attachments: [],
     });
     expect(missingTicket.status).toBe(400);

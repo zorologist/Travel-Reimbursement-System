@@ -168,9 +168,12 @@ export function canApprove(request: TravelRequest, role: SystemRole): boolean {
   );
 }
 
-/** Rejection is intentionally limited to the manager-review stage. */
+/** Rejection is allowed for manager during manager-review and timing during timing-review. */
 export function canReject(request: TravelRequest, role: SystemRole): boolean {
-  return request.stage === "manager-review" && role === "manager";
+  return (
+    (request.stage === "manager-review" && role === "manager") ||
+    (request.stage === "timing-review" && role === "timing")
+  );
 }
 
 export function canEdit(
@@ -230,8 +233,9 @@ export function submitRequest(
 
   const now = currentTime(options);
   const departureAt = new Date(request.departureAt);
-  if (Number.isNaN(departureAt.getTime()) || departureAt.getTime() <= now.getTime()) {
-    throw new WorkflowServiceError("INVALID_DATE", "A request must be submitted before its departure time.");
+  const thirtyDaysMs = 30 * 24 * 60 * 60 * 1000;
+  if (Number.isNaN(departureAt.getTime()) || now.getTime() - departureAt.getTime() > thirtyDaysMs) {
+    throw new WorkflowServiceError("INVALID_DATE", "A request cannot be submitted for a trip that took place more than 30 days in the past.");
   }
 
   const event = createAuditEvent(

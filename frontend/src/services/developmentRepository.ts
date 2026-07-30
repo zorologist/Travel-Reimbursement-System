@@ -47,6 +47,7 @@ export interface CreateDevelopmentRequestInput {
   destinationCity: string;
   departureAt: string;
   returnAt: string;
+  jobLevel?: JobLevel;
   accommodationType: AccommodationType;
   transportationMethod: string;
   transportationCost?: number;
@@ -128,6 +129,7 @@ interface SeedInput {
   attachments?: DevelopmentAttachment[];
   managerId?: string;
   tripType?: "one-way" | "round-trip";
+  jobLevel?: JobLevel;
   pendingEmployeeResponse?: boolean;
   timeNeedsVerification?: boolean;
 }
@@ -202,7 +204,8 @@ function seedAudit(input: SeedInput): AuditEvent[] {
 }
 
 function buildSeed(input: SeedInput): DevelopmentRequest {
-  const employee = employeeById(input.employeeId);
+  const baseEmployee = employeeById(input.employeeId);
+  const employee = input.jobLevel ? { ...baseEmployee, jobLevel: input.jobLevel } : baseEmployee;
   const auditEvents = seedAudit(input);
   const attachments = input.attachments ?? [{ id: `attachment-${input.id}-1`, name: `ticket-${input.id}.jpg`, mimeType: "image/jpeg", size: 4, url: "data:image/jpeg;base64,AA==" }];
   const record: DevelopmentRequest = {
@@ -388,10 +391,10 @@ export const developmentRepository = {
   async reject(id: string, role: SystemRole, reason: string, actorId = ROLE_ACTOR.manager): Promise<DevelopmentRequest> {
     const record = recordById(id);
     if (!reason.trim()) throw new ApiClientError(400, "REJECTION_REASON_REQUIRED", "A rejection reason is required.");
-    if (STAGE_ROLE[record.stage] !== role || role !== "manager") {
+    if (STAGE_ROLE[record.stage] !== role || (role !== "manager" && role !== "timing")) {
       throw new ApiClientError(409, "INVALID_TRANSITION", "This request is not in your department queue.");
     }
-    if (record.managerId !== actorId) throw new ApiClientError(403, "FORBIDDEN", "Only the selected manager may reject this request.");
+    if (role === "manager" && record.managerId !== actorId) throw new ApiClientError(403, "FORBIDDEN", "Only the selected manager may reject this request.");
     const fromStage = record.stage;
     record.stage = "cancelled";
     record.cancellationReason = reason.trim();

@@ -122,13 +122,65 @@ export function LoginPage() {
           </button>
         </form>
 
+        <div className="demo-quick-login-section mt-6 border-t border-gray-200 pt-4 text-center">
+          <p className="text-xs font-semibold text-gray-500 mb-2">{tr("Quick Demo Sign-In (Select Role)", "تسجيل دخول سريع لبيئة التطوير (اختر الدور)")}</p>
+          <div className="flex flex-wrap gap-2 justify-center text-xs">
+            <button
+              type="button"
+              className="bg-emerald-100 hover:bg-emerald-200 text-emerald-800 font-bold px-3 py-1.5 rounded-lg transition-colors"
+              onClick={() => { setEmployeeNumber("admin"); setPassword("admin"); }}
+            >
+              👑 {tr("Manager / Admin (DEV004)", "مدير / مسؤول (DEV004)")}
+            </button>
+            <button
+              type="button"
+              className="bg-indigo-100 hover:bg-indigo-200 text-indigo-800 font-bold px-3 py-1.5 rounded-lg transition-colors"
+              onClick={() => { setEmployeeNumber("pr"); setPassword("admin"); }}
+            >
+              🏢 {tr("PR Admin (DEV005)", "مسؤول العلاقات العامة (DEV005)")}
+            </button>
+            <button
+              type="button"
+              className="bg-teal-100 hover:bg-teal-200 text-teal-800 font-bold px-3 py-1.5 rounded-lg transition-colors"
+              onClick={() => { setEmployeeNumber("transportation"); setPassword("admin"); }}
+            >
+              🚗 {tr("Transportation Admin (DEV006)", "مسؤول الانتقالات (DEV006)")}
+            </button>
+            <button
+              type="button"
+              className="bg-blue-100 hover:bg-blue-200 text-blue-800 font-bold px-3 py-1.5 rounded-lg transition-colors"
+              onClick={() => { setEmployeeNumber("timing"); setPassword("admin"); }}
+            >
+              ⏱️ {tr("Timing Admin (DEV007)", "مسؤول المواعيد (DEV007)")}
+            </button>
+            <button
+              type="button"
+              className="bg-purple-100 hover:bg-purple-200 text-purple-800 font-bold px-3 py-1.5 rounded-lg transition-colors"
+              onClick={() => { setEmployeeNumber("payroll"); setPassword("admin"); }}
+            >
+              💰 {tr("Payroll Admin (DEV008)", "مسؤول الرواتب (DEV008)")}
+            </button>
+            <button
+              type="button"
+              className="bg-amber-100 hover:bg-amber-200 text-amber-800 font-bold px-3 py-1.5 rounded-lg transition-colors"
+              onClick={() => { setEmployeeNumber("employee"); setPassword("employee"); }}
+            >
+              👤 {tr("Employee (DEV001)", "موظف (DEV001)")}
+            </button>
+          </div>
+        </div>
+
         {import.meta.env.DEV && (
-          <details className="login-demo-accounts">
-            <summary>{tr("Development accounts", "حسابات التطوير")}</summary>
-            <p>{tr("Employee", "موظف")}: DEV001 / Employee@123</p>
-            <p>{tr("Manager", "مدير")}: DEV004 / Admin@123</p>
-            <p>{tr("PR", "العلاقات العامة")}: DEV005 · {tr("Transportation", "الانتقالات")}: DEV006 · {tr("Timing", "المواعيد")}: DEV007 · {tr("Payroll", "الرواتب")}: DEV008</p>
-            <small>{tr("All department accounts use Admin@123.", "تستخدم جميع حسابات الأقسام كلمة المرور Admin@123.")}</small>
+          <details className="login-demo-accounts mt-4 text-xs text-gray-500">
+            <summary className="cursor-pointer font-medium">{tr("Accepted usernames & passwords", "أسماء المستخدمين وكلمات المرور المقبولة")}</summary>
+            <div className="p-2 bg-gray-50 rounded mt-1 text-left space-y-1">
+              <p>• <strong>{tr("Admin / Manager", "مدير/مسؤول")}</strong>: <code>admin</code> or <code>DEV004</code> / <code>Admin@123</code> or <code>admin</code></p>
+              <p>• <strong>{tr("PR Admin", "مسؤول العلاقات العامة")}</strong>: <code>pr</code> or <code>DEV005</code> / <code>Admin@123</code> or <code>admin</code></p>
+              <p>• <strong>{tr("Transportation Admin", "مسؤول الانتقالات")}</strong>: <code>transportation</code> or <code>DEV006</code> / <code>Admin@123</code> or <code>admin</code></p>
+              <p>• <strong>{tr("Timing Admin", "مسؤول المواعيد")}</strong>: <code>timing</code> or <code>DEV007</code> / <code>Admin@123</code> or <code>admin</code></p>
+              <p>• <strong>{tr("Payroll Admin", "مسؤول الرواتب")}</strong>: <code>payroll</code> or <code>DEV008</code> / <code>Admin@123</code> or <code>admin</code></p>
+              <p>• <strong>{tr("Employee", "موظف")}</strong>: <code>employee</code> or <code>DEV001</code> / <code>Employee@123</code> or <code>employee</code></p>
+            </div>
           </details>
         )}
 
