@@ -25,7 +25,7 @@ export function LoginPage() {
     try {
       authenticatedUser = await login(employeeNumber, password, remember);
     } catch (loginError) {
-      setError(localizeError(loginError, "Unable to sign in.", "تعذر تسجيل الدخول."));
+      setError(localizeError(loginError, "Invalid employee number or password.", "رقم الموظف أو كلمة المرور غير صحيحة."));
       return;
     } finally {
       setSubmitting(false);
