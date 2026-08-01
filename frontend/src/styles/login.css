@@ -28,6 +28,7 @@ input {
   padding: 0;
   background: url("../../Background.jpg") center / cover no-repeat fixed;
   overflow: hidden;
+  direction: ltr;
 }
 
 .login-overlay-left {
@@ -61,6 +62,14 @@ input {
   box-shadow: 0 12px 40px rgba(0, 0, 0, 0.25);
   text-align: center;
   transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+html[dir="rtl"] .login-container {
+  direction: rtl;
+}
+
+html[dir="ltr"] .login-container {
+  direction: ltr;
 }
 
 .logo-area img {
