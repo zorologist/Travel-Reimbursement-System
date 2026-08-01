@@ -22,8 +22,16 @@ export function LoginPage() {
     event.preventDefault();
     setSubmitting(true);
     let authenticatedUser;
+    
+    // Normalize Arabic numerals to English digits
+    const arabicNumerals = ["٠", "١", "٢", "٣", "٤", "٥", "٦", "٧", "٨", "٩"];
+    const normalizedUsername = employeeNumber
+      .trim()
+      .toUpperCase()
+      .replace(/[٠-٩]/g, (char) => String(arabicNumerals.indexOf(char)));
+
     try {
-      authenticatedUser = await login(employeeNumber, password, remember);
+      authenticatedUser = await login(normalizedUsername, password, remember);
     } catch (loginError) {
       setError(localizeError(loginError, "Invalid employee number or password.", "رقم الموظف أو كلمة المرور غير صحيحة."));
       return;
@@ -36,12 +44,13 @@ export function LoginPage() {
     }
 
     const requestedPath =
-      typeof location.state === "object"
-      && location.state !== null
-      && "from" in location.state
-      && typeof location.state.from === "string"
-      && location.state.from.startsWith("/")
-      && !location.state.from.startsWith("//")
+      typeof location.state === "object" &&
+      location.state !== null &&
+      "from" in location.state &&
+      typeof location.state.from === "string" &&
+      location.state.from.startsWith("/") &&
+      !location.state.from.startsWith("//") &&
+      location.state.from !== "/login"
         ? location.state.from
         : "/home";
     navigate(requestedPath, { replace: true });

@@ -39,11 +39,16 @@ const USERNAME_ALIASES: Record<string, string> = {
 };
 
 function resolveEmployeeNumber(input: string): string {
-  const normalized = input.trim().toLowerCase();
+  const arabicNumerals = ["٠", "١", "٢", "٣", "٤", "٥", "٦", "٧", "٨", "٩"];
+  const normalized = input
+    .trim()
+    .toLowerCase()
+    .replace(/[٠-٩]/g, (char) => String(arabicNumerals.indexOf(char)));
+
   if (USERNAME_ALIASES[normalized]) {
     return USERNAME_ALIASES[normalized];
   }
-  return input.trim().toUpperCase();
+  return normalized.toUpperCase();
 }
 
 function developmentAccountsEnabled(): boolean {
