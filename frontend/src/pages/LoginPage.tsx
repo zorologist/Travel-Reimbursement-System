@@ -134,6 +134,12 @@ export function LoginPage() {
       </div>
 
       <div className="login-overlay-right">
+        <div className="company-info-panel">
+          <img src={logoUrl} alt="EGAS Logo" className="company-logo-large" />
+          <h2 className="company-name-ar">الشركة المصرية القابضة للغازات الطبيعية - ايجاس</h2>
+          <div className="gold-separator"></div>
+          <h3 className="company-name-en">Egyptian Natural Gas Holding Company – EGAS</h3>
+        </div>
       </div>
     </main>
   );
