@@ -49,91 +49,98 @@ export function LoginPage() {
 
   return (
     <main className="login-page">
-      <header className="top-bar">
-        <img src={logoUrl} alt="EGAS" />
-      </header>
-
-      <section className="login-container" aria-labelledby="login-title">
-        <div className="logo-area">
-          <img src={logoUrl} alt="EGAS logo" />
-        </div>
-
-        <h1 id="login-title">{tr("Welcome Back", "مرحباً بعودتك")}</h1>
-        <p className="subtitle">{tr("Please sign in to your EGAS account", "يرجى تسجيل الدخول إلى حساب إيجاس")}</p>
-
-        <form onSubmit={handleSubmit}>
-          <div className="form-group">
-            <label htmlFor="username">{tr("Employee Number", "رقم الموظف")}</label>
-            <input
-              type="text"
-              id="username"
-              name="username"
-              value={employeeNumber}
-              onChange={(event) => {
-                setEmployeeNumber(event.target.value);
-                setError("");
-              }}
-              autoComplete="username"
-              required
-              placeholder={tr("Enter your development employee number", "أدخل رقم الموظف الخاص ببيئة التطوير")}
-            />
+      <div className="login-overlay-left">
+        <section className="login-container" aria-labelledby="login-title">
+          <div className="logo-area">
+            <img src={logoUrl} alt="EGAS logo" />
           </div>
 
-          <div className="form-group">
-            <label htmlFor="password">{tr("Password", "كلمة المرور")}</label>
-            <div className="password-field">
+          <h1 id="login-title">{tr("Welcome Back", "مرحباً بعودتك")}</h1>
+          <p className="subtitle">{tr("Please sign in to your EGAS account", "يرجى تسجيل الدخول إلى حساب إيجاس")}</p>
+
+          <form onSubmit={handleSubmit}>
+            <div className="form-group">
+              <label htmlFor="username">{tr("Employee Number", "رقم الموظف")}</label>
               <input
-                type={showPassword ? "text" : "password"}
-                id="password"
-                name="password"
-                value={password}
+                type="text"
+                id="username"
+                name="username"
+                value={employeeNumber}
                 onChange={(event) => {
-                  setPassword(event.target.value);
+                  setEmployeeNumber(event.target.value);
                   setError("");
                 }}
-                autoComplete="current-password"
+                autoComplete="username"
                 required
-                placeholder={tr("Enter your password", "أدخل كلمة المرور")}
+                placeholder={tr("Enter your development employee number", "أدخل رقم الموظف الخاص ببيئة التطوير")}
               />
-              <button
-                type="button"
-                className="password-toggle"
-                onClick={() => setShowPassword((visible) => !visible)}
-                aria-controls="password"
-                aria-pressed={showPassword}
-                aria-label={showPassword ? tr("Hide password", "إخفاء كلمة المرور") : tr("Show password", "إظهار كلمة المرور")}
-              >
-                {showPassword ? tr("Hide", "إخفاء") : tr("Show", "إظهار")}
-              </button>
             </div>
-          </div>
 
-          <div className="form-options">
-            <label className="remember-me">
-              <input
-                type="checkbox"
-                name="remember"
-                checked={remember}
-                onChange={(event) => setRemember(event.target.checked)}
-              />
-              {tr("Remember me", "تذكرني")}
-            </label>
-            <span className="login-access-note">{tr("Development access", "دخول بيئة التطوير")}</span>
-          </div>
+            <div className="form-group">
+              <label htmlFor="password">{tr("Password", "كلمة المرور")}</label>
+              <div className="password-field">
+                <input
+                  type={showPassword ? "text" : "password"}
+                  id="password"
+                  name="password"
+                  value={password}
+                  onChange={(event) => {
+                    setPassword(event.target.value);
+                    setError("");
+                  }}
+                  autoComplete="current-password"
+                  required
+                  placeholder={tr("Enter your password", "أدخل كلمة المرور")}
+                />
+                <button
+                  type="button"
+                  className="password-toggle"
+                  onClick={() => setShowPassword((visible) => !visible)}
+                  aria-controls="password"
+                  aria-pressed={showPassword}
+                  aria-label={showPassword ? tr("Hide password", "إخفاء كلمة المرور") : tr("Show password", "إظهار كلمة المرور")}
+                >
+                  {showPassword ? tr("Hide", "إخفاء") : tr("Show", "إظهار")}
+                </button>
+              </div>
+            </div>
 
-          {error && (
-            <p className="login-error" role="alert">
-              {error}
-            </p>
-          )}
+            <div className="form-options">
+              <label className="remember-me">
+                <input
+                  type="checkbox"
+                  name="remember"
+                  checked={remember}
+                  onChange={(event) => setRemember(event.target.checked)}
+                />
+                {tr("Remember me", "تذكرني")}
+              </label>
+              <span className="login-access-note">{tr("Development access", "دخول بيئة التطوير")}</span>
+            </div>
 
-          <button type="submit" className="login-button" disabled={submitting}>
-            {submitting ? tr("Signing in...", "جارٍ تسجيل الدخول...") : tr("Sign In", "تسجيل الدخول")}
-          </button>
-        </form>
+            {error && (
+              <p className="login-error" role="alert">
+                {error}
+              </p>
+            )}
 
-        <p className="footer-text">{tr("© 2026 EGAS. All rights reserved.", "© 2026 إيجاس. جميع الحقوق محفوظة.")}</p>
-      </section>
+            <button type="submit" className="login-button" disabled={submitting}>
+              {submitting ? tr("Signing in...", "جارٍ تسجيل الدخول...") : tr("Sign In", "تسجيل الدخول")}
+            </button>
+          </form>
+
+          <p className="footer-text">{tr("© 2026 EGAS. All rights reserved.", "© 2026 إيجاس. جميع الحقوق محفوظة.")}</p>
+        </section>
+      </div>
+
+      <div className="login-overlay-right">
+        <div className="company-info-panel">
+          <img src={logoUrl} alt="EGAS Logo" className="company-logo-large" />
+          <h2 className="company-name-ar">الشركة المصرية القابضة للغازات الطبيعية - ايجاس</h2>
+          <div className="gold-separator"></div>
+          <h3 className="company-name-en">Egyptian Natural Gas Holding Company – EGAS</h3>
+        </div>
+      </div>
     </main>
   );
 }
