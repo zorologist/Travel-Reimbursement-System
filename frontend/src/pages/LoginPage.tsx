@@ -22,13 +22,16 @@ export function LoginPage() {
     event.preventDefault();
     setSubmitting(true);
     let authenticatedUser;
-    
+
     // Normalize Arabic numerals to English digits
     const arabicNumerals = ["٠", "١", "٢", "٣", "٤", "٥", "٦", "٧", "٨", "٩"];
     const normalizedUsername = employeeNumber
       .trim()
       .toUpperCase()
-      .replace(/[٠-٩]/g, (char) => String(arabicNumerals.indexOf(char)));
+      .replace(/[٠-٩]/g, (char: string) => {
+        const index = arabicNumerals.indexOf(char);
+        return index !== -1 ? String(index) : char;
+      });
 
     try {
       authenticatedUser = await login(normalizedUsername, password, remember);
@@ -45,12 +48,12 @@ export function LoginPage() {
 
     const requestedPath =
       typeof location.state === "object" &&
-      location.state !== null &&
-      "from" in location.state &&
-      typeof location.state.from === "string" &&
-      location.state.from.startsWith("/") &&
-      !location.state.from.startsWith("//") &&
-      location.state.from !== "/login"
+        location.state !== null &&
+        "from" in location.state &&
+        typeof location.state.from === "string" &&
+        location.state.from.startsWith("/") &&
+        !location.state.from.startsWith("//") &&
+        location.state.from !== "/login"
         ? location.state.from
         : "/home";
     navigate(requestedPath, { replace: true });
