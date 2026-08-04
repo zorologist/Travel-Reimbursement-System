@@ -60,6 +60,7 @@ function exportToExcel(items: SalaryQueueItem[]) {
   ];
 
   const csvRows = [
+    "sep=,",
     ["تقرير بدل السفر والانتقالات للموظفين — الشركة المصرية القابضة للغازات الطبيعية (إيجاس)"].join(","),
     [],
     headers.join(","),

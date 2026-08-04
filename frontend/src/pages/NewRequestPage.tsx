@@ -73,6 +73,17 @@ export default function NewRequestPage() {
   useEffect(() => {
     let cancelled = false;
     (async () => {
+      if (useDevelopmentRepository) {
+        // The explicit browser-only repository has no /api/managers endpoint.
+        const fallback: ManagerOption[] = developmentEmployees
+          .filter((employee) => employee.roles.includes("manager"))
+          .map(({ id, employeeNumber, displayName, department }) => ({ id, employeeNumber, displayName, department }));
+        if (cancelled) return;
+        setManagers(fallback);
+        setForm((current) => (current.managerId ? current : { ...current, managerId: fallback[0]?.id ?? "" }));
+        return;
+      }
+
       try {
         const response = await api.get<{ managers: ManagerOption[] }>("/api/managers");
         if (cancelled) return;
@@ -80,20 +91,10 @@ export default function NewRequestPage() {
         setManagers(list);
         setForm((current) => (current.managerId ? current : { ...current, managerId: list[0]?.id ?? "" }));
       } catch (managerError) {
-        if (!useDevelopmentRepository) {
-          if (!cancelled) {
-            setManagers([]);
-            setLocalError(localizeError(managerError, "Unable to load the manager list.", "تعذر تحميل قائمة المديرين."));
-          }
-          return;
+        if (!cancelled) {
+          setManagers([]);
+          setLocalError(localizeError(managerError, "Unable to load the manager list.", "تعذر تحميل قائمة المديرين."));
         }
-        // The explicit browser-only repository has no /api/managers endpoint.
-        const fallback: ManagerOption[] = developmentEmployees
-          .filter((employee) => employee.roles.includes("manager"))
-          .map(({ id, employeeNumber, displayName, department }) => ({ id, employeeNumber, displayName, department }));
-        if (cancelled) return;
-        setManagers(fallback);
-        setForm((current) => (current.managerId ? current : { ...current, managerId: fallback[0].id }));
       }
     })();
     return () => {
