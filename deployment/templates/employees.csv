@@ -1,0 +1,3 @@
+windows_username,user_principal_name,employee_number,display_name,email,department,job_level,roles,active
+EGAS\sample.employee,sample.employee@egas.local,SAMPLE001,Sample Employee,sample.employee@example.invalid,Operations,Level 1,employee,true
+EGAS\sample.manager,sample.manager@egas.local,SAMPLE002,Sample Manager,sample.manager@example.invalid,Operations,General Manager,employee|manager,true

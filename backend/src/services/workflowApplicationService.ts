@@ -8,7 +8,7 @@ import type {
 } from "@travel-reimbursement/shared";
 
 import { ApiError } from "../errors/ApiError.js";
-import { findRequestById, findUserById, replaceRequest } from "../storage/memoryStore.js";
+import { appStore } from "../storage/appStore.js";
 import { recalculateSalaryPreview } from "./salaryService.js";
 import {
   approveRequest,
@@ -45,14 +45,14 @@ export interface DepartmentReviewInput extends Omit<ApprovalInput, "reason"> {
   note?: string;
 }
 
-function requestOrThrow(id: string): TravelRequest {
-  const record = findRequestById(id);
+async function requestOrThrow(id: string): Promise<TravelRequest> {
+  const record = await appStore.findRequestById(id);
   if (!record) throw new ApiError(404, "REQUEST_NOT_FOUND", "Travel request not found.");
   return record;
 }
 
-function ownerOrThrow(record: TravelRequest): User {
-  const owner = findUserById(record.employeeId);
+async function ownerOrThrow(record: TravelRequest): Promise<User> {
+  const owner = await appStore.findUserById(record.employeeId);
   if (!owner) throw new ApiError(500, "REQUEST_OWNER_NOT_FOUND", "The request owner could not be resolved.");
   return owner;
 }
@@ -102,12 +102,12 @@ function revision(
   };
 }
 
-function applyFinancialEdits(record: TravelRequest, actor: User, role: SystemRole, edits: RequestEdits, note: string): TravelRequest {
+async function applyFinancialEdits(record: TravelRequest, actor: User, role: SystemRole, edits: RequestEdits, note: string): Promise<TravelRequest> {
   if (Object.keys(edits).length === 0) return record;
   const changes = changesBetween(record, edits);
   let updated = editRequest(record, actor.id, role, edits, note || null);
   const previousCalculation = record.salaryPreview;
-  const nextCalculation = recalculateSalaryPreview(updated, ownerOrThrow(updated));
+  const nextCalculation = recalculateSalaryPreview(updated, await ownerOrThrow(updated));
   updated = { ...updated, salaryPreview: nextCalculation };
   if (nextCalculation.totalAmount !== previousCalculation.totalAmount) {
     updated.priceRevisions = [
@@ -164,24 +164,24 @@ function assertApprovalFields(role: SystemRole, input: ApprovalInput): void {
   }
 }
 
-export function approveWorkflowRequest(id: string, actor: User, input: ApprovalInput): TravelRequest {
-  const record = requestOrThrow(id);
+export async function approveWorkflowRequest(id: string, actor: User, input: ApprovalInput): Promise<TravelRequest> {
+  const record = await requestOrThrow(id);
   const role = departmentRole(actor);
   assertAssignedManager(record, actor, role);
   assertApprovalFields(role, input);
   const edits = approvalEdits(record, role, input);
   const note = input.reason?.trim() ?? "";
-  const reviewed = applyFinancialEdits(record, actor, role, edits, note);
+  const reviewed = await applyFinancialEdits(record, actor, role, edits, note);
   const approved = approveRequest(reviewed, actor.id, role, note || null);
-  return replaceRequest(id, approved) ?? requestOrThrow(id);
+  return await appStore.replaceRequest(id, approved) ?? await requestOrThrow(id);
 }
 
-export function rejectWorkflowRequest(id: string, actor: User, reason: string): TravelRequest {
-  const record = requestOrThrow(id);
+export async function rejectWorkflowRequest(id: string, actor: User, reason: string): Promise<TravelRequest> {
+  const record = await requestOrThrow(id);
   const role = departmentRole(actor);
   assertAssignedManager(record, actor, role);
   const rejected = rejectRequest(record, actor.id, role, reason);
-  return replaceRequest(id, rejected) ?? requestOrThrow(id);
+  return await appStore.replaceRequest(id, rejected) ?? await requestOrThrow(id);
 }
 
 /**
@@ -189,19 +189,19 @@ export function rejectWorkflowRequest(id: string, actor: User, reason: string): 
  * `pendingEmployeeResponse: true` so the employee sees a banner next time they
  * open the app. (No email/SMS notification — see assumption #4 in the spec.)
  */
-export function requestInfoFromEmployee(id: string, actor: User, note: string): TravelRequest {
-  const record = requestOrThrow(id);
+export async function requestInfoFromEmployee(id: string, actor: User, note: string): Promise<TravelRequest> {
+  const record = await requestOrThrow(id);
   const role = departmentRole(actor);
   assertAssignedManager(record, actor, role);
   if (role !== "manager") {
     throw new ApiError(403, "FORBIDDEN", "Only a manager can request more information from the employee.");
   }
   const updated = requestMoreInfo(record, actor.id, role, note);
-  return replaceRequest(id, updated) ?? requestOrThrow(id);
+  return await appStore.replaceRequest(id, updated) ?? await requestOrThrow(id);
 }
 
-export function reviewWorkflowRequest(id: string, actor: User, input: DepartmentReviewInput): TravelRequest {
-  const record = requestOrThrow(id);
+export async function reviewWorkflowRequest(id: string, actor: User, input: DepartmentReviewInput): Promise<TravelRequest> {
+  const record = await requestOrThrow(id);
   const role = departmentRole(actor);
   assertAssignedManager(record, actor, role);
   const note = input.note?.trim() ?? "";
@@ -241,16 +241,16 @@ export function reviewWorkflowRequest(id: string, actor: User, input: Department
     assertApprovalFields(role, approvalInput);
     edits = approvalEdits(record, role, approvalInput);
   }
-  const updated = applyFinancialEdits(record, actor, role, edits, note);
-  return replaceRequest(id, updated) ?? requestOrThrow(id);
+  const updated = await applyFinancialEdits(record, actor, role, edits, note);
+  return await appStore.replaceRequest(id, updated) ?? await requestOrThrow(id);
 }
 
-export function reviewSalaryRequest(id: string, actor: User, input: SalaryReviewInput): TravelRequest {
+export async function reviewSalaryRequest(id: string, actor: User, input: SalaryReviewInput): Promise<TravelRequest> {
   return reviewWorkflowRequest(id, actor, input);
 }
 
-export function finalizeSalaryRequest(id: string, actor: User, note: string): TravelRequest {
-  const record = requestOrThrow(id);
+export async function finalizeSalaryRequest(id: string, actor: User, note: string): Promise<TravelRequest> {
+  const record = await requestOrThrow(id);
   const role = departmentRole(actor);
   if (role !== "salary") throw new ApiError(403, "FORBIDDEN", "Only Salary may finalize a request.");
   if (!record.transportationCostVerified) {
@@ -259,11 +259,11 @@ export function finalizeSalaryRequest(id: string, actor: User, note: string): Tr
   if (record.timeNeedsVerification) {
     throw new ApiError(409, "TIME_CONFIRMATION_REQUIRED", "The selected manager must confirm the verified times before Payroll finalization.");
   }
-  const recalculated = { ...record, salaryPreview: recalculateSalaryPreview(record, ownerOrThrow(record)) };
+  const recalculated = { ...record, salaryPreview: recalculateSalaryPreview(record, await ownerOrThrow(record)) };
   const finalized = finalizeRequest(recalculated, actor.id, role, note.trim());
   finalized.priceRevisions = [
     ...finalized.priceRevisions,
     revision(finalized, actor, role, recalculated.salaryPreview, finalized.finalSalary!, { finalSalary: { before: null, after: finalized.finalSalary } }, note.trim()),
   ];
-  return replaceRequest(id, finalized) ?? requestOrThrow(id);
+  return await appStore.replaceRequest(id, finalized) ?? await requestOrThrow(id);
 }

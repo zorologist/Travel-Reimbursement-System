@@ -6,7 +6,7 @@ describe("application routes", () => {
   it("returns backend health", async () => {
     const response = await request(app).get("/api/health");
     expect(response.status).toBe(200);
-    expect(response.body).toEqual({ status: "ok" });
+    expect(response.body).toEqual({ status: "ok", storage: "memory" });
     expect(response.headers["x-content-type-options"]).toBe("nosniff");
     expect(response.headers["x-frame-options"]).toBe("SAMEORIGIN");
     expect(response.headers["cache-control"]).toBe("no-store");

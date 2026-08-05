@@ -6,16 +6,16 @@ import { findRequestById, resetStoreForTests } from "../storage/memoryStore.js";
 beforeEach(() => resetStoreForTests());
 
 describe("authorized request views", () => {
-  it("keeps a personal view private while allowing the same dual-role user to process a department queue item", () => {
+  it("keeps a personal view private while allowing the same dual-role user to process a department queue item", async () => {
     const source = findRequestById("TR-2026-005")!;
     const salaryOwnedRequest = { ...source, employeeId: "u8" };
     const roles = ["employee", "salary"] as const;
 
-    expect(authorizedView(salaryOwnedRequest, "u8", roles).salaryPreview).toBeUndefined();
-    expect(authorizedView(salaryOwnedRequest, "u8", roles, true).salaryPreview).toEqual(source.salaryPreview);
+    expect((await authorizedView(salaryOwnedRequest, "u8", roles)).salaryPreview).toBeUndefined();
+    expect((await authorizedView(salaryOwnedRequest, "u8", roles, true)).salaryPreview).toEqual(source.salaryPreview);
   });
 
-  it("redacts Payroll notes and financial changes from PR", () => {
+  it("redacts Payroll notes and financial changes from PR", async () => {
     const source = findRequestById("TR-2026-006")!;
     const request = {
       ...source,
@@ -28,7 +28,7 @@ describe("authorized request views", () => {
         }
         : event),
     };
-    const view = authorizedView(request, "u5", ["employee", "pr"]);
+    const view = await authorizedView(request, "u5", ["employee", "pr"]);
     const lastEvent = (view.auditEvents as Array<{ note: string | null; changes: object }>).at(-1)!;
     expect(lastEvent.note).toBeNull();
     expect(lastEvent.changes).toEqual({});

@@ -1,23 +1,13 @@
 import { Router, type NextFunction, type Request, type Response } from "express";
 import type { SystemRole, WorkflowStage } from "@travel-reimbursement/shared";
 
-import { listManagers } from "../data/users.js";
 import { ApiError } from "../errors/ApiError.js";
 import { authMiddleware } from "../middleware/authMiddleware.js";
 import { createNewRequest } from "../services/requestService.js";
 import { authorizedView } from "../services/responseViews.js";
 import { recalculateSalaryPreview } from "../services/salaryService.js";
 import { editRequest } from "../services/workflowService.js";
-import {
-  createRequest,
-  findRequestById,
-  findUserById,
-  listRequestsByOwner,
-  listRequests,
-  listRequestsForRole,
-  nextRequestId,
-  replaceRequest,
-} from "../storage/memoryStore.js";
+import { appStore } from "../storage/appStore.js";
 import {
   CreateRequestBodySchema,
   PatchRequestBodySchema,
@@ -41,9 +31,11 @@ function roleStage(role: SystemRole): WorkflowStage | null {
   return stages[role] ?? null;
 }
 
-requestRouter.get("/managers", authMiddleware, (_request: Request, response: Response) => {
+requestRouter.get("/managers", authMiddleware, async (_request: Request, response: Response, next: NextFunction) => {
+  try {
+    const managers = (await appStore.listUsers()).filter((user) => user.roles.includes("manager"));
   response.json({
-    managers: listManagers().map((manager) => ({
+    managers: managers.map((manager) => ({
       id: manager.id,
       employeeNumber: manager.employeeNumber,
       displayName: manager.displayName,
@@ -51,15 +43,18 @@ requestRouter.get("/managers", authMiddleware, (_request: Request, response: Res
       jobLevel: manager.jobLevel,
     })),
   });
+  } catch (error) {
+    next(error);
+  }
 });
 
-requestRouter.get("/requests", (request: Request, response: Response, next: NextFunction) => {
+requestRouter.get("/requests", async (request: Request, response: Response, next: NextFunction) => {
   try {
     const user = request.currentUser!;
     const scope = typeof request.query.scope === "string" ? request.query.scope : "mine";
     if (scope === "mine") {
       response.json({
-        requests: listRequestsByOwner(user.id).map((record) => authorizedView(record, user.id, user.roles)),
+        requests: await Promise.all((await appStore.listRequestsByOwner(user.id)).map((record) => authorizedView(record, user.id, user.roles))),
       });
       return;
     }
@@ -69,7 +64,7 @@ requestRouter.get("/requests", (request: Request, response: Response, next: Next
         throw new ApiError(403, "FORBIDDEN", "Only department reviewers can open an approval queue.");
       }
       response.json({
-        requests: listRequestsForRole(role, user.id).map((record) => authorizedView(record, user.id, user.roles, true)),
+        requests: await Promise.all((await appStore.listRequestsForRole(role, user.id)).map((record) => authorizedView(record, user.id, user.roles, true))),
       });
       return;
     }
@@ -77,8 +72,8 @@ requestRouter.get("/requests", (request: Request, response: Response, next: Next
       if (!user.roles.includes("salary")) {
         throw new ApiError(403, "FORBIDDEN", "Only Payroll can open this request scope.");
       }
-      const records = listRequests().filter((record) => scope === "payroll-track" || record.stage === "completed");
-      response.json({ requests: records.map((record) => authorizedView(record, user.id, user.roles, true)) });
+      const records = (await appStore.listRequests()).filter((record) => scope === "payroll-track" || record.stage === "completed");
+      response.json({ requests: await Promise.all(records.map((record) => authorizedView(record, user.id, user.roles, true))) });
       return;
     }
     throw new ApiError(400, "INVALID_SCOPE", "Unsupported request scope.");
@@ -87,10 +82,10 @@ requestRouter.get("/requests", (request: Request, response: Response, next: Next
   }
 });
 
-requestRouter.get("/requests/:id", (request: Request, response: Response, next: NextFunction) => {
+requestRouter.get("/requests/:id", async (request: Request, response: Response, next: NextFunction) => {
   try {
     const user = request.currentUser!;
-    const record = findRequestById(String(request.params.id));
+    const record = await appStore.findRequestById(String(request.params.id));
     if (!record) throw new ApiError(404, "REQUEST_NOT_FOUND", "Travel request not found.");
     const isOwner = record.employeeId === user.id;
     const hasDepartmentAccess = user.roles.some((role) => {
@@ -101,30 +96,31 @@ requestRouter.get("/requests/:id", (request: Request, response: Response, next: 
     if (!isOwner && !hasDepartmentAccess) {
       throw new ApiError(403, "FORBIDDEN", "You cannot view this travel request.");
     }
-    response.json({ request: authorizedView(record, user.id, user.roles) });
+    response.json({ request: await authorizedView(record, user.id, user.roles) });
   } catch (error) {
     next(error);
   }
 });
 
-requestRouter.post("/requests", (request: Request, response: Response, next: NextFunction) => {
+requestRouter.post("/requests", async (request: Request, response: Response, next: NextFunction) => {
   try {
     const user = request.currentUser!;
     if (!user.roles.includes("employee")) {
       throw new ApiError(403, "FORBIDDEN", "Only employees can create travel requests.");
     }
     const input = CreateRequestBodySchema.parse(request.body);
-    const created = createRequest(createNewRequest(input, user, nextRequestId()));
-    response.status(201).json({ request: authorizedView(created, user.id, user.roles) });
+    const requestId = await appStore.nextRequestId();
+    const created = await appStore.createRequest(await createNewRequest(input, user, requestId));
+    response.status(201).json({ request: await authorizedView(created, user.id, user.roles) });
   } catch (error) {
     next(error);
   }
 });
 
-requestRouter.patch("/requests/:id", (request: Request, response: Response, next: NextFunction) => {
+requestRouter.patch("/requests/:id", async (request: Request, response: Response, next: NextFunction) => {
   try {
     const user = request.currentUser!;
-    const record = findRequestById(String(request.params.id));
+    const record = await appStore.findRequestById(String(request.params.id));
     if (!record) throw new ApiError(404, "REQUEST_NOT_FOUND", "Travel request not found.");
     if (record.employeeId !== user.id) {
       throw new ApiError(403, "FORBIDDEN", "Only the request owner can correct it.");
@@ -158,12 +154,12 @@ requestRouter.patch("/requests/:id", (request: Request, response: Response, next
       edits,
       typeof request.body.note === "string" ? request.body.note : null,
     );
-    const owner = findUserById(updated.employeeId);
+    const owner = await appStore.findUserById(updated.employeeId);
     if (!owner) throw new ApiError(500, "REQUEST_OWNER_NOT_FOUND", "The request owner could not be resolved.");
     updated.salaryPreview = recalculateSalaryPreview(updated, owner);
-    const stored = replaceRequest(updated.id, updated);
+    const stored = await appStore.replaceRequest(updated.id, updated);
     if (!stored) throw new ApiError(404, "REQUEST_NOT_FOUND", "Travel request not found.");
-    response.json({ request: authorizedView(stored, user.id, user.roles) });
+    response.json({ request: await authorizedView(stored, user.id, user.roles) });
   } catch (error) {
     next(error);
   }

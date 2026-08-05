@@ -2,6 +2,7 @@ import type { ErrorRequestHandler } from "express";
 import { ZodError } from "zod";
 
 import { ApiError } from "../errors/ApiError.js";
+import { log } from "../observability/logger.js";
 import {
   WorkflowServiceError,
   type WorkflowErrorCode,
@@ -46,7 +47,7 @@ function isInvalidJsonError(error: unknown): error is SyntaxError & { status: nu
 }
 
 /** Converts every API failure into the same safe JSON response shape. */
-export const errorHandler: ErrorRequestHandler = (error, _request, response, next) => {
+export const errorHandler: ErrorRequestHandler = (error, request, response, next) => {
   if (response.headersSent) {
     next(error);
     return;
@@ -79,6 +80,15 @@ export const errorHandler: ErrorRequestHandler = (error, _request, response, nex
       .json(responseBody("INVALID_JSON", "The request body contains invalid JSON."));
     return;
   }
+
+  log("error", "unhandled_request_error", {
+    requestId: request.requestId,
+    method: request.method,
+    path: request.originalUrl.split("?")[0],
+    errorName: error instanceof Error ? error.name : "UnknownError",
+    errorMessage: error instanceof Error ? error.message : "Non-error value thrown",
+    stack: process.env.NODE_ENV === "production" ? undefined : error instanceof Error ? error.stack : undefined,
+  });
 
   response
     .status(500)

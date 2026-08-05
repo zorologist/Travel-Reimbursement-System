@@ -3,7 +3,7 @@ import type { User } from "@travel-reimbursement/shared";
 import bcrypt from "bcrypt";
 
 import { developmentCredentials } from "../data/developmentCredentials.js";
-import { findUserByEmployeeNumber, findUserById } from "../storage/memoryStore.js";
+import { appStore } from "../storage/appStore.js";
 
 interface SessionRecord {
   token: string;
@@ -86,7 +86,7 @@ export async function authenticateCredentials(employeeNumber: string, password: 
     return null;
   }
   failedAttempts.delete(normalized);
-  return findUserByEmployeeNumber(normalized) ?? null;
+  return await appStore.findUserByEmployeeNumber(normalized) ?? null;
 }
 
 export function createSession(user: User, remember: boolean): SessionRecord {
@@ -115,7 +115,7 @@ export function createSession(user: User, remember: boolean): SessionRecord {
   return session;
 }
 
-export function userForSession(token: string): User | null {
+export async function userForSession(token: string): Promise<User | null> {
   const session = sessions.get(token);
   if (!session) return null;
   const now = Date.now();
@@ -124,7 +124,7 @@ export function userForSession(token: string): User | null {
     return null;
   }
   session.lastAccessAt = now;
-  return findUserById(session.userId) ?? null;
+  return await appStore.findUserById(session.userId) ?? null;
 }
 
 export function csrfTokenForSession(token: string): string | null {

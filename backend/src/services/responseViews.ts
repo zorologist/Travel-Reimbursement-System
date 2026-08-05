@@ -2,12 +2,12 @@ import type {
   SystemRole,
   TravelRequest,
 } from "@travel-reimbursement/shared";
-import { findUserById } from "../storage/memoryStore.js";
+import { appStore } from "../storage/appStore.js";
 
 export type SafeRequestView = Record<string, unknown>;
 
-function baseView(request: TravelRequest): SafeRequestView {
-  const employee = findUserById(request.employeeId);
+async function baseView(request: TravelRequest): Promise<SafeRequestView> {
+  const employee = await appStore.findUserById(request.employeeId);
   return {
     id: request.id,
     employeeId: request.employeeId,
@@ -37,9 +37,9 @@ function baseView(request: TravelRequest): SafeRequestView {
 
 /** Owner-facing summary of a price revision — exposes only the high-level fields the
  * employee needs to see (no internal calculation breakdown, no raw change set). */
-function ownerView(request: TravelRequest): SafeRequestView {
+async function ownerView(request: TravelRequest): Promise<SafeRequestView> {
   const view = {
-    ...baseView(request),
+    ...await baseView(request),
     // Employees track stages only. Internal comments, audit history, calculations,
     // and revision amounts remain server-side until the final total is approved.
     auditEvents: [],
@@ -53,9 +53,9 @@ function ownerView(request: TravelRequest): SafeRequestView {
   return view;
 }
 
-function departmentView(request: TravelRequest): SafeRequestView {
+async function departmentView(request: TravelRequest): Promise<SafeRequestView> {
   return {
-    ...baseView(request),
+    ...await baseView(request),
     verifiedDepartureAt: request.verifiedDepartureAt,
     verifiedReturnAt: request.verifiedReturnAt,
     verifiedSameDayHours: request.verifiedSameDayHours,
@@ -74,9 +74,9 @@ const FINANCIAL_CHANGE_FIELDS = new Set([
   "bonusAmount", "penaltyAmount",
 ]);
 
-function prView(request: TravelRequest): SafeRequestView {
+async function prView(request: TravelRequest): Promise<SafeRequestView> {
   return {
-    ...baseView(request),
+    ...await baseView(request),
     cancellationReason: request.cancellationReason,
     auditEvents: request.auditEvents.map((event) => ({
       ...event,
@@ -86,13 +86,13 @@ function prView(request: TravelRequest): SafeRequestView {
   };
 }
 
-function transportationView(request: TravelRequest): SafeRequestView {
-  return { ...departmentView(request), transportationCost: request.transportationCost, claimedTransportationCost: request.claimedTransportationCost };
+async function transportationView(request: TravelRequest): Promise<SafeRequestView> {
+  return { ...await departmentView(request), transportationCost: request.transportationCost, claimedTransportationCost: request.claimedTransportationCost };
 }
 
-function salaryView(request: TravelRequest): SafeRequestView {
+async function salaryView(request: TravelRequest): Promise<SafeRequestView> {
   return {
-    ...departmentView(request),
+    ...await departmentView(request),
     transportationCost: request.transportationCost,
     bonusAmount: request.bonusAmount,
     penaltyAmount: request.penaltyAmount,
@@ -105,12 +105,12 @@ function salaryView(request: TravelRequest): SafeRequestView {
 }
 
 /** Ownership takes priority so dual-role users cannot inspect their own intermediate amounts. */
-export function authorizedView(
+export async function authorizedView(
   request: TravelRequest,
   viewerId: string,
   viewerRoles: readonly SystemRole[],
   departmentContext = false,
-): SafeRequestView {
+): Promise<SafeRequestView> {
   if (request.employeeId === viewerId && !departmentContext) return ownerView(request);
   if (viewerRoles.includes("salary")) return salaryView(request);
   if (viewerRoles.includes("pr")) return prView(request);

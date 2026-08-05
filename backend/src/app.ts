@@ -3,6 +3,8 @@ import cors from "cors";
 import express from "express";
 import rateLimit from "express-rate-limit";
 import helmet from "helmet";
+import { existsSync } from "node:fs";
+import { fileURLToPath } from "node:url";
 import { ApiError } from "./errors/ApiError.js";
 import { csrfProtection } from "./middleware/csrfProtection.js";
 import { errorHandler } from "./middleware/errorHandler.js";
@@ -10,6 +12,9 @@ import { notFoundHandler } from "./middleware/notFound.js";
 import { requestRouter } from "./routes/requestRoutes.js";
 import { authRouter } from "./routes/authRoutes.js";
 import { workflowRouter } from "./routes/workflowRoutes.js";
+import { databasePool } from "./database/databasePool.js";
+import { requireFrontendBuild } from "./config/runtimeValidation.js";
+import { requestLogging } from "./middleware/requestLogging.js";
 
 export const app = express();
 
@@ -25,6 +30,7 @@ const allowedOrigins = new Set(
       : ["http://localhost:5173", "http://127.0.0.1:5173"],
 );
 
+app.use(requestLogging);
 app.use(helmet());
 app.use(cors({
   credentials: true,
@@ -70,11 +76,59 @@ app.use("/api/auth/login", rateLimit({
   },
 }));
 app.use("/api", csrfProtection);
-app.get("/api/health", (_request, response) => {
-  response.json({ status: "ok" });
+app.get("/api/health", async (_request, response) => {
+  if (!databasePool) {
+    response.json({ status: "ok", storage: "memory" });
+    return;
+  }
+  try {
+    const schema = await databasePool.query(
+      "SELECT filename AS version FROM schema_migrations ORDER BY filename DESC LIMIT 1",
+    );
+    response.json({
+      status: "ok",
+      storage: "postgres",
+      schemaVersion: schema.rows[0]?.version ?? null,
+    });
+  } catch {
+    response.status(503).json({
+      status: "unavailable",
+      storage: "postgres",
+      error: { code: "DATABASE_UNAVAILABLE", message: "The database is unavailable." },
+    });
+  }
 });
 app.use("/api", authRouter);
 app.use("/api", requestRouter);
 app.use("/api", workflowRouter);
+app.use("/api", notFoundHandler);
+
+const frontendDist = fileURLToPath(new URL("../../frontend/dist/", import.meta.url));
+const frontendIndex = fileURLToPath(new URL("../../frontend/dist/index.html", import.meta.url));
+const serveFrontend = process.env.SERVE_FRONTEND === "true" || process.env.NODE_ENV === "production";
+requireFrontendBuild(frontendIndex);
+
+if (serveFrontend && existsSync(frontendIndex)) {
+  app.use(express.static(frontendDist, {
+    index: false,
+    setHeaders(response, path) {
+      response.setHeader(
+        "Cache-Control",
+        path.includes(`${frontendDist}\\assets\\`) || path.includes(`${frontendDist}/assets/`)
+          ? "public, max-age=31536000, immutable"
+          : "no-cache",
+      );
+    },
+  }));
+  app.use((request, response, next) => {
+    if (request.method === "GET" && request.accepts("html")) {
+      response.setHeader("Cache-Control", "no-cache");
+      response.sendFile(frontendIndex);
+      return;
+    }
+    next();
+  });
+}
+
 app.use(notFoundHandler);
 app.use(errorHandler);

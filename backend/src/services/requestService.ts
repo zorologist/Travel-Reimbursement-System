@@ -5,7 +5,7 @@ import {
   type User,
 } from "@travel-reimbursement/shared";
 
-import { findUserById } from "../storage/memoryStore.js";
+import { appStore } from "../storage/appStore.js";
 import { computeInitialSalaryPreview } from "./salaryService.js";
 import { createAuditEvent, WorkflowServiceError } from "./workflowService.js";
 
@@ -17,11 +17,11 @@ function standaloneRequestId(now: Date): string {
 }
 
 /** Builds a submitted request while keeping identity, workflow, audit, and money server-controlled. */
-export function createNewRequest(
+export async function createNewRequest(
   input: CreateTravelRequestInput,
   user: User,
   requestId?: string,
-): TravelRequest {
+): Promise<TravelRequest> {
   const { jobLevel: _untrustedJobLevel, ...trustedInput } = input;
   const now = new Date();
   const thirtyDaysMs = 30 * 24 * 60 * 60 * 1000;
@@ -29,7 +29,7 @@ export function createNewRequest(
     throw new WorkflowServiceError("INVALID_DATE", "A request cannot be submitted for a trip that took place more than one month in the past.");
   }
   // Validate the selected manager: must reference a real user that has the manager role.
-  const manager = trustedInput.managerId ? findUserById(trustedInput.managerId) : undefined;
+  const manager = trustedInput.managerId ? await appStore.findUserById(trustedInput.managerId) : undefined;
   if (!manager || !manager.roles.includes("manager")) {
     throw new WorkflowServiceError("INVALID_EDIT_FIELDS", "managerId must reference a user with the manager role.");
   }

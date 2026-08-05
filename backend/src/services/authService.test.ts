@@ -41,31 +41,31 @@ describe("authentication security controls", () => {
     }
   });
 
-  it("expires short sessions after four hours even without remember-me", () => {
+  it("expires short sessions after four hours even without remember-me", async () => {
     vi.useFakeTimers();
     const user = findUserByEmployeeNumber("DEV001")!;
     const session = createSession(user, false);
 
     vi.advanceTimersByTime(4 * 60 * 60 * 1000 + 1);
 
-    expect(userForSession(session.token)).toBeNull();
+    expect(await userForSession(session.token)).toBeNull();
   });
 
-  it("expires inactive sessions after thirty minutes", () => {
+  it("expires inactive sessions after thirty minutes", async () => {
     vi.useFakeTimers();
     const user = findUserByEmployeeNumber("DEV001")!;
     const session = createSession(user, true);
 
     vi.advanceTimersByTime(30 * 60 * 1000 + 1);
 
-    expect(userForSession(session.token)).toBeNull();
+    expect(await userForSession(session.token)).toBeNull();
   });
 
-  it("limits each user to ten active sessions", () => {
+  it("limits each user to ten active sessions", async () => {
     const user = findUserByEmployeeNumber("DEV001")!;
     const sessions = Array.from({ length: 11 }, () => createSession(user, true));
 
-    expect(userForSession(sessions[0].token)).toBeNull();
-    expect(userForSession(sessions.at(-1)!.token)).toMatchObject({ id: user.id });
+    expect(await userForSession(sessions[0].token)).toBeNull();
+    expect(await userForSession(sessions.at(-1)!.token)).toMatchObject({ id: user.id });
   });
 });

@@ -3,6 +3,7 @@
 
 interface ImportMetaEnv {
   readonly VITE_API_BASE_URL?: string;
+  readonly VITE_AUTH_MODE?: "development" | "iis";
   readonly VITE_USE_DEVELOPMENT_REPOSITORY?: string;
   readonly VITE_DEVELOPMENT_ACCOUNTS?: string;
 }

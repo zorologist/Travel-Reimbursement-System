@@ -1,15 +1,17 @@
 // Development sign-in lives here until it is replaced by the company's authentication system.
 import { useState, type FormEvent } from "react";
-import { useLocation, useNavigate } from "react-router-dom";
+import { Navigate, useLocation, useNavigate } from "react-router-dom";
 import logoUrl from "../../EGAS.png";
 import { useAuth } from "../hooks/useAuth";
 import { useLanguage } from "../hooks/useLanguage";
 import "../styles/login.css";
+import { LoadingState } from "../components/ui/LoadingState";
+import { useWindowsAuthentication } from "../services/runtimeMode";
 
 export function LoginPage() {
   const navigate = useNavigate();
   const location = useLocation();
-  const { login } = useAuth();
+  const { login, loading, restore, user } = useAuth();
   const { tr, localizeError } = useLanguage();
   const [employeeNumber, setEmployeeNumber] = useState("");
   const [password, setPassword] = useState("");
@@ -17,6 +19,11 @@ export function LoginPage() {
   const [remember, setRemember] = useState(false);
   const [error, setError] = useState("");
   const [submitting, setSubmitting] = useState(false);
+
+  if (useWindowsAuthentication && loading) {
+    return <LoadingState message={tr("Signing in with your Windows account...", "Signing in with your Windows account...")} />;
+  }
+  if (useWindowsAuthentication && user) return <Navigate to="/home" replace />;
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -61,7 +68,17 @@ export function LoginPage() {
         <h1 id="login-title">{tr("Welcome Back", "مرحباً بعودتك")}</h1>
         <p className="subtitle">{tr("Please sign in to your EGAS account", "يرجى تسجيل الدخول إلى حساب إيجاس")}</p>
 
-        <form onSubmit={handleSubmit}>
+        {useWindowsAuthentication ? (
+          <div className="login-windows-auth">
+            <p>{tr(
+              "Windows sign-in could not be completed. Confirm that you are on the company network and that IT has registered your account.",
+              "Windows sign-in could not be completed. Confirm that you are on the company network and that IT has registered your account.",
+            )}</p>
+            <button type="button" className="login-button" onClick={() => void restore()}>
+              {tr("Try Windows sign-in again", "Try Windows sign-in again")}
+            </button>
+          </div>
+        ) : <form onSubmit={handleSubmit}>
           <div className="form-group">
             <label htmlFor="username">{tr("Employee Number", "رقم الموظف")}</label>
             <input
@@ -130,7 +147,7 @@ export function LoginPage() {
           <button type="submit" className="login-button" disabled={submitting}>
             {submitting ? tr("Signing in...", "جارٍ تسجيل الدخول...") : tr("Sign In", "تسجيل الدخول")}
           </button>
-        </form>
+        </form>}
 
         <p className="footer-text">{tr("© 2026 EGAS. All rights reserved.", "© 2026 إيجاس. جميع الحقوق محفوظة.")}</p>
       </section>
