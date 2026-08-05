@@ -8,7 +8,7 @@ Internal travel-request workflow for employees, managers, Public Relations, Tran
 Employee browser
   → IIS HTTPS + Windows Authentication/Kerberos
   → verified X-IIS-Windows-User header
-  → Node.js/Express on 127.0.0.1:5435
+  → Node.js/Express on 127.0.0.1:3000
   → PostgreSQL
 ```
 
@@ -93,7 +93,7 @@ Follow [deployment/TOMORROW_DEPLOYMENT.md](deployment/TOMORROW_DEPLOYMENT.md) in
 
 ## Security rules
 
-- Node binds only to loopback in production; users reach IIS, never port `5435`.
+- Node binds only to loopback in production; users reach IIS, never port `3000`.
 - IIS overwrites the trusted Windows-identity header.
 - Production configuration requires IIS authentication and PostgreSQL storage.
 - Development accounts and development identity headers must remain disabled in production.

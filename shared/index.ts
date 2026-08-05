@@ -2,6 +2,7 @@
 // This entry point is the single contract surface used by both applications.
 export * from "./constants/salaryRates.js";
 export * from "./constants/transportationRates.js";
+export * from "./date/travelDatePolicy.js";
 export * from "./salary/calculateSalary.js";
 export * from "./schemas/TravelRequestSchema.js";
 export * from "./schemas/AuthSchema.js";

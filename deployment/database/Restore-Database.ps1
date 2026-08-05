@@ -4,7 +4,7 @@ param(
   [string]$Database = "travel_reimbursement",
   [Parameter(Mandatory)][string]$ConfirmDatabaseName,
   [string]$HostName = "localhost",
-  [int]$Port = 5433,
+  [int]$Port = 5435,
   [string]$User = "postgres",
   [Parameter(Mandatory)][SecureString]$Password,
   [string]$PgRestorePath = "pg_restore.exe"

@@ -1,11 +1,12 @@
 import { randomUUID } from "node:crypto";
 
-import type {
-  AuditEvent,
-  SystemRole,
-  TravelRequest,
-  WorkflowAction,
-  WorkflowStage,
+import {
+  isWithinTravelSubmissionWindow,
+  type AuditEvent,
+  type SystemRole,
+  type TravelRequest,
+  type WorkflowAction,
+  type WorkflowStage,
 } from "@travel-reimbursement/shared";
 
 
@@ -231,9 +232,8 @@ export function submitRequest(
 
   const now = currentTime(options);
   const departureAt = new Date(request.departureAt);
-  const thirtyDaysMs = 30 * 24 * 60 * 60 * 1000;
-  if (Number.isNaN(departureAt.getTime()) || now.getTime() - departureAt.getTime() > thirtyDaysMs) {
-    throw new WorkflowServiceError("INVALID_DATE", "A request cannot be submitted for a trip that took place more than 30 days in the past.");
+  if (!isWithinTravelSubmissionWindow(departureAt, now)) {
+    throw new WorkflowServiceError("INVALID_DATE", "A request cannot be submitted for a trip that took place more than one month in the past.");
   }
 
   const event = createAuditEvent(

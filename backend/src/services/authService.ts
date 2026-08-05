@@ -2,7 +2,10 @@ import { randomUUID, timingSafeEqual } from "node:crypto";
 import type { User } from "@travel-reimbursement/shared";
 import bcrypt from "bcrypt";
 
+import { authenticationConfig } from "../auth/authConfig.js";
+import { verifyDirectoryCredentials } from "../auth/directoryAuth.js";
 import { developmentCredentials } from "../data/developmentCredentials.js";
+import { ApiError } from "../errors/ApiError.js";
 import { appStore } from "../storage/appStore.js";
 
 interface SessionRecord {
@@ -72,8 +75,12 @@ function registerFailure(key: string): void {
   failedAttempts.set(key, entry);
 }
 
-export async function authenticateCredentials(employeeNumber: string, password: string): Promise<User | null> {
-  const normalized = resolveEmployeeNumber(employeeNumber);
+export async function authenticateCredentials(identifier: string, password: string): Promise<User | null> {
+  if (authenticationConfig().mode === "ldap") {
+    return authenticateAgainstDirectory(identifier, password);
+  }
+
+  const normalized = resolveEmployeeNumber(identifier);
   if (!developmentAccountsEnabled()) {
     await bcrypt.compare(password, DUMMY_PASSWORD_HASH);
     return null;
@@ -87,6 +94,24 @@ export async function authenticateCredentials(employeeNumber: string, password: 
   }
   failedAttempts.delete(normalized);
   return await appStore.findUserByEmployeeNumber(normalized) ?? null;
+}
+
+async function authenticateAgainstDirectory(username: string, password: string): Promise<User | null> {
+  const key = username.trim().toLowerCase();
+  const failure = activeFailureEntry(key);
+  if (failure?.lockedUntil) return null;
+
+  const verified = await verifyDirectoryCredentials(username, password);
+  if (!verified) {
+    registerFailure(key);
+    return null;
+  }
+  failedAttempts.delete(key);
+  const user = await appStore.findUserByDirectoryIdentity(username.trim());
+  if (!user) {
+    throw new ApiError(403, "DIRECTORY_USER_NOT_REGISTERED", "Your Windows account is not registered for this application.");
+  }
+  return user;
 }
 
 export function createSession(user: User, remember: boolean): SessionRecord {

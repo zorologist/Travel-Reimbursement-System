@@ -5,3 +5,6 @@ export const useDevelopmentRepository =
 
 /** Production IIS builds restore the authenticated Windows user automatically. */
 export const useWindowsAuthentication = import.meta.env.VITE_AUTH_MODE === "iis";
+
+/** LDAP builds show the normal sign-in form, verified against Active Directory server-side. */
+export const useDirectoryPasswordLogin = import.meta.env.VITE_AUTH_MODE === "ldap";

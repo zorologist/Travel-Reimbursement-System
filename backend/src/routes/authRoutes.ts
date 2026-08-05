@@ -21,8 +21,9 @@ function requestToken(cookieHeader: string | undefined): string | undefined {
 
 authRouter.post("/auth/login", async (request, response, next) => {
   try {
-    if (authenticationConfig().mode !== "development") {
-      throw new ApiError(404, "DEVELOPMENT_LOGIN_DISABLED", "Password login is disabled on this deployment.");
+    const mode = authenticationConfig().mode;
+    if (mode !== "development" && mode !== "ldap") {
+      throw new ApiError(404, "PASSWORD_LOGIN_DISABLED", "Password login is disabled on this deployment.");
     }
     const input = LoginInputSchema.parse(request.body);
     const user = await authenticateCredentials(input.employeeNumber, input.password);

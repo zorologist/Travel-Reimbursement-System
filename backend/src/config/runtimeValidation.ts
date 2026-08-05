@@ -7,7 +7,8 @@ export function validateRuntime(environment: NodeJS.ProcessEnv = process.env): v
   if (environment.NODE_ENV !== "production") return;
   const problems: string[] = [];
   if (!databaseConfig(environment)) problems.push("PostgreSQL connection settings are required");
-  if (authenticationConfig(environment).mode !== "iis") problems.push("AUTH_MODE must be iis");
+  const authMode = authenticationConfig(environment).mode;
+  if (authMode !== "iis" && authMode !== "ldap") problems.push("AUTH_MODE must be iis or ldap");
   if (environment.STORAGE_MODE !== "postgres") problems.push("STORAGE_MODE must be postgres");
   if (environment.ENABLE_DEVELOPMENT_ACCOUNTS === "true") problems.push("development accounts must be disabled");
   if (environment.ALLOW_DEV_AUTH_HEADER === "true") problems.push("development auth headers must be disabled");

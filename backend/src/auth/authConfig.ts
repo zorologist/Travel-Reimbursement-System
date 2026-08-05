@@ -1,4 +1,4 @@
-export type AuthenticationMode = "development" | "iis";
+export type AuthenticationMode = "development" | "iis" | "ldap";
 
 export interface AuthenticationConfig {
   mode: AuthenticationMode;
@@ -13,8 +13,8 @@ export function authenticationConfig(
 ): AuthenticationConfig {
   const defaultMode: AuthenticationMode = environment.NODE_ENV === "production" ? "iis" : "development";
   const mode = (environment.AUTH_MODE?.trim().toLowerCase() || defaultMode) as AuthenticationMode;
-  if (!["development", "iis"].includes(mode)) {
-    throw new Error("AUTH_MODE must be development or iis.");
+  if (!["development", "iis", "ldap"].includes(mode)) {
+    throw new Error("AUTH_MODE must be development, iis, or ldap.");
   }
   const identityHeader = environment.IIS_IDENTITY_HEADER?.trim().toLowerCase()
     || "x-iis-windows-user";

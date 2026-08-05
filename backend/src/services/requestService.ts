@@ -1,5 +1,6 @@
 import {
   getTangoFare,
+  isWithinTravelSubmissionWindow,
   type CreateTravelRequestInput,
   type TravelRequest,
   type User,
@@ -24,8 +25,7 @@ export async function createNewRequest(
 ): Promise<TravelRequest> {
   const { jobLevel: _untrustedJobLevel, ...trustedInput } = input;
   const now = new Date();
-  const thirtyDaysMs = 30 * 24 * 60 * 60 * 1000;
-  if (now.getTime() - new Date(trustedInput.departureAt).getTime() > thirtyDaysMs) {
+  if (!isWithinTravelSubmissionWindow(trustedInput.departureAt, now)) {
     throw new WorkflowServiceError("INVALID_DATE", "A request cannot be submitted for a trip that took place more than one month in the past.");
   }
   // Validate the selected manager: must reference a real user that has the manager role.

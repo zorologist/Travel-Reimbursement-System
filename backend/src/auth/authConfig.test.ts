@@ -9,7 +9,7 @@ describe("authentication configuration", () => {
   });
 
   it("validates modes and identity header names", () => {
-    expect(() => authenticationConfig({ AUTH_MODE: "ldap" })).toThrow(/development or iis/);
+    expect(() => authenticationConfig({ AUTH_MODE: "carrier-pigeon" })).toThrow(/development, iis, or ldap/);
     expect(() => authenticationConfig({ IIS_IDENTITY_HEADER: "bad header" })).toThrow(/valid HTTP header/);
   });
 

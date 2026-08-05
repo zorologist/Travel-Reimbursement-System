@@ -2,7 +2,7 @@
 param(
   [string]$Database = "travel_reimbursement",
   [string]$HostName = "localhost",
-  [int]$Port = 5433,
+  [int]$Port = 5435,
   [string]$User = "travel_app",
   [Parameter(Mandatory)][SecureString]$Password,
   [string]$BackupDirectory = "",

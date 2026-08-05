@@ -6,7 +6,7 @@ import { useAuth } from "../hooks/useAuth";
 import { useLanguage } from "../hooks/useLanguage";
 import "../styles/login.css";
 import { LoadingState } from "../components/ui/LoadingState";
-import { useWindowsAuthentication } from "../services/runtimeMode";
+import { useDirectoryPasswordLogin, useWindowsAuthentication } from "../services/runtimeMode";
 
 export function LoginPage() {
   const navigate = useNavigate();
@@ -38,7 +38,9 @@ export function LoginPage() {
       setSubmitting(false);
     }
     if (!authenticatedUser) {
-      setError(tr("Invalid development employee number or password.", "رقم الموظف أو كلمة المرور غير صحيحة."));
+      setError(useDirectoryPasswordLogin
+        ? tr("Invalid Windows username or password.", "اسم مستخدم الويندوز أو كلمة المرور غير صحيحة.")
+        : tr("Invalid development employee number or password.", "رقم الموظف أو كلمة المرور غير صحيحة."));
       return;
     }
 
@@ -80,7 +82,9 @@ export function LoginPage() {
           </div>
         ) : <form onSubmit={handleSubmit}>
           <div className="form-group">
-            <label htmlFor="username">{tr("Employee Number", "رقم الموظف")}</label>
+            <label htmlFor="username">
+              {useDirectoryPasswordLogin ? tr("Windows Username", "اسم مستخدم الويندوز") : tr("Employee Number", "رقم الموظف")}
+            </label>
             <input
               type="text"
               id="username"
@@ -92,7 +96,9 @@ export function LoginPage() {
               }}
               autoComplete="username"
               required
-              placeholder={tr("Enter your development employee number", "أدخل رقم الموظف الخاص ببيئة التطوير")}
+              placeholder={useDirectoryPasswordLogin
+                ? tr("Enter your Windows username", "أدخل اسم مستخدم الويندوز الخاص بك")
+                : tr("Enter your development employee number", "أدخل رقم الموظف الخاص ببيئة التطوير")}
             />
           </div>
 
@@ -135,7 +141,9 @@ export function LoginPage() {
               />
               {tr("Remember me", "تذكرني")}
             </label>
-            <span className="login-access-note">{tr("Development access", "دخول بيئة التطوير")}</span>
+            {!useDirectoryPasswordLogin && (
+              <span className="login-access-note">{tr("Development access", "دخول بيئة التطوير")}</span>
+            )}
           </div>
 
           {error && (

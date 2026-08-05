@@ -31,7 +31,19 @@ const allowedOrigins = new Set(
 );
 
 app.use(requestLogging);
-app.use(helmet());
+app.use(
+  helmet({
+    contentSecurityPolicy: {
+      useDefaults: true,
+      directives: {
+        // IIS has no HTTPS binding until the real certificate is installed;
+        // this directive otherwise makes browsers rewrite every asset
+        // request to https:// and the connection gets reset.
+        upgradeInsecureRequests: process.env.TLS_ENABLED === "true" ? [] : null,
+      },
+    },
+  }),
+);
 app.use(cors({
   credentials: true,
   origin(origin, callback) {

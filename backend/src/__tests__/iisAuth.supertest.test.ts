@@ -45,6 +45,6 @@ describe("IIS/Kerberos authentication boundary", () => {
       .post("/api/auth/login")
       .send({ employeeNumber: "DEV001", password: "Employee@123", remember: false });
     expect(response.status).toBe(404);
-    expect(response.body.error.code).toBe("DEVELOPMENT_LOGIN_DISABLED");
+    expect(response.body.error.code).toBe("PASSWORD_LOGIN_DISABLED");
   });
 });

@@ -9,11 +9,11 @@ Domain workstation
   → HTTPS DNS name
   → IIS Windows Authentication (Negotiate/Kerberos)
   → IIS reverse proxy on the same host
-  → Node.js at 127.0.0.1:5435
+  → Node.js at 127.0.0.1:3000
   → local PostgreSQL
 ```
 
-Node.js is deliberately bound to loopback. Clients must not connect directly to port `5435`.
+Node.js is deliberately bound to loopback. Clients must not connect directly to port `3000`.
 
 ## Authentication contract
 
@@ -36,7 +36,7 @@ Node.js is deliberately bound to loopback. Clients must not connect directly to 
 7. Register and verify the `HTTP/<dns-name>` SPN on the identity selected by IT; prevent duplicate SPNs.
 8. Provide an approved user export using `deployment/templates/employees.csv`.
 9. Confirm the PostgreSQL port and backup destination.
-10. Confirm that ports 80/443 are reachable as required and port 5435 remains non-public.
+10. Confirm that ports 80/443 are reachable as required, Node port 3000 remains non-public, and PostgreSQL port 5435 is restricted according to company policy.
 
 ## Employee import columns
 
@@ -69,4 +69,4 @@ Multiple roles in CSV use `|`, for example `employee|manager`.
 - Unknown and inactive accounts are denied.
 - A request survives Node, PostgreSQL, and host restarts.
 - Backup and test restore complete successfully.
-- Direct remote access to `127.0.0.1:5435` is impossible by design.
+- Direct remote access to Node at `127.0.0.1:3000` is impossible by design.

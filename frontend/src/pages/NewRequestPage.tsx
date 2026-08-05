@@ -1,6 +1,6 @@
 import { useEffect, useState, type ChangeEvent, type FormEvent } from "react";
 import { useNavigate } from "react-router-dom";
-import type { AccommodationType } from "@travel-reimbursement/shared";
+import { earliestTravelDateInputValue, type AccommodationType } from "@travel-reimbursement/shared";
 
 import { useRequests } from "../hooks/useRequests";
 import { useAuth } from "../hooks/useAuth";
@@ -54,6 +54,7 @@ export default function NewRequestPage() {
   const [localError, setLocalError] = useState<string | null>(null);
   const [attachments, setAttachments] = useState<File[]>([]);
   const [managers, setManagers] = useState<ManagerOption[]>([]);
+  const earliestAllowedTravelDate = earliestTravelDateInputValue();
   const [form, setForm] = useState({
     travelFrom: "",
     travelTo: "",
@@ -317,7 +318,8 @@ export default function NewRequestPage() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">{tr("Departure date", "تاريخ الذهاب")} *</label>
-              <input type="date" name="startDate" value={form.startDate} onChange={handleChange} className="w-full bg-gray-50/50 border border-gray-200 p-3 rounded-lg text-gray-800 focus:bg-white focus:border-[#1E5A34] focus:outline-none transition-all" required />
+              <input type="date" name="startDate" value={form.startDate} min={earliestAllowedTravelDate} onChange={handleChange} className="w-full bg-gray-50/50 border border-gray-200 p-3 rounded-lg text-gray-800 focus:bg-white focus:border-[#1E5A34] focus:outline-none transition-all" required />
+              <p className="text-xs text-gray-500 mt-2">{tr("Trips from the previous month can still be submitted.", "يمكن تقديم طلبات الرحلات التي تمت خلال الشهر السابق.")}</p>
             </div>
             {!isOneWay && <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">{tr("Return date", "تاريخ العودة")} *</label>

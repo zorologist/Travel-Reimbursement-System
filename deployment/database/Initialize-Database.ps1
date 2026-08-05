@@ -3,7 +3,7 @@ param(
   [string]$Database = "travel_reimbursement",
   [string]$AppUser = "travel_app",
   [string]$HostName = "localhost",
-  [int]$Port = 5433,
+  [int]$Port = 5435,
   [string]$AdminUser = "postgres",
   [Parameter(Mandatory)][SecureString]$AdminPassword,
   [Parameter(Mandatory)][SecureString]$AppPassword,

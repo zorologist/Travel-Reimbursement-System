@@ -49,6 +49,7 @@ This is a living checklist. Update it whenever a project task is completed or a 
 - [ ] Store users, roles, travel requests, audit events, revisions, and sessions
 - [ ] Learn REST and HTTP methods/status codes
 - [ ] Learn error handling, logging, health checks, and automated tests
+- [x] Enforce the one-calendar-month submission window in both the browser form and backend
 
 ## 4. Frontend
 
@@ -71,12 +72,16 @@ This is a living checklist. Update it whenever a project task is completed or a 
 ## 6. Windows deployment
 
 - [ ] Learn Windows service basics and how Node.js will run after reboot
-- [ ] Build a production package that does not require internet access
+- [x] Identify the company host as Windows Server 2019, domain joined to `EGAS.Local`
+- [x] Understand the production ports: IIS `80/443`, Node `127.0.0.1:3000`, PostgreSQL `5435`
+- [x] Understand that URL Rewrite defines the proxy rule and ARR forwards IIS requests to Node
+- [x] Build and verify a production package that does not require internet access
 - [x] Configure Node.js to serve the built React frontend and API from one internal port
 - [ ] Install the application and create production `.env` configuration
 - [ ] Create the production PostgreSQL role, database, and schema
-- [ ] Run Node.js internally on port `5435`
-- [ ] Enable and configure IIS as the public reverse proxy
+- [ ] Run Node.js internally on `127.0.0.1:3000`
+- [x] Enable IIS, Windows Authentication, and the IIS management console
+- [ ] Install URL Rewrite and ARR, then configure IIS as the public reverse proxy
 - [ ] Configure Windows Authentication/Kerberos with company IT
 - [ ] Configure DNS, HTTPS certificate, firewall rules, and file permissions
 - [ ] Verify logging, backups, restart behavior, and rollback procedure

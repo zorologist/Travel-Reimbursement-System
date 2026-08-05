@@ -6,7 +6,7 @@ Use this file in order. Do not put real passwords in chat, Git, screenshots, or 
 
 - Final application DNS name (placeholder used here: `travel.egas.local`)
 - Confirmation that this Windows 10 VM is an approved permanent host
-- Approved PostgreSQL port (template currently uses `5433`)
+- Approved PostgreSQL port (`5435` on the company server)
 - Employee export with the columns in `deployment/templates/employees.csv`
 - Permission/installers for IIS URL Rewrite and Application Request Routing (ARR)
 - HTTPS certificate thumbprint for the final DNS name
@@ -61,7 +61,7 @@ ALLOW_DEV_AUTH_HEADER=false
 STORAGE_MODE=postgres
 SERVE_FRONTEND=true
 HOST=127.0.0.1
-PORT=5435
+PORT=3000
 ```
 
 Check that no placeholder remains:
@@ -79,10 +79,10 @@ Use the same application password you entered in `.env`:
 ```powershell
 $adminPassword = Read-Host "PostgreSQL postgres password" -AsSecureString
 $appPassword = Read-Host "New travel_app password" -AsSecureString
-.\deployment\database\Initialize-Database.ps1 -AdminPassword $adminPassword -AppPassword $appPassword -Port 5433
+.\deployment\database\Initialize-Database.ps1 -AdminPassword $adminPassword -AppPassword $appPassword -Port 5435
 ```
 
-If PostgreSQL is not on `5433`, replace the port everywhere, including `.env`.
+If PostgreSQL is moved from `5435`, replace the database port everywhere, including `.env`.
 
 Apply the schema and verify connectivity:
 
@@ -123,7 +123,7 @@ Only use `--disable-missing` after IT confirms the CSV is a complete authoritati
 
 ```powershell
 .\deployment\windows\Install-StartupTask.ps1 -AppRoot C:\Apps\Travel-Reimbursement-System
-Invoke-RestMethod http://127.0.0.1:5435/api/health
+Invoke-RestMethod http://127.0.0.1:3000/api/health
 ```
 
 Expected:
@@ -148,14 +148,14 @@ If IT already installed the HTTPS certificate:
 .\deployment\iis\Configure-IIS.ps1 -HostName travel.egas.local -CertificateThumbprint "CERTIFICATE_THUMBPRINT"
 ```
 
-The script enables IIS Windows Authentication, disables Anonymous Authentication, proxies to `127.0.0.1:5435`, and overwrites `X-IIS-Windows-User` with IIS's verified `{LOGON_USER}` value.
+The script enables IIS Windows Authentication, disables Anonymous Authentication, proxies to `127.0.0.1:3000`, and overwrites `X-IIS-Windows-User` with IIS's verified `{LOGON_USER}` value.
 
 IT must then:
 
 1. Create the DNS record.
 2. Register/verify the `HTTP/travel.egas.local` Kerberos SPN on the correct AD account.
 3. Confirm the HTTPS certificate chain is trusted by employee computers.
-4. Keep port `5435` inaccessible remotely; Node listens only on loopback anyway.
+4. Keep Node port `3000` inaccessible remotely; Node listens only on loopback anyway. Restrict PostgreSQL port `5435` according to company policy.
 
 ## 7. Verify
 
@@ -176,7 +176,7 @@ From a separate domain computer, browse to the HTTPS DNS name. Test:
 
 ```powershell
 $appPassword = Read-Host "travel_app password" -AsSecureString
-.\deployment\database\Backup-Database.ps1 -Password $appPassword -Port 5433
+.\deployment\database\Backup-Database.ps1 -Password $appPassword -Port 5435
 ```
 
 Copy the backup to the IT-approved protected backup location.

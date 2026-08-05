@@ -1,7 +1,7 @@
 [CmdletBinding()]
 param(
   [string]$AppRoot = "",
-  [string]$HealthUrl = "http://127.0.0.1:5435/api/health",
+  [string]$HealthUrl = "http://127.0.0.1:3000/api/health",
   [string]$TaskName = "EGAS Travel Reimbursement"
 )
 
