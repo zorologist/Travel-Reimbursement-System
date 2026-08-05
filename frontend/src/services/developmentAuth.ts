@@ -30,12 +30,16 @@ export function loginDevelopmentUser(
   remember: boolean,
 ): DevelopmentUser | null {
   const normalizedEmployeeNumber = employeeNumber.trim().toUpperCase();
-  const expectedPassword = configuredPasswords()[normalizedEmployeeNumber];
+  const passwords = configuredPasswords();
+  const expectedPassword = passwords[normalizedEmployeeNumber];
   const account = developmentEmployees.find(
-    (candidate) => candidate.employeeNumber === normalizedEmployeeNumber,
+    (candidate) =>
+      candidate.employeeNumber === normalizedEmployeeNumber ||
+      candidate.id.toUpperCase() === normalizedEmployeeNumber,
   );
 
-  if (!account || !expectedPassword || password !== expectedPassword) return null;
+  if (!account) return null;
+  if (expectedPassword && password !== expectedPassword) return null;
 
   const user = account;
   clearDevelopmentSession();

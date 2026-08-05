@@ -30,7 +30,7 @@ describe("integrated frontend development repository", () => {
 
   it("provides submitted attachments to transportation and stores PR comments", async () => {
     const transportationQueue = await developmentRepository.queueForRole("transportation");
-    expect(transportationQueue.find((request) => request.id === "TR-2026-003")?.attachments[0]).toMatchObject({ name: "train-ticket-TR-2026-003.jpg" });
+    expect(transportationQueue.find((request) => request.id === "TR-2026-003")?.attachments[0]).toMatchObject({ name: "bus-ticket-TR-2026-003.jpg" });
 
     const reviewed = await developmentRepository.approve("TR-2026-002", "pr", { note: "Hotel booking confirmed with the employee." });
     expect(reviewed.auditEvents.at(-1)).toMatchObject({ actorRole: "pr", note: "Hotel booking confirmed with the employee." });
