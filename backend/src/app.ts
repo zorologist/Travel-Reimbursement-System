@@ -95,12 +95,17 @@ app.use("/api/auth/login", rateLimit({
     return account ? `login:${account}` : `invalid:${ipKeyGenerator(request.ip ?? "")}`;
   },
   skipSuccessfulRequests: true,
+  requestWasSuccessful(_request, response) {
+    // Only a real AD credential rejection consumes one of the five attempts.
+    // Directory outages, account-state errors, and missing app registrations do not.
+    return response.locals.loginCredentialFailure !== true;
+  },
   standardHeaders: "draft-8",
   legacyHeaders: false,
   message: {
     error: {
       code: "TOO_MANY_ATTEMPTS",
-      message: "Too many login attempts. Try again later.",
+      message: "Too many incorrect login attempts. Try again in 5 minutes.",
       details: null,
     },
   },

@@ -3,7 +3,10 @@ import type { User } from "@travel-reimbursement/shared";
 import bcrypt from "bcrypt";
 
 import { authenticationConfig } from "../auth/authConfig.js";
-import { verifyDirectoryCredentials } from "../auth/directoryAuth.js";
+import {
+  DirectoryAuthenticationError,
+  verifyDirectoryCredentials,
+} from "../auth/directoryAuth.js";
 import { developmentCredentials } from "../data/developmentCredentials.js";
 import { ApiError } from "../errors/ApiError.js";
 import { appStore } from "../storage/appStore.js";
@@ -27,6 +30,48 @@ const LOCKOUT_MS = 5 * 60 * 1000;
 const MAX_FAILURE_ENTRIES = 10_000;
 const MAX_SESSIONS_PER_USER = 10;
 const DUMMY_PASSWORD_HASH = "$2b$12$Av9D3bDwbuAjfXsa4B81Muot5MtJcvXLt1A5sXBA2pz9/pYJQ43Gq";
+
+const DIRECTORY_FAILURE_RESPONSE: Record<DirectoryAuthenticationError["reason"], {
+  status: number;
+  code: string;
+  message: string;
+}> = {
+  "account-locked": {
+    status: 403,
+    code: "DIRECTORY_ACCOUNT_LOCKED",
+    message: "Your Windows account is locked. Contact IT support or wait for it to be unlocked.",
+  },
+  "account-disabled": {
+    status: 403,
+    code: "DIRECTORY_ACCOUNT_DISABLED",
+    message: "Your Windows account is disabled. Contact IT support.",
+  },
+  "account-expired": {
+    status: 403,
+    code: "DIRECTORY_ACCOUNT_EXPIRED",
+    message: "Your Windows account has expired. Contact IT support.",
+  },
+  "password-expired": {
+    status: 403,
+    code: "DIRECTORY_PASSWORD_EXPIRED",
+    message: "Your Windows password has expired. Change it, then try again.",
+  },
+  "password-change-required": {
+    status: 403,
+    code: "DIRECTORY_PASSWORD_CHANGE_REQUIRED",
+    message: "You must change your Windows password before signing in here.",
+  },
+  "account-restricted": {
+    status: 403,
+    code: "DIRECTORY_ACCOUNT_RESTRICTED",
+    message: "Your Windows account cannot sign in from this workstation or at this time. Contact IT support.",
+  },
+  "directory-unavailable": {
+    status: 503,
+    code: "DIRECTORY_UNAVAILABLE",
+    message: "The company sign-in service is unavailable. Try again shortly or contact IT support.",
+  },
+};
 
 const USERNAME_ALIASES: Record<string, string> = {
   admin: "DEV004",
@@ -106,7 +151,16 @@ async function authenticateAgainstDirectory(username: string, password: string):
   const failure = activeFailureEntry(key);
   if (failure?.lockedUntil) return null;
 
-  const verified = await verifyDirectoryCredentials(username, password);
+  let verified: boolean;
+  try {
+    verified = await verifyDirectoryCredentials(username, password);
+  } catch (error) {
+    const reason = error instanceof DirectoryAuthenticationError
+      ? error.reason
+      : "directory-unavailable";
+    const response = DIRECTORY_FAILURE_RESPONSE[reason];
+    throw new ApiError(response.status, response.code, response.message);
+  }
   if (!verified) {
     registerFailure(key);
     return null;

@@ -8,6 +8,12 @@ import "../styles/login.css";
 import { LoadingState } from "../components/ui/LoadingState";
 import { useDirectoryPasswordLogin, useWindowsAuthentication } from "../services/runtimeMode";
 
+const DIRECTORY_USERNAME_PREFIX = "EGAS\\";
+
+function accountNameWithoutDirectoryPrefix(value: string): string {
+  return value.replace(/^\s*EGAS[\\/]/i, "").replace(/^[\\/]+/, "");
+}
+
 export function LoginPage() {
   const navigate = useNavigate();
   const location = useLocation();
@@ -32,18 +38,25 @@ export function LoginPage() {
 
     // Normalize Arabic numerals to English digits
     const arabicNumerals = ["٠", "١", "٢", "٣", "٤", "٥", "٦", "٧", "٨", "٩"];
-    const normalizedUsername = employeeNumber
+    const normalizedAccountName = employeeNumber
       .trim()
       .toUpperCase()
       .replace(/[٠-٩]/g, (char: string) => {
         const index = arabicNumerals.indexOf(char);
         return index !== -1 ? String(index) : char;
       });
+    const normalizedUsername = useDirectoryPasswordLogin
+      ? `${DIRECTORY_USERNAME_PREFIX}${accountNameWithoutDirectoryPrefix(normalizedAccountName)}`
+      : normalizedAccountName;
 
     try {
       authenticatedUser = await login(normalizedUsername, password, remember);
     } catch (loginError) {
-      setError(localizeError(loginError, "Invalid employee number or password.", "رقم الموظف أو كلمة المرور غير صحيحة."));
+      setError(localizeError(
+        loginError,
+        "Sign-in could not be completed. Try again or contact IT support.",
+        "تعذر تسجيل الدخول. حاول مرة أخرى أو تواصل مع الدعم الفني.",
+      ));
       return;
     } finally {
       setSubmitting(false);
@@ -95,21 +108,46 @@ export function LoginPage() {
                 <label htmlFor="username">
                   {useDirectoryPasswordLogin ? tr("Windows Username", "اسم مستخدم الويندوز") : tr("Employee Number", "رقم الموظف")}
                 </label>
-                <input
-                  type="text"
-                  id="username"
-                  name="username"
-                  value={employeeNumber}
-                  onChange={(event) => {
-                    setEmployeeNumber(event.target.value);
-                    setError("");
-                  }}
-                  autoComplete="username"
-                  required
-                  placeholder={useDirectoryPasswordLogin
-                    ? tr("Enter your Windows username", "أدخل اسم مستخدم الويندوز الخاص بك")
-                    : tr("Enter your development employee number", "أدخل رقم الموظف الخاص ببيئة التطوير")}
-                />
+                {useDirectoryPasswordLogin ? (
+                  <>
+                    <div className="directory-username-field">
+                      <span className="directory-username-prefix" aria-hidden="true">{DIRECTORY_USERNAME_PREFIX}</span>
+                      <input
+                        type="text"
+                        id="username"
+                        name="username"
+                        value={employeeNumber}
+                        onChange={(event) => {
+                          setEmployeeNumber(accountNameWithoutDirectoryPrefix(event.target.value));
+                          setError("");
+                        }}
+                        autoComplete="username"
+                        aria-describedby="directory-username-help"
+                        required
+                        placeholder="username"
+                      />
+                    </div>
+                    <p id="directory-username-help" className="directory-username-help">
+                      {tr("Type only your Windows username after", "اكتب اسم مستخدم الويندوز فقط بعد")}{" "}
+                      <bdi dir="ltr">EGAS\</bdi>. {tr("Full example:", "مثال كامل:")}{" "}
+                      <bdi dir="ltr">EGAS\hmalek</bdi>
+                    </p>
+                  </>
+                ) : (
+                  <input
+                    type="text"
+                    id="username"
+                    name="username"
+                    value={employeeNumber}
+                    onChange={(event) => {
+                      setEmployeeNumber(event.target.value);
+                      setError("");
+                    }}
+                    autoComplete="username"
+                    required
+                    placeholder={tr("Enter your development employee number", "أدخل رقم الموظف الخاص ببيئة التطوير")}
+                  />
+                )}
               </div>
 
               <div className="form-group">

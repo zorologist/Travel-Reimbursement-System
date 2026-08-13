@@ -27,7 +27,16 @@ authRouter.post("/auth/login", async (request, response, next) => {
     }
     const input = LoginInputSchema.parse(request.body);
     const user = await authenticateCredentials(input.employeeNumber, input.password);
-    if (!user) throw new ApiError(401, "INVALID_CREDENTIALS", "The employee number or password is incorrect.");
+    if (!user) {
+      response.locals.loginCredentialFailure = true;
+      throw new ApiError(
+        401,
+        "INVALID_CREDENTIALS",
+        mode === "ldap"
+          ? "The Windows username or password is incorrect."
+          : "The employee number or password is incorrect.",
+      );
+    }
     const session = createSession(user, input.remember);
     response.setHeader("Set-Cookie", sessionCookie(session.token, input.remember));
     response.json({ user, csrfToken: session.csrfToken });
