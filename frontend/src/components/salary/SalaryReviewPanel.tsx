@@ -134,7 +134,16 @@ export function SalaryReviewPanel({
           <div><dt>{tr("Employee ID", "رقم الموظف")}</dt><dd>{request.employee.employeeNumber}</dd></div>
           <div><dt>{tr("Full name", "الاسم الكامل")}</dt><dd>{request.employee.displayName}</dd></div>
           <div><dt>{tr("Department", "القسم")}</dt><dd>{request.employee.department}</dd></div>
-          <div><dt>{tr("Job grade", "الدرجة الوظيفية")}</dt><dd>{localizeLabel(request.employee.jobLevel, language)}</dd></div>
+          <div><dt>{tr("Job grade (profile)", "الدرجة الوظيفية (الملف الشخصي)")}</dt><dd>{localizeLabel(request.employee.jobLevel, language)}</dd></div>
+          <div>
+            <dt>{tr("Job grade (declared on request)", "الدرجة الوظيفية (المعلنة في الطلب)")}</dt>
+            <dd className={request.submittedRequest.jobLevel !== request.employee.jobLevel ? "text-red-600 font-semibold" : undefined}>
+              {localizeLabel(request.submittedRequest.jobLevel, language)}
+              {request.submittedRequest.jobLevel !== request.employee.jobLevel && (
+                <> {tr("(differs from profile — verify before finalizing)", "(يختلف عن الملف الشخصي — يرجى التحقق قبل الإنهاء)")}</>
+              )}
+            </dd>
+          </div>
           <div>
             <dt>{tr("Destination", "الوجهة")}</dt>
             <dd>

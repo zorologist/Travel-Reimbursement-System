@@ -2,10 +2,11 @@ import { Client } from "ldapts";
 
 import { directoryConfig } from "./directoryConfig.js";
 
-function toUserPrincipalName(username: string, domain: string): string {
+export function toUserPrincipalName(username: string, domain: string): string {
   const trimmed = username.trim();
   if (trimmed.includes("@")) return trimmed;
-  const accountName = trimmed.includes("\\") ? trimmed.split("\\").at(-1)! : trimmed;
+  // Accept either slash direction - people mix these up constantly by hand.
+  const accountName = /[\\/]/.test(trimmed) ? trimmed.split(/[\\/]/).at(-1)! : trimmed;
   return `${accountName}@${domain}`;
 }
 

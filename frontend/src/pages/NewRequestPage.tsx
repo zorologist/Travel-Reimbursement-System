@@ -1,9 +1,13 @@
 import { useEffect, useState, type ChangeEvent, type FormEvent } from "react";
 import { useNavigate } from "react-router-dom";
-import { earliestTravelDateInputValue, type AccommodationType } from "@travel-reimbursement/shared";
+import {
+  earliestTravelDateInputValue,
+  JOB_LEVEL_OPTIONS,
+  type AccommodationType,
+  type JobLevel,
+} from "@travel-reimbursement/shared";
 
 import { useRequests } from "../hooks/useRequests";
-import { useAuth } from "../hooks/useAuth";
 import { useLanguage } from "../hooks/useLanguage";
 import { accommodationOptions } from "../constants/accommodationOptions";
 import { transportationOptions } from "../constants/transportationOptions";
@@ -11,6 +15,7 @@ import api from "../services/api";
 import { developmentEmployees } from "../services/developmentRepository";
 import { useDevelopmentRepository } from "../services/runtimeMode";
 import type { RequestAttachment, TravelRequestData } from "../services/requestApi";
+import { randomId } from "../utils/randomId";
 import "../styles/newRequest.css";
 
 const MAX_ATTACHMENT_SIZE = 5 * 1024 * 1024;
@@ -36,7 +41,7 @@ function readAttachment(file: File): Promise<RequestAttachment> {
     const reader = new FileReader();
     reader.onerror = () => reject(new Error("تعذر قراءة الملف المرفق. يرجى اختيار ملف آخر."));
     reader.onload = () => resolve({
-      id: crypto.randomUUID(),
+      id: randomId(),
       name: file.name,
       mimeType: file.type || "application/octet-stream",
       size: file.size,
@@ -49,13 +54,13 @@ function readAttachment(file: File): Promise<RequestAttachment> {
 export default function NewRequestPage() {
   const navigate = useNavigate();
   const { direction, language, localizeError, tr } = useLanguage();
-  const { user } = useAuth();
   const { addRequest, loading, error } = useRequests();
   const [localError, setLocalError] = useState<string | null>(null);
   const [attachments, setAttachments] = useState<File[]>([]);
   const [managers, setManagers] = useState<ManagerOption[]>([]);
   const earliestAllowedTravelDate = earliestTravelDateInputValue();
   const [form, setForm] = useState({
+    jobLevel: "" as JobLevel | "",
     travelFrom: "",
     travelTo: "",
     startDate: "",
@@ -141,6 +146,10 @@ export default function NewRequestPage() {
       setLocalError(tr("Please select the manager who should review this request.", "يرجى اختيار المدير الذي سيراجع هذا الطلب."));
       return;
     }
+    if (!form.jobLevel) {
+      setLocalError(tr("Please select your job level.", "يرجى اختيار المستوى الوظيفي."));
+      return;
+    }
     if (!form.travelFrom || !form.travelTo) {
       setLocalError(tr("Please select both departure and destination cities.", "يرجى اختيار مدينة الانطلاق ومدينة الوجهة."));
       return;
@@ -179,6 +188,7 @@ export default function NewRequestPage() {
         returnAt: new Date(`${requestReturnDate}T${requestReturnTime}`).toISOString(),
         tripType: form.tripType,
         managerId: form.managerId,
+        jobLevel: form.jobLevel,
         transportationMethod: transportationOptions.find((option) => option.formValue === form.transport)?.value ?? "Company Car",
         transportationCost: form.ticketAmount ? Number(form.ticketAmount) : 0,
         accommodationType: form.accommodation,
@@ -239,15 +249,23 @@ export default function NewRequestPage() {
           <legend className="text-xs font-semibold text-gray-400 tracking-wider mb-4 px-2">{tr("Employee level, Manager & trip type", "المستوى الوظيفي والمدير ونوع الرحلة")}</legend>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             <div>
-              <label htmlFor="job-level" className="block text-sm font-medium text-gray-700 mb-2">{tr("Job level", "المستوى الوظيفي")}</label>
-              <input
+              <label htmlFor="job-level" className="block text-sm font-medium text-gray-700 mb-2">{tr("Job level", "المستوى الوظيفي")} *</label>
+              <select
                 id="job-level"
-                value={user?.jobLevel ?? ""}
-                className="w-full bg-gray-100 border border-gray-200 p-3 rounded-lg text-gray-700"
-                readOnly
-                aria-readonly="true"
-              />
-              <p className="text-xs text-gray-500 mt-1">{tr("Loaded from your employee profile.", "يتم تحميله من ملف الموظف.")}</p>
+                name="jobLevel"
+                value={form.jobLevel}
+                onChange={handleChange}
+                className="w-full bg-gray-50/50 border border-gray-200 p-3 rounded-lg text-gray-800 focus:bg-white focus:border-[#1E5A34] focus:outline-none transition-all"
+                required
+              >
+                <option value="">{tr("Select your job level", "اختر المستوى الوظيفي")}</option>
+                {JOB_LEVEL_OPTIONS.map((option) => (
+                  <option key={option.value} value={option.value}>
+                    {language === "ar" ? option.arabic : option.english}
+                  </option>
+                ))}
+              </select>
+              <p className="text-xs text-gray-500 mt-1">{tr("Choose the level that applies to this request. It will be reviewed later.", "اختر المستوى المطبق على هذا الطلب، وسيتم مراجعته لاحقاً.")}</p>
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">{tr("Select manager to review", "اختر المدير المسؤول")} *</label>

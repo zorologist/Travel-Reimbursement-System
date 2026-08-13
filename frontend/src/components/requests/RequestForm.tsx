@@ -1,5 +1,5 @@
 import { useState, type FormEvent } from "react";
-import type { AccommodationType } from "@travel-reimbursement/shared";
+import { JOB_LEVEL_OPTIONS, type AccommodationType, type JobLevel } from "@travel-reimbursement/shared";
 
 import type { TravelRequestData } from "../../services/requestApi";
 import { useLanguage } from "../../hooks/useLanguage";
@@ -11,12 +11,13 @@ const cities = ["Cairo", "Alexandria", "Giza", "Suez", "Ismailia", "Port Said", 
 
 export function RequestForm({ busy, onSubmit }: { busy: boolean; onSubmit: (input: TravelRequestData) => Promise<void> }) {
   const { language, tr } = useLanguage();
-  const [form, setForm] = useState({ originCity: "Cairo", destinationCity: "", departureAt: "", returnAt: "", transportationMethod: "Company car", transportationCost: "0", accommodationType: "none" as AccommodationType, notes: "" });
+  const [form, setForm] = useState({ jobLevel: "" as JobLevel | "", originCity: "Cairo", destinationCity: "", departureAt: "", returnAt: "", transportationMethod: "Company car", transportationCost: "0", accommodationType: "none" as AccommodationType, notes: "" });
   function change(name: keyof typeof form, value: string) { setForm((current) => ({ ...current, [name]: value })); }
-  async function submit(event: FormEvent<HTMLFormElement>) { event.preventDefault(); try { await onSubmit({ ...form, tripType: "round-trip", managerId: "u4", departureAt: new Date(form.departureAt).toISOString(), returnAt: new Date(form.returnAt).toISOString(), transportationCost: Number(form.transportationCost) }); } catch { /* The route displays the service error. */ } }
+  async function submit(event: FormEvent<HTMLFormElement>) { event.preventDefault(); if (!form.jobLevel) return; try { await onSubmit({ ...form, jobLevel: form.jobLevel, tripType: "round-trip", managerId: "u4", departureAt: new Date(form.departureAt).toISOString(), returnAt: new Date(form.returnAt).toISOString(), transportationCost: Number(form.transportationCost) }); } catch { /* The route displays the service error. */ } }
 
   return <form className="request-form-card" onSubmit={(event) => void submit(event)}><div className="request-card-line" /><div className="request-card-body">
     <section className="request-form-section"><h2>{tr("Route and schedule", "المسار والمواعيد")}</h2><div className="request-form-grid request-grid-two">
+      <label className="request-form-group"><span>{tr("Job level", "المستوى الوظيفي")}</span><select required value={form.jobLevel} onChange={(event) => change("jobLevel", event.target.value)}><option value="">{tr("Select your job level", "اختر المستوى الوظيفي")}</option>{JOB_LEVEL_OPTIONS.map((option) => <option key={option.value} value={option.value}>{language === "ar" ? option.arabic : option.english}</option>)}</select></label>
       <label className="request-form-group"><span>{tr("Travel from", "السفر من")}</span><select value={form.originCity} onChange={(event) => change("originCity", event.target.value)}>{cities.map((city) => <option key={city} value={city}>{localizeLabel(city, language)}</option>)}</select></label>
       <label className="request-form-group"><span>{tr("Destination", "الوجهة")}</span><select required value={form.destinationCity} onChange={(event) => change("destinationCity", event.target.value)}><option value="">{tr("Select a city", "اختر مدينة")}</option>{cities.map((city) => <option key={city} value={city}>{localizeLabel(city, language)}</option>)}</select></label>
       <label className="request-form-group"><span>{tr("Departure", "الذهاب")}</span><input required type="datetime-local" value={form.departureAt} onChange={(event) => change("departureAt", event.target.value)} /></label>

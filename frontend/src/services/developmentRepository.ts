@@ -43,6 +43,7 @@ export interface DevelopmentRequest extends TravelRequest {
 
 export interface CreateDevelopmentRequestInput {
   employeeId: string;
+  jobLevel: JobLevel;
   originCity: string;
   destinationCity: string;
   departureAt: string;
@@ -248,6 +249,7 @@ function buildSeed(input: SeedInput): DevelopmentRequest {
       returnAt: input.returnAt,
       tripType: input.tripType ?? "round-trip",
       managerId: input.managerId ?? ROLE_ACTOR.manager,
+      jobLevel: employee.jobLevel,
       accommodationType: input.accommodationType,
       transportationMethod: input.transportationMethod,
       claimedTransportationCost: input.transportationCost,

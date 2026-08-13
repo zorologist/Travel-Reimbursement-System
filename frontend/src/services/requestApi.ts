@@ -4,6 +4,7 @@ import type {
   PriceRevision,
   WorkflowStage,
   RequestAttachment,
+  JobLevel,
 } from "@travel-reimbursement/shared";
 
 import api, { ApiClientError } from "./api";
@@ -23,6 +24,7 @@ export interface TravelRequestData {
   returnAt: string;
   tripType: "one-way" | "round-trip";
   managerId: string;
+  jobLevel: JobLevel;
   accommodationType: AccommodationType;
   transportationMethod: string;
   transportationCost?: number;
@@ -77,6 +79,7 @@ export interface RequestDetailsResponse extends RequestResponse {
     employeeNumber: string;
     displayName: string;
     department: string;
+    jobLevel: JobLevel;
   };
   auditEvents: AuditEvent[];
 }
@@ -120,6 +123,7 @@ function publicRequest(record: DevelopmentRequest): RequestDetailsResponse {
       employeeNumber: record.employee.employeeNumber,
       displayName: record.employee.displayName,
       department: record.employee.department,
+      jobLevel: record.employee.jobLevel,
     },
     originCity: record.originCity,
     destinationCity: record.destinationCity,
@@ -174,7 +178,7 @@ export function mapBackendRequest(view: BackendRequestView): RequestDetailsRespo
   return {
     id: view.id,
     employeeId: view.employeeId,
-    employee: view.employee ?? { employeeNumber: view.employeeId, displayName: "Employee", department: "Unknown" },
+    employee: view.employee ?? { employeeNumber: view.employeeId, displayName: "Employee", department: "Unknown", jobLevel: "Level 1" },
     originCity: view.originCity,
     destinationCity: view.destinationCity,
     departureAt: view.departureAt,

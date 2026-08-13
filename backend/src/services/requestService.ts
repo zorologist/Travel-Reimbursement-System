@@ -1,5 +1,6 @@
 import {
   getTangoFare,
+  getTrainFare,
   isWithinTravelSubmissionWindow,
   type CreateTravelRequestInput,
   type TravelRequest,
@@ -23,7 +24,10 @@ export async function createNewRequest(
   user: User,
   requestId?: string,
 ): Promise<TravelRequest> {
-  const { jobLevel: _untrustedJobLevel, ...trustedInput } = input;
+  const { jobLevel, ...trustedInput } = input;
+  if (!jobLevel) {
+    throw new WorkflowServiceError("INVALID_EDIT_FIELDS", "A job level must be selected for the request.");
+  }
   const now = new Date();
   if (!isWithinTravelSubmissionWindow(trustedInput.departureAt, now)) {
     throw new WorkflowServiceError("INVALID_DATE", "A request cannot be submitted for a trip that took place more than one month in the past.");
@@ -36,20 +40,27 @@ export async function createNewRequest(
 
   // PDF Item 5 & 6: Auto calculate Tango fare for Employee's Private Car when amount is omitted.
   const isPersonalCar = trustedInput.transportationMethod.includes("personal-car") || trustedInput.transportationMethod.includes("Private Car") || trustedInput.transportationMethod.includes("العامل");
+  const isCompanyCar = trustedInput.transportationMethod.includes("company-car") || trustedInput.transportationMethod.includes("Company Car") || trustedInput.transportationMethod.includes("سيارة الشركة");
   let claimedCost = trustedInput.claimedTransportationCost ?? 0;
   if (isPersonalCar && claimedCost <= 0) {
     const tangoFare = getTangoFare(trustedInput.destinationCity);
     claimedCost = trustedInput.tripType === "round-trip" ? tangoFare * 2 : tangoFare;
+  } else if (isCompanyCar && claimedCost <= 0) {
+    const trainFare = getTrainFare(trustedInput.destinationCity);
+    if (trainFare !== null) {
+      claimedCost = trustedInput.tripType === "round-trip" ? trainFare * 2 : trainFare;
+    }
   }
 
   // One-way trips must still provide a returnAt for schema compatibility, but the
   // salary preview only cares about the departure date — keep both timestamps.
   const id = requestId ?? standaloneRequestId(now);
+  const employeeAtSubmission: User = { ...user, jobLevel };
   const salaryPreview = computeInitialSalaryPreview(
     trustedInput.departureAt,
     trustedInput.returnAt,
     trustedInput.accommodationType,
-    user,
+    employeeAtSubmission,
   );
   const submitEvent = createAuditEvent(
     id,
@@ -58,7 +69,11 @@ export async function createNewRequest(
     "submit",
     null,
     "manager-review",
-    { managerId: { before: null, after: manager.id }, tripType: { before: null, after: trustedInput.tripType } },
+    {
+      managerId: { before: null, after: manager.id },
+      tripType: { before: null, after: trustedInput.tripType },
+      jobLevel: { before: null, after: jobLevel },
+    },
     null,
     { now },
   );
@@ -89,6 +104,6 @@ export async function createNewRequest(
     createdAt: now.toISOString(),
     updatedAt: now.toISOString(),
     auditEvents: [submitEvent],
-    submittedRequest: structuredClone({ ...trustedInput, jobLevel: user.jobLevel }),
+    submittedRequest: structuredClone({ ...trustedInput, jobLevel }),
   };
 }

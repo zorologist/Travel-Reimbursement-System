@@ -48,6 +48,7 @@ export const DepartmentReviewPanel: React.FC<Props> = ({ request, onAction }) =>
       <section className="request-info">
         <p><strong>{tr("Employee", "الموظف")}:</strong> {request.employeeName} ({request.employeeNumber})</p>
         <p><strong>{tr("Department", "القسم")}:</strong> {request.department}</p>
+        <p><strong>{tr("Selected job level", "المستوى الوظيفي المختار")}:</strong> {localizeLabel(request.employeeJobLevel, language)}</p>
         <p><strong>{tr("Route", "المسار")}:</strong> {localizeLabel(details.originCity ?? "Cairo", language)} → {localizeLabel(details.destinationCity ?? "", language)}</p>
         <p><strong>{tr("Trip type", "نوع الرحلة")}:</strong> {details.tripType === "one-way" ? tr("One way", "اتجاه واحد") : tr("Round trip", "ذهاب وعودة")}</p>
         <p><strong>{tr("Departure", "الذهاب")}:</strong> {formatDateTime(details.departureAt ?? "", language)}</p>

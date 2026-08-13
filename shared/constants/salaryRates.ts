@@ -23,12 +23,17 @@ export interface JobLevelOption {
 }
 
 export const JOB_LEVEL_OPTIONS: readonly JobLevelOption[] = [
+  { value: "Chairman", arabic: "رئيس مجلس الإدارة", english: "Chairman", dailyRate: 270 },
   { value: "Deputy", arabic: "نائب", english: "Deputy", dailyRate: 270 },
+  { value: "Advisor", arabic: "مستشار", english: "Advisor", dailyRate: 270 },
+  { value: "Expert", arabic: "خبير", english: "Expert", dailyRate: 270 },
   { value: "Assistant", arabic: "مساعد", english: "Assistant", dailyRate: 240 },
-  { value: "General Manager", arabic: "مدير عام و مساعد", english: "General Manager & Assistant", dailyRate: 200 },
-  { value: "Level 1", arabic: "مستوى اول", english: "Level 1", dailyRate: 140 },
-  { value: "Level 2", arabic: "مستوى ثاني", english: "Level 2", dailyRate: 110 },
-  { value: "Level 3", arabic: "مستوى ثالث", english: "Level 3", dailyRate: 60 },
+  { value: "Deputy Assistant", arabic: "مساعد نائب", english: "Deputy Assistant", dailyRate: 240 },
+  { value: "General Manager", arabic: "مدير عام", english: "General Manager", dailyRate: 200 },
+  { value: "Assistant General Manager", arabic: "مدير عام مساعد", english: "Assistant General Manager", dailyRate: 200 },
+  { value: "Level 1", arabic: "المستوى الأول", english: "Level 1", dailyRate: 140 },
+  { value: "Level 2", arabic: "المستوى الثاني", english: "Level 2", dailyRate: 110 },
+  { value: "Level 3", arabic: "المستوى الثالث", english: "Level 3", dailyRate: 60 },
 ] as const;
 
 export const ACCOMMODATION_FACTORS: Record<AccommodationType, number> = {

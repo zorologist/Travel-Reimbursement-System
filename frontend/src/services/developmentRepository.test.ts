@@ -7,8 +7,11 @@ beforeEach(() => resetDevelopmentRepositoryForTests());
 describe("integrated frontend development repository", () => {
   it("creates an employee request at manager review with an audit event", async () => {
     const attachment = { id: "receipt-1", name: "receipt.jpg", mimeType: "image/jpeg", size: 512, url: "data:image/jpeg;base64,AA==" };
-    const created = await developmentRepository.create({ employeeId: "u1", originCity: "Cairo", destinationCity: "Suez", departureAt: "2026-09-01T06:00:00.000Z", returnAt: "2026-09-02T17:00:00.000Z", accommodationType: "none", transportationMethod: "Company car", transportationCost: 120, notes: "Site visit", attachments: [attachment] });
+    const created = await developmentRepository.create({ employeeId: "u1", jobLevel: "Chairman", originCity: "Cairo", destinationCity: "Suez", departureAt: "2026-09-01T06:00:00.000Z", returnAt: "2026-09-02T17:00:00.000Z", accommodationType: "none", transportationMethod: "Company car", transportationCost: 120, notes: "Site visit", attachments: [attachment] });
     expect(created).toMatchObject({ employeeId: "u1", stage: "manager-review", originCity: "Cairo", destinationCity: "Suez" });
+    expect(created.employee.jobLevel).toBe("Chairman");
+    expect(created.submittedRequest.jobLevel).toBe("Chairman");
+    expect(created.salaryPreview.dailyRate).toBe(270);
     expect(created.attachments).toEqual([attachment]);
     expect(created.auditEvents.at(-1)).toMatchObject({ action: "submit", actorRole: "employee" });
   });
@@ -16,6 +19,7 @@ describe("integrated frontend development repository", () => {
   it("allows company transportation without an attachment", async () => {
     const created = await developmentRepository.create({
       employeeId: "u1",
+      jobLevel: "Level 1",
       originCity: "Cairo",
       destinationCity: "Suez",
       departureAt: "2026-09-01T06:00:00.000Z",

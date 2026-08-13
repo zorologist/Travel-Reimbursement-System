@@ -10,6 +10,7 @@ const validRequest = {
   returnAt: "2027-04-03T18:00:00.000Z",
   tripType: "round-trip" as const,
   managerId: "u4",
+  jobLevel: "Level 1",
   accommodationType: "none",
   transportationMethod: "Company bus",
   notes: "Operational site visit.",
@@ -41,13 +42,41 @@ describe("request lifecycle HTTP API", () => {
     expect(response.body.request.salaryPreview).toBeUndefined();
   });
 
-  it("rejects an employee-supplied job level", async () => {
-    const response = await request(app)
+  it("uses the selected job level for the immutable request snapshot and calculation", async () => {
+    const createResponse = await request(app)
       .post("/api/requests")
       .set(as("DEV001"))
       .send({ ...validRequest, jobLevel: "Chairman" });
-    expect(response.status).toBe(400);
-    expect(response.body.error.code).toBe("VALIDATION_ERROR");
+    expect(createResponse.status).toBe(201);
+
+    const queueResponse = await request(app)
+      .get("/api/requests?scope=queue")
+      .set(as("DEV004"));
+    expect(queueResponse.status).toBe(200);
+    const created = queueResponse.body.requests.find((item: { id: string }) => item.id === createResponse.body.request.id);
+    // employee.jobLevel stays the employee's real stored profile level (so reviewers
+    // can compare it against what was declared); submittedRequest.jobLevel is what
+    // they actually selected on this request, and that's what the payout uses.
+    expect(created.employee.jobLevel).toBe("Level 1");
+    expect(created.submittedRequest.jobLevel).toBe("Chairman");
+    expect(created.salaryPreview.dailyRate).toBe(270);
+  });
+
+  it("rejects a missing or invalid job-level selection", async () => {
+    const { jobLevel: _jobLevel, ...withoutJobLevel } = validRequest;
+    const missing = await request(app)
+      .post("/api/requests")
+      .set(as("DEV001"))
+      .send(withoutJobLevel);
+    expect(missing.status).toBe(400);
+    expect(missing.body.error.code).toBe("VALIDATION_ERROR");
+
+    const invalid = await request(app)
+      .post("/api/requests")
+      .set(as("DEV001"))
+      .send({ ...validRequest, jobLevel: "CEO of Everything" });
+    expect(invalid.status).toBe(400);
+    expect(invalid.body.error.code).toBe("VALIDATION_ERROR");
   });
 
   it("validates required fields and travel date order", async () => {

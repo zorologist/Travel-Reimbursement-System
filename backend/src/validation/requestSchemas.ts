@@ -1,12 +1,13 @@
 import {
   AccommodationTypeSchema,
   CreateTravelRequestInputSchema,
+  JobLevelSchema,
 } from "@travel-reimbursement/shared";
 import { z } from "zod";
 
 export const CreateRequestBodySchema = CreateTravelRequestInputSchema
   .safeExtend({
-    jobLevel: z.never().optional(),
+    jobLevel: JobLevelSchema,
     destinationCity: z.string().trim().min(1, "Destination city is required.").max(100),
     transportationMethod: z.string().trim().min(1, "Transportation method is required.").max(200),
     notes: z.string().trim().min(1, "The mission purpose is required.").max(1000),

@@ -18,6 +18,12 @@ import { requestLogging } from "./middleware/requestLogging.js";
 
 export const app = express();
 
+// Node only ever binds to loopback (enforced in production - see runtimeValidation.ts),
+// so the only thing that can connect directly is IIS/ARR on the same machine. Trusting
+// the X-Forwarded-* headers from loopback lets rate-limiting and logging see the real
+// client IP instead of treating every request as coming from IIS itself.
+app.set("trust proxy", "loopback");
+
 const configuredOrigins = (process.env.ALLOWED_ORIGINS ?? "")
   .split(",")
   .map((origin) => origin.trim())

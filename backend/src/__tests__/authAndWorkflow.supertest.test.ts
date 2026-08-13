@@ -88,6 +88,7 @@ describe("complete workflow HTTP journey", () => {
     const created = await request(app).post("/api/requests").set(as("DEV001")).send({
       destinationCity: "Suez", departureAt, returnAt: departureAt,
       tripType: "one-way", managerId: "u4", accommodationType: "none",
+      jobLevel: "Level 1",
       transportationMethod: "Train",
       notes: "One-way operational visit.",
       attachments: [{ id: "one-way-ticket", name: "ticket.jpg", mimeType: "image/jpeg", size: 4, url: "data:image/jpeg;base64,AA==" }],

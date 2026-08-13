@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import type { CreateTravelRequestInput, User } from "@travel-reimbursement/shared";
 
 import { createNewRequest } from "../services/requestService.js";
+import { recalculateSalaryPreview } from "../services/salaryService.js";
 
 const employee: User = {
   id: "employee-test",
@@ -18,6 +19,7 @@ const input: CreateTravelRequestInput = {
   returnAt: "2027-03-03T18:00:00.000Z",
   tripType: "round-trip",
   managerId: "u4",
+  jobLevel: "Level 1",
   accommodationType: "none",
   transportationMethod: "Company bus",
   attachments: [{ id: "ticket-1", name: "ticket.jpg", mimeType: "image/jpeg", size: 4, url: "data:image/jpeg;base64,AA==" }],
@@ -51,11 +53,18 @@ describe("request lifecycle creation service", () => {
     expect(request.auditEvents[0].actorRole).toBe("employee");
   });
 
-  it("uses and snapshots the trusted employee profile job level", async () => {
+  it("uses and snapshots the employee-selected job level", async () => {
     const request = await createNewRequest({ ...input, jobLevel: "Chairman" }, employee);
     expect(request.jobLevel).toBeUndefined();
-    expect(request.submittedRequest.jobLevel).toBe("Level 1");
-    expect(request.salaryPreview.dailyRate).toBe(140);
+    expect(request.submittedRequest.jobLevel).toBe("Chairman");
+    expect(request.salaryPreview.dailyRate).toBe(270);
+    expect(request.auditEvents[0].changes.jobLevel).toEqual({ before: null, after: "Chairman" });
+    expect(recalculateSalaryPreview(request, { ...employee, jobLevel: "Level 3" }).dailyRate).toBe(270);
+  });
+
+  it("requires an explicit job-level selection", async () => {
+    const { jobLevel: _jobLevel, ...withoutJobLevel } = input;
+    await expect(createNewRequest(withoutJobLevel, employee)).rejects.toThrow(/job level must be selected/i);
   });
 
   it("rejects requests created more than one month in the past", async () => {

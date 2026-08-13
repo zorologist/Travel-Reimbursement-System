@@ -160,6 +160,7 @@ export function RequestDetailsPage() {
             <InfoRow label={tr("Employee", "الموظف")} value={request.employee.displayName} />
             <InfoRow label={tr("Department", "القسم")} value={request.employee.department} />
             <InfoRow label={tr("Employee number", "رقم الموظف")} value={request.employee.employeeNumber} />
+            <InfoRow label={tr("Selected job level", "المستوى الوظيفي المختار")} value={localizeLabel(request.employee.jobLevel, language)} />
             <InfoRow label={tr("Request number", "رقم الطلب")} value={request.id} />
             <InfoRow label={tr("Trip type", "نوع الرحلة")} value={request.tripType === "one-way" ? tr("One way", "اتجاه واحد") : tr("Round trip", "ذهاب وعودة")} />
           </section>

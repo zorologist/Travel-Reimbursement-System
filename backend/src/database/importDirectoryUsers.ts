@@ -4,14 +4,10 @@ import { isAbsolute, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import type { PoolClient } from "pg";
 
+import { JOB_LEVEL_SET } from "../data/jobLevels.js";
 import { requireDatabaseConfig } from "./config.js";
 import { createDatabasePool } from "./pool.js";
 
-const JOB_LEVELS = new Set([
-  "Chairman", "Deputy", "Advisor", "Expert", "Assistant",
-  "Deputy Assistant", "General Manager", "Assistant General Manager",
-  "Level 1", "Level 2", "Level 3",
-]);
 const ROLES = new Set(["employee", "manager", "pr", "transportation", "timing", "salary"]);
 const REQUIRED_HEADERS = [
   "windows_username", "user_principal_name", "employee_number", "display_name",
@@ -87,7 +83,7 @@ function parseUsers(text: string): ImportedUser[] {
     const roles = required(get("roles"), "roles", line)
       .split("|").map((role) => role.trim().toLowerCase()).filter(Boolean);
     const activeText = required(get("active"), "active", line).toLowerCase();
-    if (!JOB_LEVELS.has(jobLevel)) throw new Error(`Line ${line}: invalid job_level '${jobLevel}'.`);
+    if (!JOB_LEVEL_SET.has(jobLevel)) throw new Error(`Line ${line}: invalid job_level '${jobLevel}'.`);
     if (roles.length === 0 || roles.some((role) => !ROLES.has(role))) {
       throw new Error(`Line ${line}: roles must use employee|manager|pr|transportation|timing|salary.`);
     }

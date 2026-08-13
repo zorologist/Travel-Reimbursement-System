@@ -17,7 +17,9 @@
     "db:check": "tsx --env-file=../.env src/database/check.ts",
     "db:check:prod": "node --env-file=../.env dist/database/check.js",
     "db:check-write:prod": "node --env-file=../.env dist/database/checkStorageWrite.js",
-    "db:import-users:prod": "node --env-file=../.env dist/database/importDirectoryUsers.js"
+    "db:import-users:prod": "node --env-file=../.env dist/database/importDirectoryUsers.js",
+    "db:inspect-ldap-user:prod": "node --env-file=../.env dist/database/inspectDirectoryUser.js",
+    "db:sync-directory-users:prod": "node --env-file=../.env dist/database/syncDirectoryUsers.js"
   },
   "dependencies": {
     "@travel-reimbursement/shared": "1.0.0",

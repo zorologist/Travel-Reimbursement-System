@@ -232,6 +232,10 @@ export class PostgresStore implements StorageInterface {
       FROM users u LEFT JOIN user_roles ur ON ur.user_id = u.id
       WHERE u.active = true AND (
         upper(u.windows_username) IN (upper($1), upper($2))
+        OR upper(CASE WHEN position('\' in u.windows_username) > 0
+            THEN split_part(u.windows_username, '\', 2)
+            ELSE u.windows_username
+          END) = upper($2)
         OR upper(u.user_principal_name) = upper($1)
       )
       GROUP BY u.id`, [normalized, accountName]);
