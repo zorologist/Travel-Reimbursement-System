@@ -1,7 +1,7 @@
 // Express middleware and API routes are assembled here separately from starting the HTTP server.
 import cors from "cors";
 import express from "express";
-import rateLimit from "express-rate-limit";
+import rateLimit, { ipKeyGenerator } from "express-rate-limit";
 import helmet from "helmet";
 import { existsSync } from "node:fs";
 import { fileURLToPath } from "node:url";
@@ -35,6 +35,13 @@ const allowedOrigins = new Set(
       ? []
       : ["http://localhost:5173", "http://127.0.0.1:5173"],
 );
+
+function loginAccountKey(value: unknown): string {
+  if (typeof value !== "string") return "";
+  const normalized = value.trim().toLowerCase();
+  const accountName = normalized.split(/[\\/]/).at(-1) ?? normalized;
+  return accountName.split("@")[0] ?? accountName;
+}
 
 app.use(requestLogging);
 app.use(
@@ -81,8 +88,13 @@ app.use("/api", rateLimit({
   },
 }));
 app.use("/api/auth/login", rateLimit({
-  windowMs: 15 * 60 * 1000,
+  windowMs: 5 * 60 * 1000,
   limit: 5,
+  keyGenerator(request) {
+    const account = loginAccountKey(request.body?.employeeNumber);
+    return account ? `login:${account}` : `invalid:${ipKeyGenerator(request.ip ?? "")}`;
+  },
+  skipSuccessfulRequests: true,
   standardHeaders: "draft-8",
   legacyHeaders: false,
   message: {

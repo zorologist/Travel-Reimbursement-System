@@ -23,12 +23,17 @@ describe("authentication security controls", () => {
   });
 
   it("locks an account after five failed attempts", async () => {
+    vi.useFakeTimers({ toFake: ["Date"] });
     for (let attempt = 0; attempt < 5; attempt += 1) {
       expect(await authenticateCredentials("DEV004", "incorrect password")).toBeNull();
     }
     expect(
       await authenticateCredentials("DEV004", "Admin@123"),
     ).toBeNull();
+
+    vi.advanceTimersByTime(5 * 60 * 1000 + 1);
+    await expect(authenticateCredentials("DEV004", "Admin@123"))
+      .resolves.toMatchObject({ employeeNumber: "DEV004" });
   }, 15_000);
 
   it("can disable all development accounts for the published deployment", async () => {

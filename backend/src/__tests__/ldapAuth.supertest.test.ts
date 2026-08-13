@@ -54,4 +54,34 @@ describe("LDAP-backed password login", () => {
     expect(response.status).toBe(403);
     expect(response.body.error.code).toBe("DIRECTORY_USER_NOT_REGISTERED");
   });
+
+  it("limits failed attempts per normalized AD user rather than shared proxy IP", async () => {
+    vi.spyOn(directoryAuth, "verifyDirectoryCredentials").mockResolvedValue(false);
+    const { app } = await import("../app.js");
+    const sameAccount = [
+      "rate-user",
+      "RATE-USER",
+      "EGAS\\rate-user",
+      "EGAS/rate-user",
+      "rate-user@EGAS.Local",
+    ];
+
+    for (const username of sameAccount) {
+      const failed = await request(app)
+        .post("/api/auth/login")
+        .send({ employeeNumber: username, password: "wrong", remember: false });
+      expect(failed.status).toBe(401);
+    }
+
+    const blocked = await request(app)
+      .post("/api/auth/login")
+      .send({ employeeNumber: "rate-user", password: "wrong", remember: false });
+    expect(blocked.status).toBe(429);
+    expect(blocked.body.error.code).toBe("TOO_MANY_ATTEMPTS");
+
+    const differentUser = await request(app)
+      .post("/api/auth/login")
+      .send({ employeeNumber: "another-user", password: "wrong", remember: false });
+    expect(differentUser.status).toBe(401);
+  });
 });
