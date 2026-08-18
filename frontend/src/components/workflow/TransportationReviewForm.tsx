@@ -15,7 +15,6 @@ function formatFileSize(size: number): string {
 export function TransportationReviewForm({ request, onAction }: { request: ApprovalQueueItem; onAction: (action: () => Promise<void>) => Promise<void> }) {
   const { language, tr } = useLanguage();
   const details = request.requestDetails;
-  const [destination, setDestination] = useState(details.destinationCity ?? "");
   const [method, setMethod] = useState(() => {
     const initial = details.transportationMethod ?? "";
     const match = transportationOptions.find((option) => option.value === initial || option.formValue === initial);
@@ -60,10 +59,6 @@ export function TransportationReviewForm({ request, onAction }: { request: Appro
         </div>
       )}
       <div className="form-group">
-        <label>{tr("Verified destination", "الوجهة المؤكدة")}</label>
-        <input value={destination} onChange={(event) => setDestination(event.target.value)} />
-      </div>
-      <div className="form-group">
         <label>{tr("Transportation method", "وسيلة الانتقال")}</label>
         <select value={method} onChange={(event) => setMethod(event.target.value)}>
           {transportationOptions.map((option) => (
@@ -80,7 +75,7 @@ export function TransportationReviewForm({ request, onAction }: { request: Appro
         <label htmlFor={`transport-comment-${request.id}`}>{tr("Transportation comment", "تعليق الانتقالات")}</label>
         <textarea id={`transport-comment-${request.id}`} rows={4} maxLength={1000} value={comment} onChange={(event) => setComment(event.target.value)} placeholder={tr("Add a review comment...", "أضف تعليق المراجعة...")} />
       </div>
-      <button className="btn-approve" type="button" onClick={() => void onAction(() => workflowApi.approve(request.id, { destination, method, reason: comment.trim() || tr("Destination and method verified.", "تم التحقق من الوجهة ووسيلة الانتقال.") }))}>
+      <button className="btn-approve" type="button" onClick={() => void onAction(() => workflowApi.approve(request.id, { method, reason: comment.trim() || tr("Transportation method verified.", "تم التحقق من وسيلة الانتقال.") }))}>
         {tr("Approve & Pass to Timing", "اعتماد وتحويل إلى المواعيد")}
       </button>
     </div>

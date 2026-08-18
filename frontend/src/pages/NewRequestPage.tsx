@@ -27,6 +27,20 @@ const governorates: Array<[string, string]> = [
   ["Port Said", "بورسعيد"], ["Damietta", "دمياط"], ["Dakahlia", "الدقهلية"], ["Sharqia", "الشرقية"], ["Qalyubia", "القليوبية"],
   ["Kafr El Sheikh", "كفر الشيخ"], ["Gharbia", "الغربية"], ["Monufia", "المنوفية"], ["Beheira", "البحيرة"], ["Fayoum", "الفيوم"],
   ["Beni Suef", "بني سويف"], ["Minya", "المنيا"], ["Assiut", "أسيوط"], ["Sohag", "سوهاج"], ["Qena", "قنا"], ["Luxor", "الأقصر"], ["Aswan", "أسوان"],
+  // Specific train stations from the ENR tariff sheet, listed alongside their governorate
+  // above (e.g. Tanta is a Gharbia station) since train fares are priced per station, not per governorate.
+  ["Benha", "بنها"], ["Qewaisna", "قويسنا"], ["Berket El Sabaa", "بركة السبع"], ["Tanta", "طنطا"],
+  ["Itay El Baroud", "إيتاي البارود"], ["Damanhur", "دمنهور"], ["Kafr El Zayat", "كفر الزيات"],
+  ["Mansoura", "المنصورة"], ["Samannoud", "سمنود"], ["El Mahalla El Kubra", "المحلة الكبرى"], ["Mahram Bek", "محرم بك"],
+  ["Borg El Arab", "برج العرب"], ["El Hammam", "الحمام"], ["El Alamein", "العلمين"], ["Sidi Abdel Rahman", "سيدي عبدالرحمن"],
+  ["El Dabaa", "الضبعة"], ["Marsa Matrouh", "مرسى مطروح"], ["El Tal El Kebir", "التل الكبير"], ["El Qantara Gharb", "القنطرة غرب"],
+  ["Fayed", "فايد"], ["Meniat El Qamh", "منية القمح"], ["Zagazig", "الزقازيق"], ["Zifta", "زفتى"],
+  ["El Qassassin", "القصاصين"], ["El Santa", "السنطة"], ["Qutur", "قطور"], ["Menouf", "منوف"], ["Ashmoun", "اشمون"],
+  ["Nag Hammadi", "نجع حمادى"], ["Edfu", "إدفو"], ["Kom Ombo", "كوم امبو"], ["Al Ayyat", "العياط"], ["El Wasta", "الواسطى"],
+  ["Beni Mazar", "بني مزار"], ["Matay", "مطاي"], ["Samalut", "سمالوط"], ["Malawi", "ملوي"], ["Dairut", "ديروط"],
+  ["El Qusiya", "القوصية"], ["Manfalut", "منفلوط"], ["Manqabad", "منقباد"], ["Abu Tig", "أبو تيج"], ["Sedfa", "صدفا"],
+  ["Tima", "طما"], ["Tahta", "طهطا"], ["El Maragha", "المراغة"], ["El Menshah", "المنشأة"], ["Girga", "جرجا"],
+  ["El Balyana", "البلينا"], ["Qift", "قفط"], ["Esna", "إسنا"], ["Kalabsha", "كلابشة"], ["Aswan High Dam", "السد العالي"],
 ];
 
 interface ManagerOption {

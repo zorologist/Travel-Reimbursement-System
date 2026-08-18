@@ -130,7 +130,7 @@ export function LoginPage() {
                     <p id="directory-username-help" className="directory-username-help">
                       {tr("Type only your Windows username after", "اكتب اسم مستخدم الويندوز فقط بعد")}{" "}
                       <bdi dir="ltr">EGAS\</bdi>. {tr("Full example:", "مثال كامل:")}{" "}
-                      <bdi dir="ltr">EGAS\hmalek</bdi>
+                      <bdi dir="ltr">EGAS\username</bdi>
                     </p>
                   </>
                 ) : (
