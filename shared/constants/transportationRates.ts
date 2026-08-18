@@ -78,8 +78,17 @@ export const TRAIN_FARES: Partial<Record<string, number>> = {
   "Port Said": 330,
 };
 
-/** Returns null (not a made-up default) when a city has no verified train fare yet. */
-export function getTrainFare(destinationCity?: string): number | null {
-  if (!destinationCity) return null;
-  return TRAIN_FARES[destinationCity] ?? null;
+/**
+ * Fallback one-way fare for a destination city with no tariff-sheet entry yet.
+ * Deliberately non-zero: leaving this at 0 was the exact bug where employees
+ * saw a $0 transportation cost for any city not yet in TRAIN_FARES. Payroll
+ * still re-enters and verifies the real ticket price before finalization
+ * (see transportationCostVerified), so this only affects the preview shown
+ * during review, never the amount actually paid.
+ */
+export const DEFAULT_TRAIN_FARE = 300;
+
+export function getTrainFare(destinationCity?: string): number {
+  if (!destinationCity) return DEFAULT_TRAIN_FARE;
+  return TRAIN_FARES[destinationCity] ?? DEFAULT_TRAIN_FARE;
 }

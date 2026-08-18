@@ -142,9 +142,6 @@ function approvalEdits(record: TravelRequest, role: SystemRole, input: ApprovalI
       verifiedReturnAt: returnAt,
       verifiedSameDayHours: sameDay ? qualifyingHours : 0,
       verifiedReturnDayHours: sameDay ? 0 : qualifyingHours,
-      // Flag for manager confirmation — the verified times need to be acknowledged by
-      // a manager before the request is considered fully verified.
-      timeNeedsVerification: true,
     };
   }
   throw new ApiError(409, "INVALID_TRANSITION", "Salary requests must be finalized from the Salary dashboard.");
@@ -255,9 +252,6 @@ export async function finalizeSalaryRequest(id: string, actor: User, note: strin
   if (role !== "salary") throw new ApiError(403, "FORBIDDEN", "Only Salary may finalize a request.");
   if (!record.transportationCostVerified) {
     throw new ApiError(409, "TICKET_PRICE_REQUIRED", "Payroll must enter and save the verified ticket price before finalization.");
-  }
-  if (record.timeNeedsVerification) {
-    throw new ApiError(409, "TIME_CONFIRMATION_REQUIRED", "The selected manager must confirm the verified times before Payroll finalization.");
   }
   const recalculated = { ...record, salaryPreview: recalculateSalaryPreview(record, await ownerOrThrow(record)) };
   const finalized = finalizeRequest(recalculated, actor.id, role, note.trim());

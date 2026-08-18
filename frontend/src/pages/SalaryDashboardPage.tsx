@@ -29,10 +29,17 @@ function initials(displayName: string): string {
     .join("");
 }
 
-/** Prevents commas/quotes and spreadsheet formulas from escaping a CSV cell. */
+/**
+ * Prevents commas/quotes and spreadsheet formulas from escaping a CSV cell.
+ * Also collapses any embedded newline in free-text fields (e.g. a multi-line
+ * note) to a space - a literal newline inside a quoted field is valid CSV,
+ * but Excel has misparsed it as a row break in practice, shifting every
+ * column after it and making the whole export look corrupted.
+ */
 export function safeCsvCell(value: string | number): string {
   if (typeof value === "number") return Number.isFinite(value) ? String(value) : "0";
-  const formulaSafe = /^[\s]*[=+\-@]/.test(value) ? `'${value}` : value;
+  const singleLine = value.replace(/\r\n|\r|\n/g, " ");
+  const formulaSafe = /^[\s]*[=+\-@]/.test(singleLine) ? `'${singleLine}` : singleLine;
   return `"${formulaSafe.replace(/"/g, '""')}"`;
 }
 
@@ -97,7 +104,11 @@ function exportToExcel(items: SalaryQueueItem[]) {
     csvRows.push(row.join(","));
   });
 
-  const blob = new Blob(["\uFEFF" + csvRows.join("\n")], { type: "text/csv;charset=utf-8;" });
+  // CRLF row endings (not bare \n) - the RFC4180-correct separator. A bare \n
+  // is ambiguous with a newline embedded inside a quoted multi-line note
+  // field, which is the likelier cause of "garbled"-looking exports than the
+  // UTF-8 BOM below (already present, and correct on its own).
+  const blob = new Blob(["\uFEFF" + csvRows.join("\r\n")], { type: "text/csv;charset=utf-8;" });
   const url = URL.createObjectURL(blob);
   const link = document.createElement("a");
   link.setAttribute("href", url);

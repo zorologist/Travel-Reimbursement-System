@@ -47,9 +47,7 @@ export async function createNewRequest(
     claimedCost = trustedInput.tripType === "round-trip" ? tangoFare * 2 : tangoFare;
   } else if (isCompanyCar && claimedCost <= 0) {
     const trainFare = getTrainFare(trustedInput.destinationCity);
-    if (trainFare !== null) {
-      claimedCost = trustedInput.tripType === "round-trip" ? trainFare * 2 : trainFare;
-    }
+    claimedCost = trustedInput.tripType === "round-trip" ? trainFare * 2 : trainFare;
   }
 
   // One-way trips must still provide a returnAt for schema compatibility, but the

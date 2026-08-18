@@ -139,15 +139,7 @@ describe("complete workflow HTTP journey", () => {
     expect(ownerBefore.body.request.salaryPreview).toBeUndefined();
     expect(ownerBefore.body.request.finalSalary).toBeUndefined();
 
-    const confirmationRequired = await request(app).post("/api/requests/TR-2026-001/finalize").set(as("DEV008")).send({ note: "Final amount checked and approved." });
-    expect(confirmationRequired.status).toBe(409);
-    expect(confirmationRequired.body.error.code).toBe("TIME_CONFIRMATION_REQUIRED");
-
-    const managerConfirmation = await request(app).patch("/api/requests/TR-2026-001/review").set(as("DEV004")).send({ timeNeedsVerification: false, note: "Verified times confirmed." });
-    expect(managerConfirmation.status).toBe(200);
-    expect(managerConfirmation.body.request.timeNeedsVerification).toBe(false);
-
-    const finalized = await request(app).post("/api/requests/TR-2026-001/finalize").set(as("DEV008")).send({});
+    const finalized = await request(app).post("/api/requests/TR-2026-001/finalize").set(as("DEV008")).send({ note: "Final amount checked and approved." });
     expect(finalized.status, JSON.stringify(finalized.body)).toBe(200);
     expect(finalized.body.request.stage).toBe("completed");
     expect(finalized.body.request.finalSalary.totalAmount).toBe(finalized.body.request.salaryPreview.totalAmount);

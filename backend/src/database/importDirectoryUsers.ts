@@ -2,11 +2,28 @@ import { randomUUID } from "node:crypto";
 import { readFile } from "node:fs/promises";
 import { isAbsolute, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
+import iconv from "iconv-lite";
 import type { PoolClient } from "pg";
 
 import { JOB_LEVEL_SET } from "../data/jobLevels.js";
 import { requireDatabaseConfig } from "./config.js";
 import { createDatabasePool } from "./pool.js";
+
+/**
+ * Excel's classic "CSV (Comma delimited)" save option (as opposed to the
+ * newer explicit "CSV UTF-8" option) writes the file in the system's legacy
+ * ANSI codepage, not UTF-8 - on an Arabic-locale Windows PC that's
+ * Windows-1256. Reading that as UTF-8 turns every Arabic name into mojibake.
+ * A genuine UTF-8 file (including ones this tool or Excel's "CSV UTF-8"
+ * option produces) starts with a BOM; anything without one is treated as
+ * Windows-1256, which is the far more common real-world case for Arabic
+ * spreadsheets exported this way.
+ */
+function decodeCsvBuffer(buffer: Buffer): string {
+  const hasUtf8Bom = buffer.length >= 3 && buffer[0] === 0xef && buffer[1] === 0xbb && buffer[2] === 0xbf;
+  if (hasUtf8Bom) return buffer.subarray(3).toString("utf8");
+  return iconv.decode(buffer, "win1256");
+}
 
 const ROLES = new Set(["employee", "manager", "pr", "transportation", "timing", "salary"]);
 const REQUIRED_HEADERS = [
@@ -166,14 +183,14 @@ if (disableMissing && !apply) {
 
 const projectRoot = fileURLToPath(new URL("../../../", import.meta.url));
 const suppliedPath = isAbsolute(csvPath) ? csvPath : resolve(process.cwd(), csvPath);
-let csvText: string;
+let csvBuffer: Buffer;
 try {
-  csvText = await readFile(suppliedPath, "utf8");
+  csvBuffer = await readFile(suppliedPath);
 } catch (error) {
   if (isAbsolute(csvPath)) throw error;
-  csvText = await readFile(resolve(projectRoot, csvPath), "utf8");
+  csvBuffer = await readFile(resolve(projectRoot, csvPath));
 }
-const users = parseUsers(csvText);
+const users = parseUsers(decodeCsvBuffer(csvBuffer));
 const roleCounts = users.flatMap((user) => user.roles).reduce<Record<string, number>>((counts, role) => {
   counts[role] = (counts[role] ?? 0) + 1;
   return counts;

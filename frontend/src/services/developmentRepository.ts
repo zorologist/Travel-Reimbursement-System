@@ -385,7 +385,6 @@ export const developmentRepository = {
       const days = dateDifferenceInDays(record.verifiedDepartureAt ?? record.departureAt, record.verifiedReturnAt ?? record.returnAt);
       record.verifiedSameDayHours = record.tripType !== "one-way" && days === 0 && input.meetsSevenHourRule ? 7 : 0;
       record.verifiedReturnDayHours = record.tripType !== "one-way" && days > 0 && input.meetsSevenHourRule ? 7 : 0;
-      record.timeNeedsVerification = true;
     }
     updateCalculation(record);
     if (record.salaryPreview.totalAmount !== previousPrice) {
@@ -433,7 +432,6 @@ export const developmentRepository = {
     const record = recordById(id);
     if (record.stage !== "salary-finalization") throw new ApiClientError(409, "REQUEST_ALREADY_COMPLETED", "This request is not awaiting salary finalization.");
     if (!record.transportationCostVerified) throw new ApiClientError(409, "TICKET_PRICE_REQUIRED", "Enter and save the verified ticket price first.");
-    if (record.timeNeedsVerification) throw new ApiClientError(409, "TIME_CONFIRMATION_REQUIRED", "The selected manager must confirm the verified times first.");
     record.stage = "completed";
     record.finalSalary = clone(record.salaryPreview);
     pushAudit(record, { actorId: ROLE_ACTOR.salary, actorRole: "salary", action: "finalize", fromStage: "salary-finalization", toStage: "completed", changes: { stage: { before: "salary-finalization", after: "completed" } }, note: note.trim() });
