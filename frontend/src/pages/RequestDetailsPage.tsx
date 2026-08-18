@@ -117,10 +117,9 @@ export function RequestDetailsPage() {
   const isManager = !!user?.roles.includes("manager");
   const isOwner = !!user && user.id === request.employeeId;
   const canRequestInfo = isManager && request.stage === "manager-review";
-  const canConfirmTime = isManager && request.timeNeedsVerification === true;
   const pendingEmployeeBanner = request.pendingEmployeeResponse === true && isOwner;
 
-  async function runManagerAction(kind: "request-info" | "confirm-time") {
+  async function runManagerAction(kind: "request-info") {
     setActionError(null);
     if (!actionNote.trim() && kind === "request-info") {
       setActionError(tr("Enter a note for the employee.", "أدخل ملاحظة للموظف."));
@@ -128,11 +127,7 @@ export function RequestDetailsPage() {
     }
     setActionLoading(true);
     try {
-      if (kind === "request-info") {
-        await workflowApi.requestInfo(request!.id, actionNote.trim());
-      } else {
-        await workflowApi.confirmTime(request!.id, actionNote.trim());
-      }
+      await workflowApi.requestInfo(request!.id, actionNote.trim());
       setActionNote("");
       await load();
     } catch (actionError) {
@@ -175,11 +170,6 @@ export function RequestDetailsPage() {
             <div>
               <p className="tracker-eyebrow">{tr("Request status", "حالة إتمام الطلب")}</p>
               <span className={`tracker-status ${statusClass}`}>● &nbsp; {localizeLabel(request.stage, language)}</span>
-              {request.timeNeedsVerification === true && (
-                <span className="tracker-badge tracker-badge--warning" style={{ display: "inline-block", marginTop: 6 }}>
-                  {tr("Pending time verification", "بانتظار التحقق من المواعيد")}
-                </span>
-              )}
               {request.pendingEmployeeResponse === true && (
                 <span className="tracker-badge tracker-badge--info" style={{ display: "inline-block", marginTop: 6 }}>
                   {tr("Manager requested more information", "طلب المدير معلومات إضافية")}
@@ -199,29 +189,20 @@ export function RequestDetailsPage() {
             </div>
           )}
 
-          {(canRequestInfo || canConfirmTime) && (
+          {canRequestInfo && (
             <div className="tracker-manager-actions" role="group" aria-label={tr("Manager actions", "إجراءات المدير")}>
-              <h3>{canConfirmTime ? tr("Confirm verified times", "تأكيد المواعيد المتحقق منها") : tr("Request more information", "طلب معلومات إضافية")}</h3>
+              <h3>{tr("Request more information", "طلب معلومات إضافية")}</h3>
               <textarea
                 rows={3}
                 value={actionNote}
                 onChange={(event) => setActionNote(event.target.value)}
-                placeholder={canConfirmTime
-                  ? tr("Add an optional confirmation note.", "أضف ملاحظة تأكيد اختيارية.")
-                  : tr("What does the employee need to clarify?", "ما الذي يحتاج الموظف لتوضيحه؟")}
+                placeholder={tr("What does the employee need to clarify?", "ما الذي يحتاج الموظف لتوضيحه؟")}
               />
               {actionError && <p className="tracker-action-error" role="alert">{actionError}</p>}
               <div className="tracker-manager-actions-buttons">
-                {canConfirmTime && (
-                  <button type="button" className="tracker-btn tracker-btn--primary" disabled={actionLoading} onClick={() => void runManagerAction("confirm-time")}>
-                    {actionLoading ? tr("Confirming...", "جارٍ التأكيد...") : tr("Confirm time verification", "تأكيد التحقق من المواعيد")}
-                  </button>
-                )}
-                {canRequestInfo && (
-                  <button type="button" className="tracker-btn tracker-btn--secondary" disabled={actionLoading} onClick={() => void runManagerAction("request-info")}>
-                    {actionLoading ? tr("Sending...", "جارٍ الإرسال...") : tr("Request more details", "طلب تفاصيل إضافية")}
-                  </button>
-                )}
+                <button type="button" className="tracker-btn tracker-btn--secondary" disabled={actionLoading} onClick={() => void runManagerAction("request-info")}>
+                  {actionLoading ? tr("Sending...", "جارٍ الإرسال...") : tr("Request more details", "طلب تفاصيل إضافية")}
+                </button>
               </div>
             </div>
           )}
